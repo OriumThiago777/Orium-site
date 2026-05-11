@@ -18,7 +18,7 @@ export default function Home() {
 
       <main
         id="inicio"
-        className="relative overflow-hidden min-h-screen bg-black text-white flex items-center pt-32 md:pt-36 pb-20"
+        className="relative overflow-hidden min-h-screen bg-black text-white flex items-center pt-28 md:pt-32 pb-16"
       >
         <div className="absolute top-[-220px] right-[-160px] w-[420px] md:w-[520px] h-[420px] md:h-[520px] bg-orange-500/20 blur-[130px] rounded-full"></div>
         <div className="absolute bottom-[-260px] left-[-180px] w-[360px] md:w-[460px] h-[360px] md:h-[460px] bg-orange-500/10 blur-[130px] rounded-full"></div>
