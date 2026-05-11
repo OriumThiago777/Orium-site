@@ -257,6 +257,26 @@ export default function Home() {
                     Conteúdo
                   </span>
                 </div>
+
+                <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                  <a
+                    href="https://www.instagram.com/altemansbarbearia/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={secondaryButton}
+                  >
+                    Ver Instagram
+                  </a>
+
+                  <a
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={primaryButton}
+                  >
+                    Quero algo parecido
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -296,6 +316,26 @@ export default function Home() {
                   <span className="rounded-full border border-zinc-700 bg-black/50 px-4 py-2 text-sm text-zinc-300">
                     Posicionamento
                   </span>
+                </div>
+
+                <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                  <a
+                    href="https://www.instagram.com/prof.marcelofelix/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={secondaryButton}
+                  >
+                    Ver Instagram
+                  </a>
+
+                  <a
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={primaryButton}
+                  >
+                    Quero algo parecido
+                  </a>
                 </div>
               </div>
             </div>
