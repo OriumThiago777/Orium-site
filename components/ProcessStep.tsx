@@ -1,23 +1,33 @@
-type ServiceCardProps = {
+type ProcessStepProps = {
+  number: string;
   title: string;
   description: string;
 };
 
-export default function ServiceCard({
+export default function ProcessStep({
+  number,
   title,
   description,
-}: ServiceCardProps) {
+}: ProcessStepProps) {
   return (
-    <div className="border border-zinc-800 rounded-3xl p-8 hover:border-orange-500 transition">
+    <div className="relative rounded-3xl border border-zinc-800 bg-zinc-950/80 p-8 overflow-hidden">
+      <div className="absolute right-6 top-6 text-6xl font-black text-orange-500/10">
+        {number}
+      </div>
 
-      <h3 className="text-2xl font-bold mb-4">
-        {title}
-      </h3>
+      <div className="relative z-10">
+        <p className="text-orange-500 font-semibold mb-4">
+          Etapa {number}
+        </p>
 
-      <p className="text-zinc-400 leading-relaxed">
-        {description}
-      </p>
+        <h3 className="text-2xl font-bold mb-4">
+          {title}
+        </h3>
 
+        <p className="text-zinc-400 leading-relaxed">
+          {description}
+        </p>
+      </div>
     </div>
   );
 }
