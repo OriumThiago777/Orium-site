@@ -15,8 +15,8 @@ export default function Navbar() {
           <Image
             src="/lgdc.png"
             alt="ORIUM"
-            width={140}
-            height={40}
+            width={160}
+            height={48}
             priority
             className="h-10 md:h-11 w-auto"
           />
