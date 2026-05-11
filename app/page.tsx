@@ -18,7 +18,7 @@ export default function Home() {
 
       <main
         id="inicio"
-        className="relative overflow-hidden min-h-screen bg-black text-white flex items-center pt-32 md:pt-36 pb-20"
+        className="relative overflow-hidden min-h-screen bg-black text-white flex items-center pt-28 md:pt-32 pb-16"
       >
         <div className="absolute top-[-220px] right-[-160px] w-[420px] md:w-[520px] h-[420px] md:h-[520px] bg-orange-500/20 blur-[130px] rounded-full"></div>
         <div className="absolute bottom-[-260px] left-[-180px] w-[360px] md:w-[460px] h-[360px] md:h-[460px] bg-orange-500/10 blur-[130px] rounded-full"></div>
@@ -257,6 +257,26 @@ export default function Home() {
                     Conteúdo
                   </span>
                 </div>
+
+                <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                  <a
+                    href="https://www.instagram.com/altemansbarbearia/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={secondaryButton}
+                  >
+                    Ver Instagram
+                  </a>
+
+                  <a
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={primaryButton}
+                  >
+                    Quero algo parecido
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -296,6 +316,26 @@ export default function Home() {
                   <span className="rounded-full border border-zinc-700 bg-black/50 px-4 py-2 text-sm text-zinc-300">
                     Posicionamento
                   </span>
+                </div>
+
+                <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                  <a
+                    href="https://www.instagram.com/prof.marcelofelix/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={secondaryButton}
+                  >
+                    Ver Instagram
+                  </a>
+
+                  <a
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={primaryButton}
+                  >
+                    Quero algo parecido
+                  </a>
                 </div>
               </div>
             </div>
