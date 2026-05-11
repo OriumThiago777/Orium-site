@@ -12,9 +12,9 @@ export default function FloatingWhatsApp() {
       <Image
         src="/wpp.png"
         alt="WhatsApp"
-        width={36}
-        height={36}
-        className="h-9 w-9 object-contain"
+        width={64}
+        height={64}
+        className="h-16 w-16 object-contain drop-shadow-2xl"
       />
     </a>
   );
