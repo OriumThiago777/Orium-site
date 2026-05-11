@@ -1,17 +1,6 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import FloatingWhatsApp from "../components/FloatingWhatsApp";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "ORIUM | Estruturação Digital para Negócios Locais",
@@ -36,12 +25,12 @@ export const metadata: Metadata = {
   authors: [{ name: "ORIUM" }],
   creator: "ORIUM",
   publisher: "ORIUM",
-  metadataBase: new URL("https://orium-site.vercel.app"),
+  metadataBase: new URL("https://oriumagencia.com.br"),
   openGraph: {
     title: "ORIUM | Estruturação Digital para Negócios Locais",
     description:
       "Branding, posicionamento, sites, conteúdo, automação e estrutura digital para negócios locais que querem crescer com presença profissional.",
-    url: "https://orium-site.vercel.app",
+    url: "https://oriumagencia.com.br",
     siteName: "ORIUM",
     locale: "pt_BR",
     type: "website",
@@ -60,10 +49,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="pt-BR"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="pt-BR" className="h-full antialiased">
       <body className="min-h-full bg-black text-white">
         {children}
 
