@@ -2,6 +2,7 @@ import ServiceCard from "../components/ServiceCard";
 import ProcessStep from "../components/ProcessStep";
 import StatsStrip from "../components/StatsStrip";
 import Navbar from "../components/Navbar";
+import Image from "next/image";
 
 export default function Home() {
   const whatsappLink = "https://wa.me/5531999352065";
@@ -24,7 +25,8 @@ export default function Home() {
         <div className="absolute bottom-[-260px] left-[-180px] w-[360px] md:w-[460px] h-[360px] md:h-[460px] bg-orange-500/10 blur-[130px] rounded-full"></div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-8 w-full">
-          <div className="max-w-3xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 items-center">
+            <div className="max-w-3xl">
             <p className="text-orange-500 font-semibold mb-4 tracking-widest uppercase text-sm md:text-base">
               Estruturação Digital
             </p>
@@ -51,6 +53,20 @@ export default function Home() {
               <a href="#projetos" className={secondaryButton}>
                 Ver Projetos
               </a>
+            </div>
+            </div>
+
+            <div className="hidden lg:block">
+              <div className="relative h-[460px] rounded-3xl border border-zinc-800 overflow-hidden shadow-2xl shadow-orange-500/10">
+                <Image
+                  src="/hero.jpg"
+                  alt="Ambiente criativo ORIUM"
+                  fill
+                  className="object-cover"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-orange-500/10" />
+              </div>
             </div>
           </div>
         </div>
@@ -96,7 +112,8 @@ export default function Home() {
         <div className="absolute top-[-180px] left-[-160px] w-[360px] md:w-[420px] h-[360px] md:h-[420px] bg-orange-500/10 blur-[120px] rounded-full"></div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-8 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
-          <div>
+          <div className="space-y-8">
+            <div>
             <p className="text-orange-500 uppercase tracking-widest font-semibold mb-4 text-sm md:text-base">
               Diferencial
             </p>
@@ -110,6 +127,17 @@ export default function Home() {
               eles pareçam mais profissionais, sejam mais fáceis de entender e
               tenham uma comunicação mais forte para vender melhor.
             </p>
+            </div>
+
+            <div className="relative h-56 md:h-64 rounded-3xl border border-zinc-800 overflow-hidden shadow-xl shadow-orange-500/10">
+              <Image
+                src="/estrategia.jpg"
+                alt="Estratégia digital ORIUM"
+                fill
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/25 to-transparent" />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4">
@@ -165,6 +193,16 @@ export default function Home() {
               negócio, organizamos a comunicação e construímos uma direção
               clara.
             </p>
+          </div>
+
+          <div className="relative mb-10 md:mb-12 h-44 md:h-56 rounded-3xl border border-zinc-800 overflow-hidden shadow-xl shadow-orange-500/10">
+            <Image
+              src="/processo.jpg"
+              alt="Processo ORIUM"
+              fill
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/45 to-black/60" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -224,10 +262,14 @@ export default function Home() {
               <div className="absolute right-[-100px] top-[-100px] h-56 w-56 rounded-full bg-orange-500/0 blur-3xl transition duration-300 group-hover:bg-orange-500/10"></div>
 
               <div className="relative z-10">
-                <div className="mb-8 h-36 md:h-44 rounded-2xl border border-zinc-800 bg-gradient-to-br from-zinc-900 to-black p-6 flex items-end overflow-hidden">
-                  <p className="text-4xl md:text-5xl font-black text-orange-500/60">
-                    ALTEMANS
-                  </p>
+                <div className="relative mb-8 h-44 rounded-2xl border border-zinc-800 overflow-hidden">
+                  <Image
+                    src="/altemans.jpg"
+                    alt="Projeto Altemans Barbearia"
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                 </div>
 
                 <p className="text-orange-500 text-sm uppercase tracking-widest font-semibold mb-4">
@@ -284,10 +326,14 @@ export default function Home() {
               <div className="absolute right-[-100px] top-[-100px] h-56 w-56 rounded-full bg-orange-500/0 blur-3xl transition duration-300 group-hover:bg-orange-500/10"></div>
 
               <div className="relative z-10">
-                <div className="mb-8 h-36 md:h-44 rounded-2xl border border-zinc-800 bg-gradient-to-br from-zinc-900 to-black p-6 flex items-end overflow-hidden">
-                  <p className="text-4xl md:text-5xl font-black text-orange-500/60">
-                    MARCELO
-                  </p>
+                <div className="relative mb-8 h-44 rounded-2xl border border-zinc-800 overflow-hidden">
+                  <Image
+                    src="/marcelo.jpg"
+                    alt="Projeto Prof. Marcelo Félix"
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                 </div>
 
                 <p className="text-orange-500 text-sm uppercase tracking-widest font-semibold mb-4">
@@ -347,6 +393,10 @@ export default function Home() {
         id="contato"
         className="relative overflow-hidden bg-zinc-950 text-white py-20 md:py-32 border-t border-zinc-900 scroll-mt-24"
       >
+        <div className="absolute inset-0">
+          <Image src="/cta.jpg" alt="CTA ORIUM" fill className="object-cover opacity-20" />
+          <div className="absolute inset-0 bg-black/70" />
+        </div>
         <div className="absolute top-[-220px] left-1/2 h-[360px] md:h-[420px] w-[360px] md:w-[420px] -translate-x-1/2 rounded-full bg-orange-500/10 blur-[120px]"></div>
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-8 text-center">
