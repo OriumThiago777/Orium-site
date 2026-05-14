@@ -32,12 +32,12 @@ export default function Home() {
             </p>
 
             <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6">
-              Transformamos negócios locais em marcas com presença forte.
+              Transformamos negócios locais em marcas com estrutura digital e presença que vende.
             </h1>
 
             <p className="text-zinc-400 text-lg md:text-xl mb-10 leading-relaxed">
-              Branding, posicionamento, conteúdo, automação e estrutura digital
-              para empresas que querem crescer de forma profissional.
+              Não é só sobre postar. É sobre posicionar, organizar e escalar a
+              presença digital com branding, conteúdo, sites e automação.
             </p>
 
             <div className="flex flex-col md:flex-row gap-4">
@@ -85,7 +85,7 @@ export default function Home() {
             </p>
 
             <h2 className="text-3xl md:text-5xl font-bold max-w-2xl leading-tight">
-              Estrutura digital para empresas que querem crescer de verdade.
+              Soluções integradas para empresas que querem crescer com método.
             </h2>
           </div>
 
@@ -119,13 +119,13 @@ export default function Home() {
             </p>
 
             <h2 className="text-3xl md:text-5xl font-bold leading-tight mb-6">
-              Não criamos apenas posts. Criamos estrutura.
+              Não entregamos só conteúdo. Construímos uma operação digital completa.
             </h2>
 
             <p className="text-zinc-400 text-base md:text-lg leading-relaxed">
-              A ORIUM organiza a presença digital de negócios locais para que
-              eles pareçam mais profissionais, sejam mais fáceis de entender e
-              tenham uma comunicação mais forte para vender melhor.
+              A ORIUM organiza posicionamento, comunicação e ativos digitais
+              para sua empresa parecer mais profissional, gerar confiança e
+              converter com consistência.
             </p>
             </div>
 
@@ -184,14 +184,12 @@ export default function Home() {
             </p>
 
             <h2 className="text-3xl md:text-5xl font-bold leading-tight mb-6">
-              Um processo simples para transformar presença digital em
-              estrutura.
+              Um processo claro para transformar presença digital em crescimento previsível.
             </h2>
 
             <p className="text-zinc-400 text-base md:text-lg leading-relaxed">
-              Antes de criar qualquer arte, site ou conteúdo, entendemos o
-              negócio, organizamos a comunicação e construímos uma direção
-              clara.
+              Antes de executar, estruturamos estratégia, mensagem e operação
+              para cada entrega ter função comercial real.
             </p>
           </div>
 
@@ -247,13 +245,13 @@ export default function Home() {
               </p>
 
               <h2 className="text-3xl md:text-5xl font-bold max-w-2xl leading-tight">
-                Cases em construção com marcas reais.
+                Projetos reais com foco em percepção, autoridade e conversão.
               </h2>
             </div>
 
             <p className="text-zinc-400 max-w-md leading-relaxed">
-              Alguns projetos iniciais mostram como a ORIUM estrutura presença,
-              percepção e comunicação para negócios locais e profissionais.
+              Cada projeto mostra como a ORIUM transforma presença digital em
+              posicionamento forte e resultado comercial.
             </p>
           </div>
 
@@ -405,12 +403,12 @@ export default function Home() {
           </p>
 
           <h2 className="text-3xl md:text-6xl font-bold leading-tight mb-8">
-            Sua marca pode parecer muito mais profissional.
+            Sua marca pode operar em outro nível de percepção e resultado.
           </h2>
 
           <p className="text-zinc-400 text-base md:text-xl leading-relaxed max-w-3xl mx-auto mb-8">
-            Estrutura, posicionamento, branding, conteúdo e tecnologia para
-            negócios locais que querem crescer com percepção premium.
+            Estruturamos sua presença digital de ponta a ponta para atrair,
+            convencer e vender com mais consistência.
           </p>
 
           <div className="flex flex-col md:flex-row justify-center gap-4">
