@@ -10,7 +10,7 @@ export default function Navbar() {
 
   return (
     <header className="fixed top-0 left-0 z-50 w-full border-b border-white/10 bg-black/80 backdrop-blur-xl">
-      <nav className="max-w-7xl mx-auto px-5 py-3 flex items-center justify-between">
+      <nav className="max-w-7xl mx-auto px-5 py-3 md:py-3.5 flex items-center justify-between">
         <a href="#inicio" className="flex items-center">
           <Image
             src="/lgdc.png"
@@ -51,19 +51,24 @@ export default function Navbar() {
 
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className="md:hidden border border-zinc-700 text-zinc-200 px-4 py-2 rounded-full text-sm"
+          className="md:hidden border border-zinc-700/90 bg-zinc-950/70 text-zinc-100 px-4 py-2 rounded-full text-sm transition hover:border-orange-500/60 hover:text-orange-400"
         >
           {menuOpen ? "Fechar" : "Menu"}
         </button>
       </nav>
 
-      {menuOpen && (
-        <div className="md:hidden border-t border-white/10 bg-black px-5 py-6">
-          <div className="flex flex-col gap-5 text-zinc-300 text-sm font-medium">
+      <div
+        className={`md:hidden overflow-hidden border-t border-white/10 bg-black/95 backdrop-blur-xl transition-all duration-300 ${
+          menuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="px-5 py-6">
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4">
+            <div className="flex flex-col gap-2 text-zinc-200 text-base font-medium">
             <a
               href="#inicio"
               onClick={() => setMenuOpen(false)}
-              className="hover:text-orange-500 transition"
+              className="rounded-xl px-3 py-2.5 hover:bg-zinc-900 hover:text-orange-400 transition"
             >
               Início
             </a>
@@ -71,7 +76,7 @@ export default function Navbar() {
             <a
               href="#servicos"
               onClick={() => setMenuOpen(false)}
-              className="hover:text-orange-500 transition"
+              className="rounded-xl px-3 py-2.5 hover:bg-zinc-900 hover:text-orange-400 transition"
             >
               Serviços
             </a>
@@ -79,7 +84,7 @@ export default function Navbar() {
             <a
               href="#projetos"
               onClick={() => setMenuOpen(false)}
-              className="hover:text-orange-500 transition"
+              className="rounded-xl px-3 py-2.5 hover:bg-zinc-900 hover:text-orange-400 transition"
             >
               Projetos
             </a>
@@ -87,22 +92,23 @@ export default function Navbar() {
             <a
               href="#contato"
               onClick={() => setMenuOpen(false)}
-              className="hover:text-orange-500 transition"
+              className="rounded-xl px-3 py-2.5 hover:bg-zinc-900 hover:text-orange-400 transition"
             >
               Contato
             </a>
+            </div>
 
             <a
               href={whatsappLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 bg-orange-500 text-black px-5 py-3 rounded-2xl text-center font-semibold"
+              className="mt-4 block bg-orange-500 text-black px-5 py-3 rounded-2xl text-center font-semibold transition hover:bg-orange-400"
             >
               Falar no WhatsApp
             </a>
           </div>
         </div>
-      )}
+      </div>
     </header>
   );
 }
