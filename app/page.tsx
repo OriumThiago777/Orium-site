@@ -453,6 +453,60 @@ export default function Home() {
       </Reveal>
 
       <Reveal delay={0.4}>
+        <section className="relative overflow-hidden bg-zinc-950 text-white py-16 md:py-20 border-t border-zinc-900">
+          <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-8">
+            <div className="max-w-3xl mb-10 md:mb-12">
+              <p className="text-orange-500 uppercase tracking-widest font-semibold mb-4 text-sm md:text-base">
+                COMO FUNCIONA
+              </p>
+
+              <h2 className="text-3xl md:text-5xl font-bold leading-tight mb-5">
+                Como funciona o diagnóstico?
+              </h2>
+
+              <p className="text-zinc-400 text-base md:text-lg leading-relaxed">
+                Um processo simples para entender sua presença digital atual e identificar caminhos práticos de melhoria.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+              <div className="rounded-2xl border border-zinc-800 bg-black/40 p-5 md:p-6">
+                <p className="text-orange-500 text-sm font-semibold mb-3">01</p>
+                <h3 className="text-lg md:text-xl font-bold mb-2">Você chama no WhatsApp</h3>
+                <p className="text-zinc-400 leading-relaxed">
+                  Entendemos rapidamente seu negócio, momento atual e principais objetivos.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-black/40 p-5 md:p-6">
+                <p className="text-orange-500 text-sm font-semibold mb-3">02</p>
+                <h3 className="text-lg md:text-xl font-bold mb-2">Analisamos sua presença digital</h3>
+                <p className="text-zinc-400 leading-relaxed">
+                  Observamos Instagram, identidade, comunicação, site, links e jornada do cliente.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-black/40 p-5 md:p-6">
+                <p className="text-orange-500 text-sm font-semibold mb-3">03</p>
+                <h3 className="text-lg md:text-xl font-bold mb-2">Indicamos pontos de melhoria</h3>
+                <p className="text-zinc-400 leading-relaxed">
+                  Mostramos onde sua marca pode parecer mais profissional, clara e preparada para vender.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-black/40 p-5 md:p-6">
+                <p className="text-orange-500 text-sm font-semibold mb-3">04</p>
+                <h3 className="text-lg md:text-xl font-bold mb-2">Se fizer sentido, montamos uma proposta</h3>
+                <p className="text-zinc-400 leading-relaxed">
+                  A ORIUM apresenta uma estrutura de trabalho alinhada ao momento da sua marca.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </Reveal>
+
+      <Reveal delay={0.45}>
         <section
           id="contato"
           className="relative overflow-hidden bg-zinc-950 text-white py-16 md:py-32 border-t border-zinc-900 scroll-mt-24"
