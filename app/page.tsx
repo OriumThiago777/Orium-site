@@ -7,6 +7,7 @@ import Image from "next/image";
 
 export default function Home() {
   const whatsappLink = "https://wa.me/5531999352065";
+  const diagnosticWhatsappLink = `${whatsappLink}?text=${encodeURIComponent("Olá, quero solicitar um diagnóstico digital para minha marca.")}`;
 
   const primaryButton =
     "bg-orange-500 text-black px-8 py-4 rounded-2xl font-bold transition duration-300 text-center hover:bg-orange-400 hover:-translate-y-1 hover:shadow-2xl hover:shadow-orange-500/20";
@@ -393,6 +394,60 @@ export default function Home() {
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+      </Reveal>
+
+
+      <Reveal delay={0.35}>
+        <section className="relative overflow-hidden bg-black text-white py-20 md:py-32 border-t border-zinc-900">
+          <div className="absolute left-[-160px] bottom-[-200px] h-[360px] md:h-[420px] w-[360px] md:w-[420px] rounded-full bg-orange-500/10 blur-[120px]"></div>
+
+          <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-8">
+            <div className="max-w-3xl mb-12 md:mb-16">
+              <p className="text-orange-500 uppercase tracking-widest font-semibold mb-4 text-sm md:text-base">
+                DIAGNÓSTICO DIGITAL
+              </p>
+
+              <h2 className="text-3xl md:text-5xl font-bold leading-tight mb-6">
+                Antes de criar conteúdo, entendemos a estrutura da sua marca.
+              </h2>
+
+              <p className="text-zinc-400 text-base md:text-lg leading-relaxed">
+                A ORIUM analisa presença digital, posicionamento, imagem, comunicação e oportunidades de melhoria para transformar sua marca em uma estrutura mais profissional.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-10">
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6 md:p-7">
+                <h3 className="text-xl font-bold mb-3">Presença visual</h3>
+                <p className="text-zinc-400">Instagram, identidade e percepção da marca.</p>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6 md:p-7">
+                <h3 className="text-xl font-bold mb-3">Comunicação</h3>
+                <p className="text-zinc-400">Clareza da mensagem, oferta e posicionamento.</p>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6 md:p-7">
+                <h3 className="text-xl font-bold mb-3">Estrutura digital</h3>
+                <p className="text-zinc-400">Site, links, automações e jornada do cliente.</p>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6 md:p-7">
+                <h3 className="text-xl font-bold mb-3">Próximos passos</h3>
+                <p className="text-zinc-400">Plano inicial para organizar e fortalecer sua presença.</p>
+              </div>
+            </div>
+
+            <a
+              href={diagnosticWhatsappLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${primaryButton} inline-flex`}
+            >
+              Solicitar diagnóstico
+            </a>
           </div>
         </section>
       </Reveal>
