@@ -114,6 +114,7 @@ export default function Navbar() {
               href={whatsappLink}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => setMenuOpen(false)}
               className="mt-4 block bg-orange-500 text-black px-5 py-3 rounded-2xl text-center font-semibold transition hover:bg-orange-400"
             >
               Falar no WhatsApp
