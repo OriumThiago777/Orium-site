@@ -506,6 +506,60 @@ export default function Home() {
         </section>
       </Reveal>
 
+
+      <Reveal delay={0.43}>
+        <section className="bg-zinc-950 text-white py-16 md:py-20 border-t border-zinc-900">
+          <div className="max-w-4xl mx-auto px-6 md:px-8">
+            <div className="max-w-3xl mb-10 md:mb-12">
+              <p className="text-orange-500 uppercase tracking-widest font-semibold mb-4 text-sm md:text-base">
+                DÚVIDAS FREQUENTES
+              </p>
+
+              <h2 className="text-3xl md:text-5xl font-bold leading-tight">
+                Antes de falar com a ORIUM, talvez você queira saber:
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:gap-5">
+              <div className="rounded-2xl border border-zinc-800 bg-black/40 p-5 md:p-6">
+                <h3 className="text-lg md:text-xl font-bold text-white mb-2">1. O diagnóstico é gratuito?</h3>
+                <p className="text-zinc-400 leading-relaxed">
+                  Sim. É uma conversa inicial para entender o momento da sua marca e identificar possibilidades de melhoria.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-black/40 p-5 md:p-6">
+                <h3 className="text-lg md:text-xl font-bold text-white mb-2">2. A ORIUM faz apenas posts para Instagram?</h3>
+                <p className="text-zinc-400 leading-relaxed">
+                  Não. A ORIUM trabalha com estrutura digital: posicionamento, branding, conteúdo, sites, automações e presença profissional.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-black/40 p-5 md:p-6">
+                <h3 className="text-lg md:text-xl font-bold text-white mb-2">3. Vocês atendem apenas negócios locais?</h3>
+                <p className="text-zinc-400 leading-relaxed">
+                  O foco principal são negócios locais, profissionais e marcas em crescimento que precisam parecer mais organizadas e confiáveis no digital.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-black/40 p-5 md:p-6">
+                <h3 className="text-lg md:text-xl font-bold text-white mb-2">4. Depois do diagnóstico eu sou obrigado a contratar?</h3>
+                <p className="text-zinc-400 leading-relaxed">
+                  Não. O diagnóstico serve para entender o cenário. Se fizer sentido para os dois lados, a ORIUM apresenta uma proposta.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-black/40 p-5 md:p-6">
+                <h3 className="text-lg md:text-xl font-bold text-white mb-2">5. A ORIUM cria site também?</h3>
+                <p className="text-zinc-400 leading-relaxed">
+                  Sim. Criamos landing pages, sites institucionais e estruturas digitais focadas em presença profissional e conversão.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </Reveal>
+
       <Reveal delay={0.45}>
         <section
           id="contato"
