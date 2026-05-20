@@ -400,7 +400,10 @@ export default function Home() {
 
 
       <Reveal delay={0.35}>
-        <section className="relative overflow-hidden bg-black text-white py-20 md:py-32 border-t border-zinc-900">
+        <section
+          id="diagnostico"
+          className="relative overflow-hidden bg-black text-white py-20 md:py-32 border-t border-zinc-900"
+        >
           <div className="absolute left-[-160px] bottom-[-200px] h-[360px] md:h-[420px] w-[360px] md:w-[420px] rounded-full bg-orange-500/10 blur-[120px]"></div>
 
           <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-8">
