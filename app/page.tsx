@@ -34,13 +34,13 @@ export default function Home() {
               </p>
 
               <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold leading-tight mb-5 md:mb-6">
-                Transformamos negócios locais em marcas com estrutura digital e
-                presença que vende.
+                Estruturamos negócios locais para terem presença digital
+                profissional e pronta para vender.
               </h1>
 
               <p className="text-zinc-400 text-base sm:text-lg md:text-xl mb-8 md:mb-10 leading-relaxed">
-                Não é só sobre postar. É sobre posicionar, organizar e escalar a
-                presença digital com branding, conteúdo, sites e automação.
+                Não é só sobre postar. É sobre posicionar, organizar e sustentar
+                a presença digital com branding, conteúdo, site e automação.
               </p>
 
               <div className="flex flex-col md:flex-row gap-4">
@@ -87,7 +87,7 @@ export default function Home() {
                 Serviços
               </p>
               <h2 className="text-3xl md:text-5xl font-bold max-w-2xl leading-tight">
-                Soluções integradas para empresas que querem crescer com método.
+                Soluções integradas para empresas que querem crescer com clareza.
               </h2>
             </div>
 
@@ -123,14 +123,14 @@ export default function Home() {
                 </p>
 
                 <h2 className="text-3xl md:text-5xl font-bold leading-tight mb-6">
-                  Não entregamos só conteúdo. Construímos uma operação digital
-                  completa.
+                  Não entregamos só conteúdo. Estruturamos sua presença digital
+                  de ponta a ponta.
                 </h2>
 
                 <p className="text-zinc-400 text-base md:text-lg leading-relaxed">
                   A ORIUM organiza posicionamento, comunicação e ativos digitais
-                  para sua empresa parecer mais profissional, gerar confiança e
-                  converter com consistência.
+                  para sua empresa transmitir valor, gerar confiança e vender
+                  com consistência.
                 </p>
               </div>
 
@@ -163,7 +163,7 @@ export default function Home() {
               <div className="rounded-2xl border border-zinc-800 bg-black/70 p-6 backdrop-blur-sm">
                 <h3 className="text-xl font-bold mb-2">Operação digital</h3>
                 <p className="text-zinc-400">
-                  Estruturas, páginas e automações para reduzir improviso.
+                  Estruturas, páginas e automações para operar com método.
                 </p>
               </div>
 
@@ -173,8 +173,8 @@ export default function Home() {
                 </h3>
 
                 <p className="text-zinc-400">
-                  Presença digital pensada para gerar continuidade, não apenas
-                  volume.
+                  Presença digital pensada para gerar continuidade, não só picos
+                  pontuais.
                 </p>
               </div>
             </div>
@@ -191,13 +191,13 @@ export default function Home() {
               </p>
 
               <h2 className="text-3xl md:text-5xl font-bold leading-tight mb-6">
-                Um processo claro para transformar presença digital em
-                crescimento previsível.
+                Um processo claro para transformar presença digital em resultado
+                comercial consistente.
               </h2>
 
               <p className="text-zinc-400 text-base md:text-lg leading-relaxed">
-                Antes de executar, estruturamos estratégia, mensagem e operação
-                para cada entrega ter função comercial real.
+                Antes de executar, alinhamos estratégia, mensagem e operação
+                para cada entrega cumprir uma função comercial real.
               </p>
             </div>
 
@@ -254,14 +254,15 @@ export default function Home() {
                   Projetos
                 </p>
 
-                <h2 className="text-3xl md:text-5xl font-bold max-w-2xl leading-tight">
-                  Projetos reais com foco em percepção, autoridade e conversão.
-                </h2>
+              <h2 className="text-3xl md:text-5xl font-bold max-w-2xl leading-tight">
+                  Projetos reais com foco em percepção, autoridade e geração de
+                  demanda.
+              </h2>
               </div>
 
               <p className="text-zinc-400 max-w-md leading-relaxed">
                 Cada projeto mostra como a ORIUM transforma presença digital em
-                posicionamento forte e resultado comercial.
+                posicionamento claro e resultado comercial.
               </p>
             </div>
 
@@ -289,9 +290,9 @@ export default function Home() {
                   </h3>
 
                   <p className="text-zinc-400 leading-relaxed mb-8">
-                    Estruturação de Instagram, posts fixados, criativos, vídeos,
-                    comunicação visual e presença digital para fortalecer
-                    percepção e facilitar o contato com clientes.
+                    Estruturação de Instagram, destaques, criativos, vídeos e
+                    comunicação visual para fortalecer percepção e facilitar o
+                    contato com clientes.
                   </p>
 
                   <div className="flex flex-wrap gap-3">
@@ -353,9 +354,9 @@ export default function Home() {
                   </h3>
 
                   <p className="text-zinc-400 leading-relaxed mb-8">
-                    Posicionamento digital para autoridade profissional,
-                    organização de perfil, destaques, posts fixados, identidade
-                    visual e comunicação para cursos, palestras e treinamentos.
+                    Posicionamento digital para autoridade profissional, com
+                    organização de perfil, destaques, identidade visual e
+                    comunicação para cursos, palestras e treinamentos.
                   </p>
 
                   <div className="flex flex-wrap gap-3">
@@ -413,11 +414,13 @@ export default function Home() {
               </p>
 
               <h2 className="text-3xl md:text-5xl font-bold leading-tight mb-6">
-                Antes de criar conteúdo, entendemos a estrutura da sua marca.
+                Antes de produzir conteúdo, avaliamos a estrutura da sua marca.
               </h2>
 
               <p className="text-zinc-400 text-base md:text-lg leading-relaxed">
-                A ORIUM analisa presença digital, posicionamento, imagem, comunicação e oportunidades de melhoria para transformar sua marca em uma estrutura mais profissional.
+                A ORIUM analisa presença digital, posicionamento, imagem e
+                comunicação para identificar melhorias e organizar uma estrutura
+                mais profissional.
               </p>
             </div>
 
@@ -468,7 +471,8 @@ export default function Home() {
               </h2>
 
               <p className="text-zinc-400 text-base md:text-lg leading-relaxed">
-                Um processo simples para entender sua presença digital atual e identificar caminhos práticos de melhoria.
+                Um processo direto para entender sua presença atual e identificar
+                caminhos práticos de melhoria.
               </p>
             </div>
 
@@ -477,7 +481,7 @@ export default function Home() {
                 <p className="text-orange-500 text-sm font-semibold mb-3">01</p>
                 <h3 className="text-lg md:text-xl font-bold mb-2">Você chama no WhatsApp</h3>
                 <p className="text-zinc-400 leading-relaxed">
-                  Entendemos rapidamente seu negócio, momento atual e principais objetivos.
+                  Entendemos seu negócio, momento atual e principais objetivos.
                 </p>
               </div>
 
@@ -493,7 +497,8 @@ export default function Home() {
                 <p className="text-orange-500 text-sm font-semibold mb-3">03</p>
                 <h3 className="text-lg md:text-xl font-bold mb-2">Indicamos pontos de melhoria</h3>
                 <p className="text-zinc-400 leading-relaxed">
-                  Mostramos onde sua marca pode parecer mais profissional, clara e preparada para vender.
+                  Mostramos onde sua marca pode ficar mais clara, profissional e
+                  preparada para vender.
                 </p>
               </div>
 
@@ -501,7 +506,8 @@ export default function Home() {
                 <p className="text-orange-500 text-sm font-semibold mb-3">04</p>
                 <h3 className="text-lg md:text-xl font-bold mb-2">Se fizer sentido, montamos uma proposta</h3>
                 <p className="text-zinc-400 leading-relaxed">
-                  A ORIUM apresenta uma estrutura de trabalho alinhada ao momento da sua marca.
+                  A ORIUM apresenta um plano de trabalho alinhado ao momento da
+                  sua marca.
                 </p>
               </div>
             </div>
@@ -519,7 +525,7 @@ export default function Home() {
               </p>
 
               <h2 className="text-3xl md:text-5xl font-bold leading-tight">
-                Antes de falar com a ORIUM, talvez você queira saber:
+                Antes de falar com a ORIUM, vale esclarecer:
               </h2>
             </div>
 
@@ -527,7 +533,8 @@ export default function Home() {
               <div className="rounded-2xl border border-zinc-800 bg-black/40 p-5 md:p-6">
                 <h3 className="text-lg md:text-xl font-bold text-white mb-2">1. O diagnóstico é gratuito?</h3>
                 <p className="text-zinc-400 leading-relaxed">
-                  Sim. É uma conversa inicial para entender o momento da sua marca e identificar possibilidades de melhoria.
+                  Sim. É uma conversa inicial para entender o momento da sua
+                  marca e mapear oportunidades de melhoria.
                 </p>
               </div>
 
@@ -541,7 +548,9 @@ export default function Home() {
               <div className="rounded-2xl border border-zinc-800 bg-black/40 p-5 md:p-6">
                 <h3 className="text-lg md:text-xl font-bold text-white mb-2">3. Vocês atendem apenas negócios locais?</h3>
                 <p className="text-zinc-400 leading-relaxed">
-                  O foco principal são negócios locais, profissionais e marcas em crescimento que precisam parecer mais organizadas e confiáveis no digital.
+                  O foco principal são negócios locais, profissionais e marcas
+                  em crescimento que precisam de mais organização e confiança no
+                  digital.
                 </p>
               </div>
 
@@ -586,12 +595,13 @@ export default function Home() {
             </p>
 
             <h2 className="text-3xl md:text-6xl font-bold leading-tight mb-8">
-              Sua marca pode operar em outro nível de percepção e resultado.
+              Sua marca pode operar com mais clareza, valor percebido e
+              consistência comercial.
             </h2>
 
             <p className="text-zinc-400 text-base md:text-xl leading-relaxed max-w-3xl mx-auto mb-8">
-              Estruturamos sua presença digital de ponta a ponta para atrair,
-              convencer e vender com mais consistência.
+              Estruturamos sua presença digital de ponta a ponta para atrair os
+              clientes certos, comunicar melhor e vender com consistência.
             </p>
 
             <div className="flex flex-col md:flex-row justify-center gap-4">
@@ -618,7 +628,8 @@ export default function Home() {
             <div>
               <h3 className="text-orange-500 text-xl md:text-2xl font-bold mb-4">ORIUM</h3>
               <p className="text-zinc-400 leading-relaxed max-w-sm mx-auto md:mx-0">
-                Estrutura digital para negócios locais que querem parecer mais profissionais.
+                Estrutura digital para negócios locais que querem presença
+                profissional e organizada.
               </p>
             </div>
 
