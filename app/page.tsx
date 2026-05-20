@@ -612,37 +612,54 @@ export default function Home() {
         </section>
       </Reveal>
 
-      <footer className="bg-black text-zinc-500 border-t border-zinc-900 py-10">
-        <div className="max-w-7xl mx-auto px-6 md:px-8 flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
-          <h3 className="text-orange-500 text-xl font-bold">ORIUM</h3>
+      <footer className="bg-black border-t border-zinc-900 py-12 md:py-14">
+        <div className="max-w-7xl mx-auto px-6 md:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 text-center md:text-left">
+            <div>
+              <h3 className="text-orange-500 text-xl md:text-2xl font-bold mb-4">ORIUM</h3>
+              <p className="text-zinc-400 leading-relaxed max-w-sm mx-auto md:mx-0">
+                Estrutura digital para negócios locais que querem parecer mais profissionais.
+              </p>
+            </div>
 
-          <div className="flex items-center gap-6 text-sm">
-            <a
-              href="https://www.instagram.com/orium.agc/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-orange-500 transition"
-            >
-              Instagram
-            </a>
+            <div>
+              <h4 className="text-white font-semibold mb-4">Navegação</h4>
+              <nav className="flex flex-col gap-3 text-zinc-400">
+                <a href="#inicio" className="hover:text-orange-500 transition">Início</a>
+                <a href="#servicos" className="hover:text-orange-500 transition">Serviços</a>
+                <a href="#projetos" className="hover:text-orange-500 transition">Projetos</a>
+                <a href="#diagnostico" className="hover:text-orange-500 transition">Diagnóstico</a>
+                <a href="#contato" className="hover:text-orange-500 transition">Contato</a>
+              </nav>
+            </div>
 
-            <a
-              href={whatsappLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-orange-500 transition"
-            >
-              WhatsApp
-            </a>
-
-            <a href="#contato" className="hover:text-orange-500 transition">
-              Contato
-            </a>
+            <div>
+              <h4 className="text-white font-semibold mb-4">Contato</h4>
+              <div className="flex flex-col gap-3 text-zinc-400">
+                <a
+                  href="https://www.instagram.com/orium.agc/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-orange-500 transition"
+                >
+                  Instagram
+                </a>
+                <a
+                  href={whatsappLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-orange-500 transition"
+                >
+                  WhatsApp
+                </a>
+                <p className="text-zinc-500">Belo Horizonte - MG</p>
+              </div>
+            </div>
           </div>
 
-          <p className="text-sm">
-            © 2026 ORIUM. Todos os direitos reservados.
-          </p>
+          <div className="mt-10 pt-6 border-t border-zinc-900 text-center">
+            <p className="text-sm text-zinc-500">© 2026 ORIUM. Todos os direitos reservados.</p>
+          </div>
         </div>
       </footer>
     </>
