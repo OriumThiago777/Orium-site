@@ -35,6 +35,10 @@ export default function Navbar() {
             Projetos
           </a>
 
+          <a href="#diagnostico" className="hover:text-orange-500 transition">
+            Diagnóstico
+          </a>
+
           <a href="#contato" className="hover:text-orange-500 transition">
             Contato
           </a>
@@ -87,6 +91,14 @@ export default function Navbar() {
               className="rounded-xl px-3 py-2.5 hover:bg-zinc-900 hover:text-orange-400 transition"
             >
               Projetos
+            </a>
+
+            <a
+              href="#diagnostico"
+              onClick={() => setMenuOpen(false)}
+              className="rounded-xl px-3 py-2.5 hover:bg-zinc-900 hover:text-orange-400 transition"
+            >
+              Diagnóstico
             </a>
 
             <a
