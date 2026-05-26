@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import "./globals.css";
 import FloatingWhatsApp from "../components/FloatingWhatsApp";
@@ -89,7 +90,9 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body>
         {children}
-        <FloatingWhatsApp />
+        <Suspense fallback={null}>
+  <FloatingWhatsApp />
+</Suspense>
       </body>
     </html>
   );
