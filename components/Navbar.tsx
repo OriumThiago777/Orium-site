@@ -35,6 +35,10 @@ export default function Navbar() {
             Projetos
           </a>
 
+          <a href="#diagnostico" className="hover:text-orange-500 transition">
+            Diagnóstico
+          </a>
+
           <a href="#contato" className="hover:text-orange-500 transition">
             Contato
           </a>
@@ -90,6 +94,14 @@ export default function Navbar() {
             </a>
 
             <a
+              href="#diagnostico"
+              onClick={() => setMenuOpen(false)}
+              className="rounded-xl px-3 py-2.5 hover:bg-zinc-900 hover:text-orange-400 transition"
+            >
+              Diagnóstico
+            </a>
+
+            <a
               href="#contato"
               onClick={() => setMenuOpen(false)}
               className="rounded-xl px-3 py-2.5 hover:bg-zinc-900 hover:text-orange-400 transition"
@@ -102,6 +114,7 @@ export default function Navbar() {
               href={whatsappLink}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => setMenuOpen(false)}
               className="mt-4 block bg-orange-500 text-black px-5 py-3 rounded-2xl text-center font-semibold transition hover:bg-orange-400"
             >
               Falar no WhatsApp
