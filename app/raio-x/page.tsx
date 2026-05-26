@@ -36,6 +36,35 @@ const BADGE = {
   Sólido:  { bg: '#16A34A', text: '#ffffff', border: '#14532d' },
 } as const;
 
+const PROMPT_ANALISE = `Você é um analista estratégico da ORIUM, empresa de estruturação digital.
+
+Acesse o perfil do Instagram: [COLE O LINK AQUI]
+
+Analise com base nas seguintes dimensões e me entregue um diagnóstico completo:
+
+1. PRIMEIRA IMPRESSÃO — O que um desconhecido vê nos primeiros 10 segundos. Bio, foto de perfil, feed, destaques.
+
+2. CLAREZA DA OFERTA — Fica claro o que essa pessoa/empresa faz, para quem e por quê escolher ela?
+
+3. IDENTIDADE VISUAL — Existe consistência entre cores, tipografia, tom e estética? Parece profissional ou improvisado?
+
+4. POSICIONAMENTO — A marca tem um ponto de vista claro ou é genérica?
+
+5. CONTEÚDO E COMUNICAÇÃO — O que está sendo publicado serve para atrair, educar ou converter?
+
+6. PRESENÇA LOCAL E DIGITAL — Google Meu Negócio, avaliações, site, links, WhatsApp Business — está tudo organizado?
+
+7. JORNADA DO CLIENTE — Quando alguém quer contratar, o caminho é claro? Tem CTA, link, contato?
+
+8. PERCEPÇÃO DE VALOR — O que a marca comunica está compatível com o que ela cobra?
+
+Para cada dimensão classifique como:
+🔴 Crítico — precisa de ação imediata
+🟡 Atenção — funciona mas tem gaps importantes
+🟢 Sólido — está bem
+
+Ao final liste as 3 prioridades mais urgentes com observações detalhadas para cada uma.`;
+
 function formatarInvestimento(val: string): string {
   if (!val.trim()) return '—';
   if (val.trim().startsWith('R$')) return val.trim();
@@ -52,6 +81,8 @@ export default function RaioXPage() {
   const [erroSenha, setErroSenha] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [gerando, setGerando] = useState(false);
+  const [promptAberto, setPromptAberto] = useState(false);
+  const [copiado, setCopiado] = useState(false);
 
   const [form, setForm] = useState<FormState>({
     nomeCliente: '',
@@ -79,6 +110,12 @@ export default function RaioXPage() {
     } finally {
       setCarregando(false);
     }
+  }
+
+  function copiarPrompt() {
+    navigator.clipboard.writeText(PROMPT_ANALISE);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2000);
   }
 
   function setDimensao(i: number, campo: keyof DimensaoData, valor: string) {
@@ -351,6 +388,7 @@ export default function RaioXPage() {
               {carregando ? 'Verificando...' : 'Entrar'}
             </button>
           </form>
+
         </div>
       </div>
     );
@@ -380,6 +418,32 @@ export default function RaioXPage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-6 py-10 space-y-6">
+
+        {/* Prompt de Análise */}
+        <div style={{ border: '1px solid #222', borderRadius: '12px', overflow: 'hidden', background: '#111' }}>
+          <button
+            onClick={() => setPromptAberto(p => !p)}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.875rem 1.25rem', background: 'transparent', border: 'none', cursor: 'pointer', color: '#aaa', fontSize: '0.85rem', fontFamily: 'inherit' }}
+          >
+            <span>Prompt de Análise</span>
+            <span style={{ fontSize: '0.75rem', display: 'inline-block', transform: promptAberto ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▾</span>
+          </button>
+          {promptAberto && (
+            <div style={{ borderTop: '1px solid #222', padding: '1rem' }}>
+              <div style={{ position: 'relative' }}>
+                <pre style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: '8px', padding: '1rem', paddingTop: '2.5rem', color: '#aaa', fontSize: '0.78rem', lineHeight: 1.65, whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0, maxHeight: '300px', overflowY: 'auto', fontFamily: 'monospace' }}>
+                  {PROMPT_ANALISE}
+                </pre>
+                <button
+                  onClick={copiarPrompt}
+                  style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', background: copiado ? '#444' : '#FF6B00', border: 'none', borderRadius: '6px', padding: '0.375rem 0.75rem', color: '#fff', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', transition: 'background 0.2s', letterSpacing: '0.05em' }}
+                >
+                  {copiado ? 'Copiado ✓' : 'Copiar'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Informações do cliente */}
         <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">

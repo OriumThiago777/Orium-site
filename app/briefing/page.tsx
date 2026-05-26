@@ -12,6 +12,7 @@ export default function BriefingPage() {
   const [multi, setMulti] = useState<Record<string, string[]>>({})
   const [enviado, setEnviado] = useState(false)
   const [enviando, setEnviando] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   const set = (name: string, value: string) =>
     setForm(prev => ({ ...prev, [name]: value }))
@@ -244,12 +245,32 @@ export default function BriefingPage() {
       {bgImage}
 
       {/* Sidebar */}
-      <div style={{ width: '260px', borderRight: '1px solid #141414', padding: '3rem 2rem', display: 'flex', flexDirection: 'column', flexShrink: 0, height: '100%', background: 'rgba(8,8,8,0.95)', backdropFilter: 'blur(12px)', position: 'relative', zIndex: 10 }}>
-        <div style={{ marginBottom: '3rem' }}>
-          <Image src="/lglaranja.png" alt="ORIUM" width={100} height={32} style={{ objectFit: 'contain' }} />
+      <div style={{ width: sidebarCollapsed ? '60px' : '260px', borderRight: '1px solid #141414', display: 'flex', flexDirection: 'column', flexShrink: 0, height: '100%', background: 'rgba(8,8,8,0.95)', backdropFilter: 'blur(12px)', position: 'relative', zIndex: 10, transition: 'width 0.3s ease', overflow: 'hidden' }}>
+        {/* Toggle */}
+        <div style={{ padding: sidebarCollapsed ? '1.5rem 0 0' : '1.5rem 1.5rem 0', display: 'flex', justifyContent: sidebarCollapsed ? 'center' : 'flex-end', flexShrink: 0 }}>
+          <button
+            onClick={() => setSidebarCollapsed(c => !c)}
+            title={sidebarCollapsed ? 'Expandir sidebar' : 'Recolher sidebar'}
+            style={{ background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '6px', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#555', fontSize: '0.8rem', flexShrink: 0 }}
+            onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#444'; b.style.color = '#aaa' }}
+            onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#1e1e1e'; b.style.color = '#555' }}
+          >
+            {sidebarCollapsed ? '→' : '←'}
+          </button>
         </div>
-        <div style={{ flex: 1 }}>
-          <p style={{ color: '#222', fontSize: '0.65rem', letterSpacing: '0.2em', marginBottom: '1.25rem', textTransform: 'uppercase' }}>Etapas</p>
+        {/* Logo */}
+        {!sidebarCollapsed ? (
+          <div style={{ padding: '1.5rem 2rem', flexShrink: 0 }}>
+            <Image src="/lglaranja.png" alt="ORIUM" width={100} height={32} style={{ objectFit: 'contain' }} />
+          </div>
+        ) : (
+          <div style={{ height: '1.5rem', flexShrink: 0 }} />
+        )}
+        {/* Steps */}
+        <div style={{ flex: 1, padding: sidebarCollapsed ? '0 0.75rem' : '0 2rem', overflowY: 'hidden' }}>
+          {!sidebarCollapsed && (
+            <p style={{ color: '#222', fontSize: '0.65rem', letterSpacing: '0.2em', marginBottom: '1.25rem', textTransform: 'uppercase' }}>Etapas</p>
+          )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             {steps.map((s, i) => (
               <button
@@ -258,6 +279,7 @@ export default function BriefingPage() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                   gap: '0.875rem',
                   padding: '0.75rem 0.5rem',
                   background: 'transparent',
@@ -279,17 +301,22 @@ export default function BriefingPage() {
                   background: i <= step ? '#FF6B00' : 'transparent',
                   border: i <= step ? '2px solid #FF6B00' : '2px solid #2a2a2a',
                 }} />
-                <p style={{ fontSize: '0.78rem', color: i === step ? '#fff' : i < step ? '#444' : '#2a2a2a', transition: 'color 0.3s', lineHeight: 1.3, margin: 0 }}>{s.bloco}</p>
+                {!sidebarCollapsed && (
+                  <p style={{ fontSize: '0.78rem', color: i === step ? '#fff' : i < step ? '#444' : '#2a2a2a', transition: 'color 0.3s', lineHeight: 1.3, margin: 0 }}>{s.bloco}</p>
+                )}
               </button>
             ))}
           </div>
         </div>
-        <div>
-          <div style={{ height: '2px', background: '#141414', borderRadius: '2px', marginBottom: '0.625rem', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${progress}%`, background: '#FF6B00', borderRadius: '2px', transition: 'width 0.5s ease' }} />
+        {/* Progress */}
+        {!sidebarCollapsed && (
+          <div style={{ padding: '0 2rem 2rem', flexShrink: 0 }}>
+            <div style={{ height: '2px', background: '#141414', borderRadius: '2px', marginBottom: '0.625rem', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${progress}%`, background: '#FF6B00', borderRadius: '2px', transition: 'width 0.5s ease' }} />
+            </div>
+            <p style={{ color: '#2a2a2a', fontSize: '0.72rem' }}>{Math.round(progress)}% concluído</p>
           </div>
-          <p style={{ color: '#2a2a2a', fontSize: '0.72rem' }}>{Math.round(progress)}% concluído</p>
-        </div>
+        )}
       </div>
 
       {/* Conteúdo */}
