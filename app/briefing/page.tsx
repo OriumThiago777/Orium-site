@@ -210,13 +210,11 @@ export default function BriefingPage() {
           <div style={{ marginBottom: '5rem' }}>
             <Image src="/lglaranja.png" alt="ORIUM" width={120} height={40} style={{ objectFit: 'contain' }} />
           </div>
-
           <p style={{ color: '#FF6B00', fontSize: '0.72rem', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: '1rem' }}>Ponto de partida</p>
           <h1 style={{ fontFamily: 'Anton, sans-serif', fontSize: 'clamp(3.5rem, 8vw, 6rem)', color: '#fff', letterSpacing: '0.02em', lineHeight: 0.95, marginBottom: '1.75rem' }}>BRIEFING</h1>
           <p style={{ color: '#aaa', fontSize: '1.05rem', lineHeight: 1.75, maxWidth: '500px', marginBottom: '4rem' }}>
             Ponto de partida do nosso trabalho. Responda com honestidade — quanto mais preciso, melhor o resultado.
           </p>
-
           <p style={{ color: '#444', fontSize: '0.78rem', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '1.25rem' }}>Como você chega</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', maxWidth: '560px' }}>
             {[
@@ -247,11 +245,9 @@ export default function BriefingPage() {
 
       {/* Sidebar */}
       <div style={{ width: '260px', borderRight: '1px solid #141414', padding: '3rem 2rem', display: 'flex', flexDirection: 'column', flexShrink: 0, height: '100%', background: 'rgba(8,8,8,0.95)', backdropFilter: 'blur(12px)', position: 'relative', zIndex: 10 }}>
-
         <div style={{ marginBottom: '3rem' }}>
           <Image src="/lglaranja.png" alt="ORIUM" width={100} height={32} style={{ objectFit: 'contain' }} />
         </div>
-
         <div style={{ flex: 1 }}>
           <p style={{ color: '#222', fontSize: '0.65rem', letterSpacing: '0.2em', marginBottom: '1.25rem', textTransform: 'uppercase' }}>Etapas</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
@@ -259,7 +255,22 @@ export default function BriefingPage() {
               <button
                 key={i}
                 onClick={() => setStep(i)}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', padding: '0.75rem 0.5rem', borderBottom: '1px solid #0f0f0f', background: 'transparent', border: 'none', borderBottom: '1px solid #0f0f0f', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'background 0.2s', borderRadius: '6px' }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.875rem',
+                  padding: '0.75rem 0.5rem',
+                  background: 'transparent',
+                  borderTop: 'none',
+                  borderLeft: 'none',
+                  borderRight: 'none',
+                  borderBottom: '1px solid #0f0f0f',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  width: '100%',
+                  transition: 'background 0.2s',
+                  borderRadius: '6px',
+                }}
                 onMouseEnter={e => { if (i !== step) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.03)' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
               >
@@ -273,7 +284,6 @@ export default function BriefingPage() {
             ))}
           </div>
         </div>
-
         <div>
           <div style={{ height: '2px', background: '#141414', borderRadius: '2px', marginBottom: '0.625rem', overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${progress}%`, background: '#FF6B00', borderRadius: '2px', transition: 'width 0.5s ease' }} />
@@ -284,8 +294,6 @@ export default function BriefingPage() {
 
       {/* Conteúdo */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
-
-        {/* Header da etapa */}
         <div style={{ padding: '3rem 5rem 2.5rem', borderBottom: '1px solid #141414', flexShrink: 0 }}>
           <p style={{ color: '#FF6B00', fontSize: '0.68rem', letterSpacing: '0.3em', marginBottom: '0.75rem', textTransform: 'uppercase' }}>Etapa {step + 1} de {totalSteps}</p>
           <h2 style={{ fontFamily: 'Anton, sans-serif', fontSize: 'clamp(1.8rem, 3vw, 2.8rem)', color: '#fff', letterSpacing: '0.04em', lineHeight: 1, marginBottom: '0.5rem' }}>
@@ -294,7 +302,6 @@ export default function BriefingPage() {
           <p style={{ color: '#555', fontSize: '0.95rem' }}>{currentStep.subtitulo}</p>
         </div>
 
-        {/* Campos */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '3rem 5rem' }}>
           <div style={{ maxWidth: '680px', display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
             {currentStep.campos.map(campo => (
@@ -302,7 +309,6 @@ export default function BriefingPage() {
                 <label style={{ display: 'block', color: '#e0e0e0', fontSize: '1rem', lineHeight: 1.5, marginBottom: '1rem', fontWeight: 500 }}>
                   {campo.label}
                 </label>
-
                 {campo.tipo === 'textarea' && (
                   <textarea
                     rows={3}
@@ -314,7 +320,6 @@ export default function BriefingPage() {
                     onBlur={e => e.target.style.borderColor = '#1e1e1e'}
                   />
                 )}
-
                 {campo.tipo === 'input' && (
                   <input
                     type="text"
@@ -326,7 +331,6 @@ export default function BriefingPage() {
                     onBlur={e => e.target.style.borderColor = '#1e1e1e'}
                   />
                 )}
-
                 {campo.tipo === 'radio' && campo.opcoes && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.625rem' }}>
                     {campo.opcoes.map(op => (
@@ -337,7 +341,6 @@ export default function BriefingPage() {
                     ))}
                   </div>
                 )}
-
                 {campo.tipo === 'multi' && campo.opcoes && (
                   <>
                     <p style={{ color: '#3a3a3a', fontSize: '0.78rem', marginBottom: '0.75rem' }}>Selecione quantos quiser</p>
@@ -356,7 +359,6 @@ export default function BriefingPage() {
           </div>
         </div>
 
-        {/* Navegação */}
         <div style={{ padding: '1.75rem 5rem', borderTop: '1px solid #141414', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, background: 'rgba(8,8,8,0.9)', backdropFilter: 'blur(8px)' }}>
           {step > 0 ? (
             <button onClick={handleBack}
@@ -365,7 +367,6 @@ export default function BriefingPage() {
               onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#1e1e1e'; b.style.color = '#666' }}
             >← Voltar</button>
           ) : <div />}
-
           <button
             onClick={step === totalSteps - 1 ? handleSubmit : handleNext}
             disabled={enviando}
