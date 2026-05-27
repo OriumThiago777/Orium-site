@@ -1,0 +1,827 @@
+'use client';
+
+import { useState } from 'react';
+
+// ── Serviços pré-definidos ────────────────────────────────────────────────────
+
+interface Servico {
+  id: string;
+  nome: string;
+  descricao: string;
+}
+
+const SERVICOS_POR_CATEGORIA: Array<{ nome: string; servicos: Servico[] }> = [
+  {
+    nome: 'ESTRUTURAÇÃO INICIAL',
+    servicos: [
+      { id: 'briefing-estrategico', nome: 'Briefing Estratégico™', descricao: 'Diagnóstico inicial para entender posicionamento, público, objetivos e direção da marca' },
+      { id: 'direcao-percepcao', nome: 'Direção de Percepção™', descricao: 'Definição de como a marca deve ser percebida visualmente e estrategicamente' },
+      { id: 'presenca-base', nome: 'Presença Base™', descricao: 'Bio profissional, destaques e alinhamento inicial da comunicação' },
+      { id: 'vitrine-estrategica', nome: 'Vitrine Estratégica™', descricao: 'Estruturação dos 3 posts fixados para apresentação da marca' },
+      { id: 'estruturacao-instagram', nome: 'Estruturação do Instagram™', descricao: 'Organização inicial do perfil, comunicação e presença digital' },
+      { id: 'google-meu-negocio', nome: 'Google Meu Negócio™', descricao: 'Configuração e otimização da presença no Google' },
+      { id: 'facebook', nome: 'Facebook™', descricao: 'Estruturação e organização da página no Facebook' },
+      { id: 'whatsapp-business', nome: 'WhatsApp Business™', descricao: 'Configuração profissional do WhatsApp Business' },
+    ],
+  },
+  {
+    nome: 'CONTEÚDO E COMUNICAÇÃO',
+    servicos: [
+      { id: 'planejamento-conteudo', nome: 'Planejamento de Conteúdo™', descricao: 'Organização mensal das publicações e direção estratégica dos conteúdos' },
+      { id: 'conteudo-estrategico', nome: 'Conteúdo Estratégico™', descricao: 'Criação de posts institucionais, educativos e de divulgação' },
+      { id: 'presenca-continua', nome: 'Presença Contínua™', descricao: 'Fortalecimento da consistência visual e da comunicação da marca' },
+      { id: 'stories-estrategicos', nome: 'Stories Estratégicos™', descricao: 'Criação e planejamento de stories com intenção comercial' },
+      { id: 'reels-videos', nome: 'Reels e Vídeos™', descricao: 'Produção de conteúdo em vídeo para engajamento e alcance' },
+    ],
+  },
+  {
+    nome: 'EXPANSÃO DIGITAL',
+    servicos: [
+      { id: 'site-institucional', nome: 'Site Institucional™', descricao: 'Estruturação de um site profissional para apresentação da marca' },
+      { id: 'landing-page', nome: 'Landing Page™', descricao: 'Página de venda ou captura focada em conversão' },
+      { id: 'automacao-atendimento', nome: 'Automação de Atendimento™', descricao: 'Fluxos entre Instagram, WhatsApp e formulários' },
+      { id: 'estrutura-cursos', nome: 'Estrutura de Cursos™', descricao: 'Páginas para divulgação e venda das formações' },
+      { id: 'campanhas-divulgacao', nome: 'Campanhas de Divulgação™', descricao: 'Estratégias para fortalecimento da presença e alcance' },
+      { id: 'relatorio-mensal', nome: 'Relatório Mensal™', descricao: 'Análise de resultados e direcionamento estratégico mensal' },
+    ],
+  },
+];
+
+const TODOS_SERVICOS = SERVICOS_POR_CATEGORIA.flatMap(c => c.servicos);
+
+// ── Tipos ─────────────────────────────────────────────────────────────────────
+
+interface Fase {
+  nome: string;
+  subtitulo: string;
+  descricao: string;
+  servicosSelecionados: string[];
+  objetivo: string;
+  valor: string;
+  aberta: boolean;
+}
+
+interface ProximoPasso {
+  titulo: string;
+  descricao: string;
+}
+
+interface FormState {
+  nomeCliente: string;
+  segmento: string;
+  dataProposta: string;
+  validadeProposta: string;
+  fases: Fase[];
+  proximosPassos: ProximoPasso[];
+}
+
+const PASSOS_DEFAULT: ProximoPasso[] = [
+  { titulo: 'Aprovação da proposta', descricao: 'Confirmação do aceite e alinhamento das condições comerciais.' },
+  { titulo: 'Briefing Estratégico™', descricao: 'Sessão de levantamento profundo sobre o negócio, público e posicionamento.' },
+  { titulo: 'Reunião de alinhamento', descricao: 'Apresentação do planejamento detalhado e validação das entregas.' },
+  { titulo: 'Início da Estruturação Digital™', descricao: 'Execução das ações conforme o cronograma acordado.' },
+];
+
+function novaFase(): Fase {
+  return {
+    nome: '',
+    subtitulo: '',
+    descricao: '',
+    servicosSelecionados: [],
+    objetivo: '',
+    valor: '',
+    aberta: true,
+  };
+}
+
+// ── Componente ────────────────────────────────────────────────────────────────
+
+export default function PropostaPage() {
+  const [autenticado, setAutenticado] = useState(false);
+  const [senha, setSenha] = useState('');
+  const [erroSenha, setErroSenha] = useState(false);
+  const [carregando, setCarregando] = useState(false);
+  const [gerando, setGerando] = useState(false);
+
+  // Categorias colapsadas globalmente (independente de qual fase está sendo editada)
+  const [categoriasColapsadas, setCategoriasColapsadas] = useState<Set<string>>(new Set());
+
+  const [form, setForm] = useState<FormState>({
+    nomeCliente: '',
+    segmento: '',
+    dataProposta: new Date().toISOString().split('T')[0],
+    validadeProposta: '',
+    fases: [novaFase()],
+    proximosPassos: PASSOS_DEFAULT.map(p => ({ ...p })),
+  });
+
+  // ── Auth ────────────────────────────────────────────────────────────────────
+  async function handleSenha(e: React.FormEvent) {
+    e.preventDefault();
+    setCarregando(true);
+    setErroSenha(false);
+    try {
+      const res = await fetch('/api/raio-x/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ senha }),
+      });
+      if (res.ok) setAutenticado(true);
+      else setErroSenha(true);
+    } catch {
+      setErroSenha(true);
+    } finally {
+      setCarregando(false);
+    }
+  }
+
+  // ── Fases ───────────────────────────────────────────────────────────────────
+  function adicionarFase() {
+    if (form.fases.length >= 3) return;
+    setForm(p => ({ ...p, fases: [...p.fases, novaFase()] }));
+  }
+
+  function removerFase(i: number) {
+    if (form.fases.length <= 1) return;
+    setForm(p => ({ ...p, fases: p.fases.filter((_, idx) => idx !== i) }));
+  }
+
+  function toggleFase(i: number) {
+    setForm(p => ({
+      ...p,
+      fases: p.fases.map((f, idx) => idx === i ? { ...f, aberta: !f.aberta } : f),
+    }));
+  }
+
+  function setFase(i: number, campo: 'nome' | 'subtitulo' | 'descricao' | 'objetivo' | 'valor', valor: string) {
+    setForm(p => ({
+      ...p,
+      fases: p.fases.map((f, idx) => idx === i ? { ...f, [campo]: valor } : f),
+    }));
+  }
+
+  // ── Serviços ────────────────────────────────────────────────────────────────
+  function toggleServico(fi: number, servicoId: string) {
+    setForm(p => ({
+      ...p,
+      fases: p.fases.map((f, idx) => {
+        if (idx !== fi) return f;
+        const sel = f.servicosSelecionados;
+        return {
+          ...f,
+          servicosSelecionados: sel.includes(servicoId)
+            ? sel.filter(id => id !== servicoId)
+            : [...sel, servicoId],
+        };
+      }),
+    }));
+  }
+
+  function toggleCategoria(nome: string) {
+    setCategoriasColapsadas(prev => {
+      const next = new Set(prev);
+      if (next.has(nome)) next.delete(nome);
+      else next.add(nome);
+      return next;
+    });
+  }
+
+  // ── Próximos passos ─────────────────────────────────────────────────────────
+  function setPasso(i: number, campo: keyof ProximoPasso, valor: string) {
+    setForm(p => ({
+      ...p,
+      proximosPassos: p.proximosPassos.map((ps, idx) => idx === i ? { ...ps, [campo]: valor } : ps),
+    }));
+  }
+
+  // ── Gerar PDF ───────────────────────────────────────────────────────────────
+  async function gerarPDF() {
+    if (!form.nomeCliente.trim()) {
+      alert('Preencha o nome do cliente antes de gerar o PDF.');
+      return;
+    }
+    setGerando(true);
+    try {
+      if (!document.getElementById('proposta-gfonts')) {
+        const link = document.createElement('link');
+        link.id = 'proposta-gfonts';
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;600;700&display=swap';
+        document.head.appendChild(link);
+        await new Promise(r => setTimeout(r, 1500));
+      }
+      await document.fonts.ready;
+
+      const { default: jsPDF } = await import('jspdf');
+      const { default: html2canvas } = await import('html2canvas');
+
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const PX_W = 794;
+      const PX_H = 1123;
+
+      const logoBase64 = await new Promise<string>(resolve => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          const c = document.createElement('canvas');
+          c.width = img.width; c.height = img.height;
+          c.getContext('2d')!.drawImage(img, 0, 0);
+          resolve(c.toDataURL('image/png'));
+        };
+        img.onerror = () => resolve('');
+        img.src = '/lglaranja.png';
+      });
+
+      const logoLg = logoBase64
+        ? `<img src="${logoBase64}" style="height:72px;object-fit:contain;" />`
+        : `<span style="font-family:'Anton',Impact,sans-serif;font-size:40px;color:#FF6B00;letter-spacing:8px;">ORIUM</span>`;
+      const logoSm = logoBase64
+        ? `<img src="${logoBase64}" style="height:40px;object-fit:contain;" />`
+        : `<span style="font-family:'Anton',Impact,sans-serif;font-size:22px;color:#FF6B00;letter-spacing:6px;">ORIUM</span>`;
+      const logoXs = logoBase64
+        ? `<img src="${logoBase64}" style="height:28px;object-fit:contain;" />`
+        : `<span style="font-family:'Anton',Impact,sans-serif;font-size:16px;color:#FF6B00;letter-spacing:4px;">ORIUM</span>`;
+
+      const dataFormatada = new Date(form.dataProposta + 'T12:00:00').toLocaleDateString('pt-BR', {
+        day: '2-digit', month: 'long', year: 'numeric',
+      });
+
+      const P = "font-family:'Poppins',Arial,sans-serif;";
+      const A = "font-family:'Anton',Impact,sans-serif;";
+      const BAR = 'position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#FF6B00,#FF8C00 50%,#FF6B00);';
+      const BBAR = 'position:absolute;bottom:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#FF6B00,#FF8C00 50%,#FF6B00);';
+
+      const metodologiaHtml = [
+        { nome: 'RAIO-X ORIUM™', desc: 'Diagnóstico estratégico da presença digital' },
+        { nome: 'DIREÇÃO DE PERCEPÇÃO™', desc: 'Posicionamento e identidade de marca' },
+        { nome: 'VITRINE ESTRATÉGICA™', desc: 'Estruturação visual e digital da marca' },
+        { nome: 'PRESENÇA BASE™', desc: 'Organização completa dos canais digitais' },
+      ].map(m => `<div style="border-left:2px solid #FF6B00;padding-left:12px;"><div style="${A}font-size:10px;color:#fff;letter-spacing:1px;margin-bottom:3px;line-height:1.2;">${m.nome}</div><div style="color:#555;font-size:11px;line-height:1.5;${P}">${m.desc}</div></div>`).join('');
+
+      const passosHtml = form.proximosPassos.map((p, i) => `
+        <div style="background:#0f0f0f;border:1px solid #1a1a1a;border-radius:10px;padding:18px;">
+          <div style="${A}font-size:28px;color:#FF6B00;line-height:1;margin-bottom:8px;">${String(i + 1).padStart(2, '0')}</div>
+          <div style="${P}color:#fff;font-size:14px;font-weight:700;margin-bottom:5px;">${p.titulo}</div>
+          <div style="${P}color:#666;font-size:13px;line-height:1.6;">${p.descricao}</div>
+        </div>
+      `).join('');
+
+      let isFirst = true;
+      const addPage = async (html: string) => {
+        const el = document.createElement('div');
+        el.style.cssText = [
+          'position:fixed', 'left:-9999px', 'top:0',
+          `width:${PX_W}px`, `height:${PX_H}px`,
+          'background:#080808', 'overflow:hidden',
+          "font-family:'Poppins',Arial,sans-serif",
+          'box-sizing:border-box',
+        ].join(';');
+        el.innerHTML = html;
+        document.body.appendChild(el);
+        try {
+          await new Promise(r => setTimeout(r, 100));
+          const canvas = await html2canvas(el, {
+            backgroundColor: '#080808',
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            logging: false,
+            width: PX_W,
+            height: PX_H,
+          });
+          const imgData = canvas.toDataURL('image/jpeg', 0.93);
+          if (!isFirst) doc.addPage();
+          isFirst = false;
+          doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+        } finally {
+          document.body.removeChild(el);
+        }
+      };
+
+      // === PÁGINA 1: CAPA ===
+      const nomeFontSize = form.nomeCliente.length > 12 ? '64' : form.nomeCliente.length > 8 ? '80' : '96';
+      await addPage(`
+        <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:80px;box-sizing:border-box;">
+          <div style="${BAR}"></div>
+          <div style="${BBAR}"></div>
+          <div style="position:absolute;top:56px;display:flex;flex-direction:column;align-items:center;gap:8px;">
+            ${logoSm}
+            <div style="color:#2a2a2a;font-size:9px;letter-spacing:5px;text-transform:uppercase;margin-top:5px;${P}">ESTRUTURA · PRESENÇA · RESULTADOS</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="color:#FF6B00;font-size:11px;letter-spacing:8px;text-transform:uppercase;margin-bottom:22px;font-weight:600;${P}">PROPOSTA COMERCIAL</div>
+            <div style="${A}font-size:${nomeFontSize}px;color:#fff;letter-spacing:3px;line-height:0.9;margin-bottom:18px;text-transform:uppercase;">${form.nomeCliente.toUpperCase()}</div>
+            <div style="color:#252525;font-size:13px;letter-spacing:2px;margin-bottom:18px;">━━━━━━━━━━━━━━━━━━━━━</div>
+            <div style="${A}font-size:20px;color:#fff;letter-spacing:6px;margin-bottom:10px;">ESTRUTURAÇÃO DIGITAL</div>
+            <div style="color:#FF6B00;font-size:11px;letter-spacing:4px;${P}">PRESENÇA · AUTORIDADE · CRESCIMENTO</div>
+          </div>
+          <div style="position:absolute;bottom:54px;display:flex;flex-direction:column;align-items:center;gap:8px;">
+            ${logoXs}
+            <div style="color:#1a1a1a;font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-top:3px;${P}">ESTRUTURAMOS O QUE GERA RESULTADOS.</div>
+          </div>
+        </div>
+      `);
+
+      // === PÁGINA 2: SOBRE A ORIUM (fixa) ===
+      await addPage(`
+        <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;box-sizing:border-box;position:relative;display:flex;flex-direction:column;">
+          <div style="${BAR}"></div>
+          <div style="padding:44px 70px 20px 70px;">
+            <div style="margin-bottom:12px;">${logoXs}</div>
+            <div style="${A}font-size:44px;color:#fff;line-height:1;margin-bottom:8px;">Sobre a <span style="color:#FF6B00;">ORIUM</span></div>
+            <div style="color:#555;font-size:14px;max-width:540px;line-height:1.7;${P}">Estruturação de presença digital para marcas que desejam ser percebidas com mais clareza, autoridade e profissionalismo.</div>
+          </div>
+          <div style="padding:0 70px;flex:1;display:flex;flex-direction:column;gap:12px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+              <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;">
+                <div style="color:#FF6B00;font-size:10px;letter-spacing:4px;font-weight:700;margin-bottom:6px;${P}">QUEM SOMOS</div>
+                <div style="color:#999;font-size:13px;line-height:1.75;${P}">A ORIUM é uma agência de estruturação digital especializada em construir presença profissional para negócios que querem crescer com estratégia e consistência.</div>
+              </div>
+              <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;">
+                <div style="color:#FF6B00;font-size:10px;letter-spacing:4px;font-weight:700;margin-bottom:6px;${P}">O QUE FAZEMOS</div>
+                <div style="color:#999;font-size:13px;line-height:1.75;${P}">Estruturamos a base digital: identidade visual, posicionamento, site, conteúdo e presença local — tudo conectado e alinhado com os objetivos do negócio.</div>
+              </div>
+              <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;">
+                <div style="color:#FF6B00;font-size:10px;letter-spacing:4px;font-weight:700;margin-bottom:6px;${P}">COMO TRABALHAMOS</div>
+                <div style="color:#999;font-size:13px;line-height:1.75;${P}">Cada projeto começa com diagnóstico estratégico. Entendemos o negócio, o público e os objetivos antes de qualquer entrega. Clareza primeiro, execução depois.</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;">
+                <div style="color:#FF6B00;font-size:10px;letter-spacing:4px;font-weight:700;margin-bottom:6px;${P}">NOSSO COMPROMISSO</div>
+                <div style="color:#999;font-size:13px;line-height:1.75;${P}">Não entregamos apenas peças — entregamos estrutura. Cada decisão criativa tem propósito estratégico. Nosso trabalho gera percepção, confiança e resultado mensurável.</div>
+              </div>
+              <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;">
+                <div style="color:#FF6B00;font-size:10px;letter-spacing:4px;font-weight:700;margin-bottom:6px;${P}">NOSSO DIFERENCIAL</div>
+                <div style="color:#999;font-size:13px;line-height:1.75;${P}">Combinamos estratégia, design e tecnologia em um processo integrado. Cada entrega é pensada para gerar impacto real no posicionamento e na percepção da sua marca.</div>
+              </div>
+            </div>
+            <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:20px;">
+              <div style="${A}font-size:13px;color:#FF6B00;letter-spacing:4px;margin-bottom:14px;">METODOLOGIA ORIUM™</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;">
+                ${metodologiaHtml}
+              </div>
+            </div>
+          </div>
+          <div style="background:#FF6B00;padding:14px 70px;display:flex;justify-content:center;align-items:center;margin-top:14px;">
+            <div style="${A}font-size:11px;color:#000;letter-spacing:3px;">ESTRUTURAMOS O QUE GERA PERCEPÇÃO, PRESENÇA E RESULTADO.</div>
+          </div>
+        </div>
+      `);
+
+      // === PÁGINAS 3+: UMA POR FASE ===
+      for (let i = 0; i < form.fases.length; i++) {
+        const fase = form.fases[i];
+        const num = String(i + 1).padStart(2, '0');
+
+        const servicosSel = fase.servicosSelecionados
+          .map(id => TODOS_SERVICOS.find(s => s.id === id))
+          .filter((s): s is Servico => !!s);
+
+        const entregasHtml = servicosSel.map(s => `
+          <div style="margin-bottom:10px;padding:12px 16px;background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;">
+            <div style="color:#fff;font-size:16px;font-weight:700;margin-bottom:4px;${P}">${s.nome}</div>
+            <div style="color:#666;font-size:14px;line-height:1.6;${P}">${s.descricao}</div>
+          </div>
+        `).join('');
+
+        await addPage(`
+          <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;box-sizing:border-box;position:relative;display:flex;flex-direction:column;">
+            <div style="${BAR}"></div>
+            <div style="${A}font-size:320px;color:#FF6B00;position:absolute;right:-20px;top:-40px;opacity:0.03;line-height:1;z-index:0;">${num}</div>
+            <div style="padding:30px 70px 18px 70px;border-bottom:1px solid #161616;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;">
+              ${logoXs}
+              <div style="color:#2a2a2a;font-size:12px;letter-spacing:4px;text-transform:uppercase;${P}">PROPOSTA COMERCIAL</div>
+            </div>
+            <div style="padding:26px 70px;flex:1;position:relative;z-index:1;overflow:hidden;">
+              <div style="color:#FF6B00;font-size:13px;letter-spacing:6px;font-weight:700;margin-bottom:6px;${P}">FASE ${num}</div>
+              <div style="${A}font-size:54px;color:#fff;line-height:0.95;margin-bottom:10px;text-transform:uppercase;">${fase.nome || 'FASE ' + (i + 1)}</div>
+              <div style="color:#FF6B00;font-size:16px;margin-bottom:18px;font-weight:600;${P}">${fase.subtitulo || ''}</div>
+              <div style="width:44px;height:2px;background:#FF6B00;margin-bottom:18px;"></div>
+              <div style="color:#888;font-size:17px;line-height:2.0;margin-bottom:22px;max-width:600px;${P}">${(fase.descricao || '').replace(/\n/g, '<br/>')}</div>
+              ${entregasHtml ? `
+                <div>
+                  <div style="color:#3a3a3a;font-size:13px;letter-spacing:4px;text-transform:uppercase;margin-bottom:10px;${P}">O QUE SERÁ DESENVOLVIDO</div>
+                  ${entregasHtml}
+                </div>
+              ` : ''}
+            </div>
+            <div style="background:#FF6B00;padding:18px 70px;display:flex;justify-content:space-between;align-items:center;">
+              <div style="${P}color:#000;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">INVESTIMENTO INICIAL</div>
+              <div style="${A}color:#000;font-size:26px;letter-spacing:2px;">${fase.valor || 'A DEFINIR'}</div>
+            </div>
+          </div>
+        `);
+      }
+
+      // === PÁGINA FINAL: PRÓXIMOS PASSOS + ENCERRAMENTO ===
+      await addPage(`
+        <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;padding:48px 70px 0 70px;box-sizing:border-box;position:relative;display:flex;flex-direction:column;">
+          <div style="${BAR}"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;">
+            ${logoXs}
+            <div style="color:#2a2a2a;font-size:12px;letter-spacing:4px;text-transform:uppercase;${P}">PROPOSTA COMERCIAL</div>
+          </div>
+          <div style="margin-bottom:22px;">
+            <div style="color:#FF6B00;font-size:12px;letter-spacing:6px;font-weight:700;margin-bottom:6px;${P}">CONTINUIDADE DE RESULTADOS</div>
+            <div style="${A}font-size:42px;color:#fff;line-height:1;margin-bottom:10px;">PRÓXIMOS PASSOS</div>
+            <div style="color:#555;font-size:14px;max-width:500px;line-height:1.75;${P}">Após a aprovação desta proposta, seguiremos um caminho estruturado para garantir que cada etapa seja executada com clareza e alinhamento estratégico.</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px;">
+            ${passosHtml}
+          </div>
+          <div style="background:linear-gradient(135deg,#0d0d0d,#0a0a00);border:1px solid #2a2000;border-radius:12px;padding:22px;margin-bottom:18px;">
+            <div style="${A}font-size:13px;color:#FF6B00;letter-spacing:4px;margin-bottom:10px;">COMPROMISSO ORIUM</div>
+            <div style="color:#aaa;font-size:14px;line-height:2.0;max-width:560px;${P}">Nosso compromisso vai além das entregas. Trabalhamos para construir estrutura real que gera crescimento sustentável. Cada ação é pensada para fortalecer a percepção da sua marca e ampliar seus resultados ao longo do tempo.</div>
+          </div>
+          <div style="text-align:center;padding:14px 0;">
+            <div style="${A}font-size:18px;color:#fff;letter-spacing:2px;margin-bottom:6px;">Aqui começa uma parceria estratégica</div>
+            <div style="color:#FF6B00;font-size:13px;letter-spacing:2px;${P}">focada em evolução constante.</div>
+          </div>
+          <div style="margin-top:auto;border-top:1px solid #161616;padding:14px 0 28px 0;display:flex;justify-content:space-between;">
+            <div style="color:#1e1e1e;font-size:12px;letter-spacing:2px;${P}">ORIUM AGENCY · PROPOSTA COMERCIAL</div>
+            <div style="color:#1e1e1e;font-size:12px;${P}">${form.nomeCliente} · ${dataFormatada}</div>
+          </div>
+        </div>
+      `);
+
+      // === PÁGINA DE ENCERRAMENTO ===
+      await addPage(`
+        <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:80px;box-sizing:border-box;">
+          <div style="${BAR}"></div>
+          <div style="${BBAR}"></div>
+          <div style="margin-bottom:48px;">${logoLg}</div>
+          <div style="text-align:center;margin-bottom:28px;">
+            <div style="${A}font-size:68px;color:#fff;letter-spacing:4px;line-height:0.9;">CONTINUIDADE</div>
+            <div style="${A}font-size:68px;color:#FF6B00;letter-spacing:4px;line-height:0.9;">GERA RESULTADOS.</div>
+          </div>
+          <div style="width:60px;height:3px;background:#FF6B00;margin-bottom:28px;"></div>
+          <div style="color:#2a2a2a;font-size:12px;letter-spacing:4px;text-transform:uppercase;text-align:center;${P}">VAMOS SEGUIR, EVOLUIR E ALCANÇAR MAIS JUNTOS.</div>
+        </div>
+      `);
+
+      const arquivo = `proposta-${form.nomeCliente.toLowerCase().replace(/\s+/g, '-')}-${form.dataProposta}.pdf`;
+      doc.save(arquivo);
+
+    } catch (err) {
+      console.error('Erro ao gerar PDF:', err);
+      alert('Erro ao gerar o PDF. Verifique o console e tente novamente.');
+    } finally {
+      setGerando(false);
+    }
+  }
+
+  // ── Tela de senha ──────────────────────────────────────────────────────────
+  if (!autenticado) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center px-6">
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-10">
+            <div className="text-orange-500 text-xs font-semibold tracking-[4px] uppercase mb-3">Acesso Restrito</div>
+            <h1 className="text-white font-bold text-3xl mb-1">PROPOSTA ORIUM</h1>
+            <p className="text-zinc-500 text-sm">Ferramenta interna de propostas comerciais</p>
+          </div>
+          <form onSubmit={handleSenha} className="space-y-4">
+            <div>
+              <input
+                type="password"
+                placeholder="Senha de acesso"
+                value={senha}
+                onChange={e => { setSenha(e.target.value); setErroSenha(false); }}
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-xl text-white px-4 py-3 text-center focus:outline-none focus:border-orange-500 transition placeholder:text-zinc-600"
+                autoFocus
+              />
+              {erroSenha && (
+                <p className="text-red-400 text-xs text-center mt-2">Senha incorreta. Tente novamente.</p>
+              )}
+            </div>
+            <button
+              type="submit"
+              disabled={carregando || !senha}
+              className="w-full bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold py-3 rounded-xl transition"
+            >
+              {carregando ? 'Verificando...' : 'Entrar'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Formulário ─────────────────────────────────────────────────────────────
+  const inputClass = "w-full bg-zinc-900 border border-zinc-800 rounded-xl text-white px-4 py-3 focus:outline-none focus:border-orange-500 transition placeholder:text-zinc-600 text-sm";
+  const labelClass = "block text-zinc-400 text-[10px] font-semibold uppercase tracking-widest mb-2";
+
+  return (
+    <div className="min-h-screen bg-[#080808]">
+      {/* Header fixo */}
+      <div className="sticky top-0 z-40 bg-[#080808]/90 backdrop-blur-sm border-b border-zinc-900">
+        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div>
+            <div className="text-orange-500 text-[10px] tracking-[4px] uppercase font-semibold mb-0.5">Ferramenta Interna</div>
+            <h1 className="text-white font-bold text-lg leading-none">PROPOSTA COMERCIAL</h1>
+          </div>
+          <button
+            onClick={gerarPDF}
+            disabled={gerando}
+            className="bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold px-6 py-2.5 rounded-xl transition text-sm"
+          >
+            {gerando ? 'Gerando...' : 'Gerar PDF'}
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-6 py-10 space-y-6">
+
+        {/* 1. DADOS DO CLIENTE */}
+        <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
+          <h2 className="text-white font-bold text-base mb-5">Dados do Cliente</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Nome do Cliente</label>
+              <input
+                type="text"
+                placeholder="Ex: CORTEX Consultoria"
+                value={form.nomeCliente}
+                onChange={e => setForm(p => ({ ...p, nomeCliente: e.target.value }))}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Segmento</label>
+              <input
+                type="text"
+                placeholder="Ex: Consultoria Financeira"
+                value={form.segmento}
+                onChange={e => setForm(p => ({ ...p, segmento: e.target.value }))}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Data da Proposta</label>
+              <input
+                type="date"
+                value={form.dataProposta}
+                onChange={e => setForm(p => ({ ...p, dataProposta: e.target.value }))}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Validade da Proposta</label>
+              <input
+                type="text"
+                placeholder="Ex: 7 dias"
+                value={form.validadeProposta}
+                onChange={e => setForm(p => ({ ...p, validadeProposta: e.target.value }))}
+                className={inputClass}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 2. FASES */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-white font-bold text-base">Fases da Proposta</h2>
+            <button
+              onClick={adicionarFase}
+              disabled={form.fases.length >= 3}
+              className="text-sm bg-zinc-900 border border-zinc-700 hover:border-orange-500 text-zinc-400 hover:text-orange-400 disabled:opacity-30 disabled:cursor-not-allowed px-4 py-2 rounded-xl transition"
+            >
+              {form.fases.length >= 3 ? '+ Adicionar Fase (máximo)' : `+ Adicionar Fase (${form.fases.length}/3)`}
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {form.fases.map((fase, i) => (
+              <div key={i} className="bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden">
+                {/* Cabeçalho da fase */}
+                <div className="flex items-center p-5 border-b border-zinc-800/60">
+                  <button
+                    onClick={() => toggleFase(i)}
+                    className="flex items-center gap-3 text-left flex-1 min-w-0"
+                  >
+                    <span className="text-orange-500 text-xs font-bold tracking-widest shrink-0">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <span className="text-white font-semibold truncate">
+                      {fase.nome || `Fase ${i + 1}`}
+                    </span>
+                    {fase.servicosSelecionados.length > 0 && (
+                      <span className="text-orange-500/60 text-xs shrink-0">
+                        {fase.servicosSelecionados.length} serviço{fase.servicosSelecionados.length !== 1 ? 's' : ''}
+                      </span>
+                    )}
+                    <span className="text-zinc-600 text-xs ml-auto mr-3 shrink-0">
+                      {fase.aberta ? '▾' : '▸'}
+                    </span>
+                  </button>
+                  {form.fases.length > 1 && (
+                    <button
+                      onClick={() => removerFase(i)}
+                      className="text-zinc-600 hover:text-red-400 text-xs transition px-2 py-1 rounded-lg hover:bg-red-950/30 shrink-0"
+                    >
+                      Remover
+                    </button>
+                  )}
+                </div>
+
+                {fase.aberta && (
+                  <div className="p-5 space-y-5">
+                    {/* Info básica da fase */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className={labelClass}>Nome da Fase</label>
+                        <input
+                          type="text"
+                          placeholder="Ex: Estruturação Digital"
+                          value={fase.nome}
+                          onChange={e => setFase(i, 'nome', e.target.value)}
+                          className={inputClass}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Subtítulo (laranja no PDF)</label>
+                        <input
+                          type="text"
+                          placeholder="Ex: Organização da base digital do cliente"
+                          value={fase.subtitulo}
+                          onChange={e => setFase(i, 'subtitulo', e.target.value)}
+                          className={inputClass}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className={labelClass}>Descrição</label>
+                      <textarea
+                        rows={3}
+                        placeholder="Descreva o que esta fase contempla..."
+                        value={fase.descricao}
+                        onChange={e => setFase(i, 'descricao', e.target.value)}
+                        className={`${inputClass} resize-none`}
+                      />
+                    </div>
+
+                    {/* Seleção de serviços */}
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <label className={labelClass}>Serviços incluídos</label>
+                        {fase.servicosSelecionados.length > 0 && (
+                          <span className="text-orange-500 text-xs font-semibold">
+                            {fase.servicosSelecionados.length} selecionado{fase.servicosSelecionados.length !== 1 ? 's' : ''}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="space-y-3">
+                        {SERVICOS_POR_CATEGORIA.map(cat => {
+                          const colapsada = categoriasColapsadas.has(cat.nome);
+                          const selecionadosNaCat = cat.servicos.filter(s =>
+                            fase.servicosSelecionados.includes(s.id)
+                          ).length;
+
+                          return (
+                            <div key={cat.nome} className="border border-zinc-800 rounded-xl overflow-hidden">
+                              {/* Header da categoria */}
+                              <button
+                                onClick={() => toggleCategoria(cat.nome)}
+                                className="w-full flex items-center justify-between px-4 py-3 bg-zinc-900/60 hover:bg-zinc-900 transition text-left"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <span className="text-zinc-300 text-xs font-bold tracking-widest">
+                                    {cat.nome}
+                                  </span>
+                                  {selecionadosNaCat > 0 && (
+                                    <span className="bg-orange-500/20 text-orange-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                      {selecionadosNaCat}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-zinc-600 text-xs transition-transform duration-200"
+                                  style={{ display: 'inline-block', transform: colapsada ? 'rotate(-90deg)' : 'rotate(0deg)' }}>
+                                  ▾
+                                </span>
+                              </button>
+
+                              {/* Cards de serviços */}
+                              {!colapsada && (
+                                <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-2 bg-zinc-950/40">
+                                  {cat.servicos.map(servico => {
+                                    const selecionado = fase.servicosSelecionados.includes(servico.id);
+                                    return (
+                                      <button
+                                        key={servico.id}
+                                        onClick={() => toggleServico(i, servico.id)}
+                                        className={`text-left p-3 rounded-lg border transition-all duration-150 ${
+                                          selecionado
+                                            ? 'border-orange-500 bg-orange-500/10'
+                                            : 'border-zinc-800 bg-[#111] hover:border-zinc-600'
+                                        }`}
+                                      >
+                                        <div className="flex items-start gap-2">
+                                          <div className={`mt-0.5 w-4 h-4 rounded shrink-0 flex items-center justify-center border transition-colors ${
+                                            selecionado
+                                              ? 'bg-orange-500 border-orange-500'
+                                              : 'border-zinc-600 bg-transparent'
+                                          }`}>
+                                            {selecionado && (
+                                              <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                                                <path d="M1 4L3.5 6.5L9 1" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                              </svg>
+                                            )}
+                                          </div>
+                                          <div>
+                                            <div className={`text-xs font-semibold mb-0.5 ${selecionado ? 'text-white' : 'text-zinc-300'}`}>
+                                              {servico.nome}
+                                            </div>
+                                            <div className="text-zinc-500 text-[11px] leading-relaxed">
+                                              {servico.descricao}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Objetivo e valor */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className={labelClass}>Objetivo da Fase</label>
+                        <input
+                          type="text"
+                          placeholder="Ex: Consolidar a identidade digital"
+                          value={fase.objetivo}
+                          onChange={e => setFase(i, 'objetivo', e.target.value)}
+                          className={inputClass}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Valor da Fase</label>
+                        <input
+                          type="text"
+                          placeholder="Ex: R$ 1.199 ou A definir"
+                          value={fase.valor}
+                          onChange={e => setFase(i, 'valor', e.target.value)}
+                          className={inputClass}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 3. PRÓXIMOS PASSOS */}
+        <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
+          <h2 className="text-white font-bold text-base mb-5">Próximos Passos</h2>
+          <div className="space-y-3">
+            {form.proximosPassos.map((passo, i) => (
+              <div key={i} className="flex gap-4 items-center">
+                <span className="text-orange-500 text-xs font-bold tracking-widest w-6 shrink-0">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    placeholder="Título"
+                    value={passo.titulo}
+                    onChange={e => setPasso(i, 'titulo', e.target.value)}
+                    className={inputClass}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Descrição"
+                    value={passo.descricao}
+                    onChange={e => setPasso(i, 'descricao', e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Botão inferior */}
+        <div className="flex justify-end pb-12">
+          <button
+            onClick={gerarPDF}
+            disabled={gerando}
+            className="bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold px-10 py-4 rounded-2xl transition text-base"
+          >
+            {gerando ? 'Gerando PDF...' : 'Gerar PDF'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

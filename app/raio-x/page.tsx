@@ -205,7 +205,7 @@ export default function RaioXPage() {
       const POPPINS = "font-family:'Poppins',Arial,sans-serif;";
       const ANTON   = "font-family:'Anton',Impact,sans-serif;";
       const TOP_BAR = 'position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#FF6B00,#FF8C00 50%,#FF6B00);';
-      const LABEL   = 'color:#555;font-size:10px;letter-spacing:4px;text-transform:uppercase;';
+      const LABEL   = 'color:#555;font-size:13px;letter-spacing:4px;text-transform:uppercase;';
 
       // ── Capa ───────────────────────────────────────────────────────────────────
       await addPage(`
@@ -263,7 +263,7 @@ export default function RaioXPage() {
 
             <div style="margin-bottom:32px;">
               <div style="${LABEL}margin-bottom:10px;">DIMENSÃO ${i + 1} DE ${DIMENSOES.length}</div>
-              <div style="${ANTON}font-size:46px;color:#fff;line-height:1.1;margin-bottom:22px;">${DIMENSOES[i]}</div>
+              <div style="${ANTON}font-size:52px;color:#fff;line-height:1.1;margin-bottom:22px;">${DIMENSOES[i]}</div>
               ${badgeHtml}
             </div>
 
@@ -271,12 +271,12 @@ export default function RaioXPage() {
 
             <div>
               <div style="${LABEL}margin-bottom:16px;">ANÁLISE E OBSERVAÇÕES</div>
-              <div style="color:#d0d0d0;font-size:17px;line-height:1.9;max-width:620px;">${obs}</div>
+              <div style="color:#d0d0d0;font-size:20px;line-height:2.0;max-width:620px;">${obs}</div>
             </div>
 
             <div style="position:absolute;bottom:36px;left:70px;right:70px;border-top:1px solid #1a1a1a;padding-top:16px;display:flex;justify-content:space-between;">
-              <div style="color:#2a2a2a;font-size:10px;letter-spacing:2px;">ORIUM AGENCY · RAIO-X</div>
-              <div style="color:#2a2a2a;font-size:10px;">${form.nomeCliente} · ${form.dataAnalise}</div>
+              <div style="color:#2a2a2a;font-size:13px;letter-spacing:2px;">ORIUM AGENCY · RAIO-X</div>
+              <div style="color:#2a2a2a;font-size:13px;">${form.nomeCliente} · ${form.dataAnalise}</div>
             </div>
           </div>
         `);
@@ -335,12 +335,12 @@ export default function RaioXPage() {
           ${form.proximosPassos ? `
           <div style="margin-bottom:24px;">
             <div style="${LABEL}margin-bottom:10px;">PRÓXIMOS PASSOS</div>
-            <div style="color:#d0d0d0;font-size:15px;line-height:1.8;max-width:640px;${POPPINS}">${passosHtml}</div>
+            <div style="color:#d0d0d0;font-size:17px;line-height:2.0;max-width:640px;${POPPINS}">${passosHtml}</div>
           </div>` : ''}
 
           <div style="margin-top:auto;border-top:1px solid #1a1a1a;padding:16px 0 36px 0;display:flex;justify-content:space-between;">
-            <div style="color:#2a2a2a;font-size:10px;letter-spacing:2px;">ORIUM AGENCY · RAIO-X</div>
-            <div style="color:#2a2a2a;font-size:10px;">${dataFormatada}</div>
+            <div style="color:#2a2a2a;font-size:13px;letter-spacing:2px;">ORIUM AGENCY · RAIO-X</div>
+            <div style="color:#2a2a2a;font-size:13px;">${dataFormatada}</div>
           </div>
         </div>
       `);
