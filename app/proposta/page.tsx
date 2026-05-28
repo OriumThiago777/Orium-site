@@ -58,6 +58,7 @@ interface Fase {
   servicosSelecionados: string[];
   objetivo: string;
   valor: string;
+  prazo: string;
   aberta: boolean;
 }
 
@@ -73,6 +74,13 @@ interface FormState {
   validadeProposta: string;
   fases: Fase[];
   proximosPassos: ProximoPasso[];
+  contato: {
+    responsavel: string;
+    whatsapp: string;
+    email: string;
+    instagram: string;
+  };
+  condicoesPagamento: string;
 }
 
 const PASSOS_DEFAULT: ProximoPasso[] = [
@@ -90,6 +98,7 @@ function novaFase(): Fase {
     servicosSelecionados: [],
     objetivo: '',
     valor: '',
+    prazo: '',
     aberta: true,
   };
 }
@@ -103,7 +112,6 @@ export default function PropostaPage() {
   const [carregando, setCarregando] = useState(false);
   const [gerando, setGerando] = useState(false);
 
-  // Categorias colapsadas globalmente (independente de qual fase está sendo editada)
   const [categoriasColapsadas, setCategoriasColapsadas] = useState<Set<string>>(new Set());
 
   const [form, setForm] = useState<FormState>({
@@ -113,6 +121,13 @@ export default function PropostaPage() {
     validadeProposta: '',
     fases: [novaFase()],
     proximosPassos: PASSOS_DEFAULT.map(p => ({ ...p })),
+    contato: {
+      responsavel: 'Thiago Duarte',
+      whatsapp: '(31) 99935-2065',
+      email: 'contato@oriumagencia.com.br',
+      instagram: '@orium.agc',
+    },
+    condicoesPagamento: '50% na aprovação · 50% na entrega final · PIX, boleto ou cartão',
   });
 
   // ── Auth ────────────────────────────────────────────────────────────────────
@@ -153,7 +168,7 @@ export default function PropostaPage() {
     }));
   }
 
-  function setFase(i: number, campo: 'nome' | 'subtitulo' | 'descricao' | 'objetivo' | 'valor', valor: string) {
+  function setFase(i: number, campo: 'nome' | 'subtitulo' | 'descricao' | 'objetivo' | 'valor' | 'prazo', valor: string) {
     setForm(p => ({
       ...p,
       fases: p.fases.map((f, idx) => idx === i ? { ...f, [campo]: valor } : f),
@@ -192,6 +207,19 @@ export default function PropostaPage() {
       ...p,
       proximosPassos: p.proximosPassos.map((ps, idx) => idx === i ? { ...ps, [campo]: valor } : ps),
     }));
+  }
+
+  // ── Formatação de valor ──────────────────────────────────────────────────────
+  function formatarValorPDF(valor: string): string {
+    const v = valor.trim();
+    if (!v) return 'A DEFINIR';
+    if (/^\d[\d.,\s]*$/.test(v)) {
+      const num = parseFloat(v.replace(/\./g, '').replace(',', '.').replace(/\s/g, ''));
+      if (!isNaN(num)) {
+        return 'R$ ' + num.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+      }
+    }
+    return v;
   }
 
   // ── Gerar PDF ───────────────────────────────────────────────────────────────
@@ -261,8 +289,8 @@ export default function PropostaPage() {
       const passosHtml = form.proximosPassos.map((p, i) => `
         <div style="background:#0f0f0f;border:1px solid #1a1a1a;border-radius:10px;padding:18px;">
           <div style="${A}font-size:28px;color:#FF6B00;line-height:1;margin-bottom:8px;">${String(i + 1).padStart(2, '0')}</div>
-          <div style="${P}color:#fff;font-size:14px;font-weight:700;margin-bottom:5px;">${p.titulo}</div>
-          <div style="${P}color:#666;font-size:13px;line-height:1.6;">${p.descricao}</div>
+          <div style="${P}color:#fff;font-size:14px;font-weight:700;margin-bottom:5px;">${p.titulo.trim()}</div>
+          <div style="${P}color:#666;font-size:13px;line-height:1.6;">${p.descricao.trim()}</div>
         </div>
       `).join('');
 
@@ -310,7 +338,7 @@ export default function PropostaPage() {
           </div>
           <div style="text-align:center;">
             <div style="color:#FF6B00;font-size:11px;letter-spacing:8px;text-transform:uppercase;margin-bottom:22px;font-weight:600;${P}">PROPOSTA COMERCIAL</div>
-            <div style="${A}font-size:${nomeFontSize}px;color:#fff;letter-spacing:3px;line-height:0.9;margin-bottom:18px;text-transform:uppercase;">${form.nomeCliente.toUpperCase()}</div>
+            <div style="${A}font-size:${nomeFontSize}px;color:#fff;letter-spacing:3px;line-height:0.9;margin-bottom:18px;text-transform:uppercase;">${form.nomeCliente.trim().toUpperCase()}</div>
             <div style="color:#252525;font-size:13px;letter-spacing:2px;margin-bottom:18px;">━━━━━━━━━━━━━━━━━━━━━</div>
             <div style="${A}font-size:20px;color:#fff;letter-spacing:6px;margin-bottom:10px;">ESTRUTURAÇÃO DIGITAL</div>
             <div style="color:#FF6B00;font-size:11px;letter-spacing:4px;${P}">PRESENÇA · AUTORIDADE · CRESCIMENTO</div>
@@ -385,20 +413,25 @@ export default function PropostaPage() {
           </div>
         `).join('');
 
+        const faseNome = fase.nome.trim() || `FASE ${i + 1}`;
+        const faseSubtitulo = fase.subtitulo.trim();
+        const faseDescricao = fase.descricao.trim();
+        const faseValorFormatado = formatarValorPDF(fase.valor);
+        const fasePrazo = fase.prazo.trim();
+
         await addPage(`
           <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;box-sizing:border-box;position:relative;display:flex;flex-direction:column;">
             <div style="${BAR}"></div>
-            <div style="${A}font-size:320px;color:#FF6B00;position:absolute;right:-20px;top:-40px;opacity:0.03;line-height:1;z-index:0;">${num}</div>
             <div style="padding:30px 70px 18px 70px;border-bottom:1px solid #161616;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;">
               ${logoXs}
               <div style="color:#2a2a2a;font-size:12px;letter-spacing:4px;text-transform:uppercase;${P}">PROPOSTA COMERCIAL</div>
             </div>
             <div style="padding:26px 70px;flex:1;position:relative;z-index:1;overflow:hidden;">
               <div style="color:#FF6B00;font-size:13px;letter-spacing:6px;font-weight:700;margin-bottom:6px;${P}">FASE ${num}</div>
-              <div style="${A}font-size:54px;color:#fff;line-height:0.95;margin-bottom:10px;text-transform:uppercase;">${fase.nome || 'FASE ' + (i + 1)}</div>
-              <div style="color:#FF6B00;font-size:16px;margin-bottom:18px;font-weight:600;${P}">${fase.subtitulo || ''}</div>
+              <div style="${A}font-size:54px;color:#fff;line-height:0.95;margin-bottom:10px;text-transform:uppercase;">${faseNome.toUpperCase()}</div>
+              ${faseSubtitulo ? `<div style="color:#FF6B00;font-size:16px;margin-bottom:18px;font-weight:600;${P}">${faseSubtitulo}</div>` : ''}
               <div style="width:44px;height:2px;background:#FF6B00;margin-bottom:18px;"></div>
-              <div style="color:#888;font-size:17px;line-height:2.0;margin-bottom:22px;max-width:600px;${P}">${(fase.descricao || '').replace(/\n/g, '<br/>')}</div>
+              ${faseDescricao ? `<div style="color:#888;font-size:17px;line-height:2.0;margin-bottom:22px;max-width:600px;${P}">${faseDescricao.replace(/\n/g, '<br/>')}</div>` : ''}
               ${entregasHtml ? `
                 <div>
                   <div style="color:#3a3a3a;font-size:13px;letter-spacing:4px;text-transform:uppercase;margin-bottom:10px;${P}">O QUE SERÁ DESENVOLVIDO</div>
@@ -407,14 +440,22 @@ export default function PropostaPage() {
               ` : ''}
             </div>
             <div style="background:#FF6B00;padding:18px 70px;display:flex;justify-content:space-between;align-items:center;">
-              <div style="${P}color:#000;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">INVESTIMENTO INICIAL</div>
-              <div style="${A}color:#000;font-size:26px;letter-spacing:2px;">${fase.valor || 'A DEFINIR'}</div>
+              <div>
+                <div style="${P}color:rgba(0,0,0,0.55);font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:3px;">INVESTIMENTO INICIAL</div>
+                <div style="${A}color:#000;font-size:26px;letter-spacing:2px;">${faseValorFormatado}</div>
+              </div>
+              ${fasePrazo ? `
+              <div style="text-align:right;">
+                <div style="${P}color:rgba(0,0,0,0.55);font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:3px;">PRAZO</div>
+                <div style="${A}color:#000;font-size:22px;letter-spacing:2px;">${fasePrazo}</div>
+              </div>
+              ` : ''}
             </div>
           </div>
         `);
       }
 
-      // === PÁGINA FINAL: PRÓXIMOS PASSOS + ENCERRAMENTO ===
+      // === PÁGINA FINAL: PRÓXIMOS PASSOS ===
       await addPage(`
         <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;padding:48px 70px 0 70px;box-sizing:border-box;position:relative;display:flex;flex-direction:column;">
           <div style="${BAR}"></div>
@@ -427,9 +468,14 @@ export default function PropostaPage() {
             <div style="${A}font-size:42px;color:#fff;line-height:1;margin-bottom:10px;">PRÓXIMOS PASSOS</div>
             <div style="color:#555;font-size:14px;max-width:500px;line-height:1.75;${P}">Após a aprovação desta proposta, seguiremos um caminho estruturado para garantir que cada etapa seja executada com clareza e alinhamento estratégico.</div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
             ${passosHtml}
           </div>
+          ${form.condicoesPagamento.trim() ? `
+          <div style="border-top:1px solid #161616;padding:10px 0 14px 0;text-align:center;">
+            <div style="${P}color:#2e2e2e;font-size:11px;letter-spacing:2px;">${form.condicoesPagamento.trim()}</div>
+          </div>
+          ` : ''}
           <div style="background:linear-gradient(135deg,#0d0d0d,#0a0a00);border:1px solid #2a2000;border-radius:12px;padding:22px;margin-bottom:18px;">
             <div style="${A}font-size:13px;color:#FF6B00;letter-spacing:4px;margin-bottom:10px;">COMPROMISSO ORIUM</div>
             <div style="color:#aaa;font-size:14px;line-height:2.0;max-width:560px;${P}">Nosso compromisso vai além das entregas. Trabalhamos para construir estrutura real que gera crescimento sustentável. Cada ação é pensada para fortalecer a percepção da sua marca e ampliar seus resultados ao longo do tempo.</div>
@@ -440,12 +486,17 @@ export default function PropostaPage() {
           </div>
           <div style="margin-top:auto;border-top:1px solid #161616;padding:14px 0 28px 0;display:flex;justify-content:space-between;">
             <div style="color:#1e1e1e;font-size:12px;letter-spacing:2px;${P}">ORIUM AGENCY · PROPOSTA COMERCIAL</div>
-            <div style="color:#1e1e1e;font-size:12px;${P}">${form.nomeCliente} · ${dataFormatada}</div>
+            <div style="color:#1e1e1e;font-size:12px;${P}">${form.nomeCliente.trim()} · ${dataFormatada}</div>
           </div>
         </div>
       `);
 
       // === PÁGINA DE ENCERRAMENTO ===
+      const contatoResp = form.contato.responsavel.trim();
+      const contatoWpp = form.contato.whatsapp.trim();
+      const contatoEmail = form.contato.email.trim();
+      const contatoInsta = form.contato.instagram.trim();
+
       await addPage(`
         <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:80px;box-sizing:border-box;">
           <div style="${BAR}"></div>
@@ -455,12 +506,20 @@ export default function PropostaPage() {
             <div style="${A}font-size:68px;color:#fff;letter-spacing:4px;line-height:0.9;">CONTINUIDADE</div>
             <div style="${A}font-size:68px;color:#FF6B00;letter-spacing:4px;line-height:0.9;">GERA RESULTADOS.</div>
           </div>
-          <div style="width:60px;height:3px;background:#FF6B00;margin-bottom:28px;"></div>
+          <div style="width:60px;height:3px;background:#FF6B00;margin-bottom:32px;"></div>
+          ${(contatoResp || contatoWpp || contatoEmail || contatoInsta) ? `
+          <div style="margin-bottom:28px;padding:14px 32px;border:1px solid #1a1a1a;border-radius:10px;display:flex;flex-wrap:wrap;gap:20px;justify-content:center;align-items:center;">
+            ${contatoResp ? `<div style="${P}color:#3a3a3a;font-size:11px;letter-spacing:1px;">${contatoResp}</div>` : ''}
+            ${contatoWpp ? `<div style="${P}color:#252525;font-size:10px;">·</div><div style="${P}color:#3a3a3a;font-size:11px;letter-spacing:1px;">${contatoWpp}</div>` : ''}
+            ${contatoEmail ? `<div style="${P}color:#252525;font-size:10px;">·</div><div style="${P}color:#3a3a3a;font-size:11px;letter-spacing:1px;">${contatoEmail}</div>` : ''}
+            ${contatoInsta ? `<div style="${P}color:#252525;font-size:10px;">·</div><div style="${P}color:#3a3a3a;font-size:11px;letter-spacing:1px;">${contatoInsta}</div>` : ''}
+          </div>
+          ` : ''}
           <div style="color:#2a2a2a;font-size:12px;letter-spacing:4px;text-transform:uppercase;text-align:center;${P}">VAMOS SEGUIR, EVOLUIR E ALCANÇAR MAIS JUNTOS.</div>
         </div>
       `);
 
-      const arquivo = `proposta-${form.nomeCliente.toLowerCase().replace(/\s+/g, '-')}-${form.dataProposta}.pdf`;
+      const arquivo = `proposta-${form.nomeCliente.trim().toLowerCase().replace(/\s+/g, '-')}-${form.dataProposta}.pdf`;
       doc.save(arquivo);
 
     } catch (err) {
@@ -751,8 +810,8 @@ export default function PropostaPage() {
                       </div>
                     </div>
 
-                    {/* Objetivo e valor */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Objetivo, valor e prazo */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className={labelClass}>Objetivo da Fase</label>
                         <input
@@ -767,9 +826,19 @@ export default function PropostaPage() {
                         <label className={labelClass}>Valor da Fase</label>
                         <input
                           type="text"
-                          placeholder="Ex: R$ 1.199 ou A definir"
+                          placeholder="Ex: R$ 1.199 ou 1499"
                           value={fase.valor}
                           onChange={e => setFase(i, 'valor', e.target.value)}
+                          className={inputClass}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Prazo Estimado</label>
+                        <input
+                          type="text"
+                          placeholder="Ex: 2 semanas"
+                          value={fase.prazo}
+                          onChange={e => setFase(i, 'prazo', e.target.value)}
                           className={inputClass}
                         />
                       </div>
@@ -808,6 +877,62 @@ export default function PropostaPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* 4. CONDIÇÕES DE PAGAMENTO */}
+        <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
+          <h2 className="text-white font-bold text-base mb-2">Condições de Pagamento</h2>
+          <p className="text-zinc-500 text-xs mb-4">Exibido discretamente na página de próximos passos do PDF.</p>
+          <input
+            type="text"
+            value={form.condicoesPagamento}
+            onChange={e => setForm(p => ({ ...p, condicoesPagamento: e.target.value }))}
+            className={inputClass}
+          />
+        </div>
+
+        {/* 5. CONTATO */}
+        <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
+          <h2 className="text-white font-bold text-base mb-1">Contato</h2>
+          <p className="text-zinc-500 text-xs mb-5">Exibido na página de encerramento do PDF.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Responsável</label>
+              <input
+                type="text"
+                value={form.contato.responsavel}
+                onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, responsavel: e.target.value } }))}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>WhatsApp</label>
+              <input
+                type="text"
+                value={form.contato.whatsapp}
+                onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, whatsapp: e.target.value } }))}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>E-mail</label>
+              <input
+                type="text"
+                value={form.contato.email}
+                onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, email: e.target.value } }))}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Instagram</label>
+              <input
+                type="text"
+                value={form.contato.instagram}
+                onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, instagram: e.target.value } }))}
+                className={inputClass}
+              />
+            </div>
           </div>
         </div>
 
