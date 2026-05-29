@@ -1,7 +1,5 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import "./globals.css";
-import FloatingWhatsApp from "../components/FloatingWhatsApp";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://oriumagencia.com.br"),
@@ -90,10 +88,7 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body>
         {children}
-        <Suspense fallback={null}>
-  <FloatingWhatsApp />
-</Suspense>
-      </body>
+</body>
     </html>
   );
 }

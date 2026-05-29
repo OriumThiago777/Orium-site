@@ -530,7 +530,7 @@ export default function ContratoPage() {
             <p style={{ fontFamily: FA, color: '#FF6B00', letterSpacing: '0.3em', fontSize: '1rem', margin: 0 }}>ORIUM</p>
             <p style={{ color: '#222', fontSize: '0.62rem', letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0.25rem 0 0' }}>Contratos</p>
             <a
-              href="/ferramentas"
+              href="/hub"
               style={{ display: 'inline-block', marginTop: '1rem', color: '#2a2a2a', fontSize: '0.65rem', letterSpacing: '0.2em', textDecoration: 'none', textTransform: 'uppercase', transition: 'color 0.2s' }}
               onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
               onMouseLeave={e => { e.currentTarget.style.color = '#2a2a2a'; }}
@@ -539,8 +539,8 @@ export default function ContratoPage() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '1.25rem', paddingBottom: '0.5rem', flexShrink: 0 }}>
             <a
-              href="/ferramentas"
-              title="Voltar às ferramentas"
+              href="/hub"
+              title="Voltar ao menu"
               style={{ color: '#2a2a2a', fontSize: '0.9rem', textDecoration: 'none', transition: 'color 0.2s', lineHeight: 1 }}
               onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
               onMouseLeave={e => { e.currentTarget.style.color = '#2a2a2a'; }}
