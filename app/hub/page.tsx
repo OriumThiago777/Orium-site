@@ -28,14 +28,15 @@ const FERRAMENTAS = [
     descricao: 'Formulário de onboarding estratégico integrado ao Notion.',
     href: '/briefing',
   },
+  {
+    tag: 'CONTEÚDO',
+    titulo: 'CALENDÁRIO',
+    descricao: 'Planejamento de conteúdo mensal gerado com IA por cliente.',
+    href: '/calendario',
+  },
 ];
 
 const EM_BREVE = [
-  {
-    tag: 'EM BREVE',
-    titulo: 'CALENDÁRIO',
-    descricao: 'Planejamento de conteúdo mensal por cliente.',
-  },
   {
     tag: 'EM BREVE',
     titulo: 'RELATÓRIO',
