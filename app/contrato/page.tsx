@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import Image from 'next/image';
 
 const FA = 'Anton, sans-serif';
 const FP = 'Poppins, sans-serif';
@@ -510,79 +511,85 @@ export default function ContratoPage() {
     <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', fontFamily: FP, display: 'flex' }}>
 
       {/* Sidebar */}
-      <nav style={{ width: sidebarCollapsed ? '60px' : '260px', borderRight: '1px solid #141414', display: 'flex', flexDirection: 'column', flexShrink: 0, height: '100%', background: 'rgba(8,8,8,0.98)', zIndex: 10, transition: 'width 0.3s ease', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', width: sidebarCollapsed ? '60px' : '260px', flexShrink: 0, height: '100%', zIndex: 10, transition: 'width 0.3s ease' }}>
 
-        {/* Toggle */}
-        <div style={{ padding: sidebarCollapsed ? '1.5rem 0 0' : '1.5rem 1.5rem 0', display: 'flex', justifyContent: sidebarCollapsed ? 'center' : 'flex-end', flexShrink: 0 }}>
-          <button
-            onClick={() => setSidebarCollapsed(c => !c)}
-            style={{ background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '6px', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#555', fontSize: '0.8rem', transition: 'all 0.2s', flexShrink: 0 }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = '#444'; e.currentTarget.style.color = '#aaa'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = '#1e1e1e'; e.currentTarget.style.color = '#555'; }}
-          >
-            {sidebarCollapsed ? '→' : '←'}
-          </button>
-        </div>
+        {/* Toggle — círculo */}
+        <button
+          onClick={() => setSidebarCollapsed(c => !c)}
+          title={sidebarCollapsed ? 'Expandir' : 'Recolher'}
+          style={{ position: 'absolute', right: '-12px', top: '50%', transform: 'translateY(-50%)', zIndex: 20, width: '24px', height: '24px', background: '#0a0a0a', border: '1px solid #1e1e1e', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#333', fontSize: '0.65rem', transition: 'all 0.2s' }}
+          onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#FF6B00'; b.style.color = '#FF6B00'; }}
+          onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#1e1e1e'; b.style.color = '#333'; }}
+        >
+          {sidebarCollapsed ? '›' : '‹'}
+        </button>
 
-        {/* Brand + voltar */}
-        {!sidebarCollapsed ? (
-          <div style={{ padding: '1.25rem 2rem 0.5rem', flexShrink: 0 }}>
-            <p style={{ fontFamily: FA, color: '#FF6B00', letterSpacing: '0.3em', fontSize: '1rem', margin: 0 }}>ORIUM</p>
-            <p style={{ color: '#222', fontSize: '0.62rem', letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0.25rem 0 0' }}>Contratos</p>
-            <a
-              href="/hub"
-              style={{ display: 'inline-block', marginTop: '1rem', color: '#2a2a2a', fontSize: '0.65rem', letterSpacing: '0.2em', textDecoration: 'none', textTransform: 'uppercase', transition: 'color 0.2s' }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#2a2a2a'; }}
-            >← ferramentas</a>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '1.25rem', paddingBottom: '0.5rem', flexShrink: 0 }}>
-            <a
-              href="/hub"
-              title="Voltar ao menu"
-              style={{ color: '#2a2a2a', fontSize: '0.9rem', textDecoration: 'none', transition: 'color 0.2s', lineHeight: 1 }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#2a2a2a'; }}
-            >←</a>
-          </div>
-        )}
+        <div style={{ width: '100%', height: '100%', borderRight: '1px solid #0f0f0f', display: 'flex', flexDirection: 'column', background: 'rgba(8,8,8,0.97)', backdropFilter: 'blur(16px)', overflow: 'hidden' }}>
 
-        {/* Steps */}
-        <div style={{ flex: 1, padding: sidebarCollapsed ? '1rem 0.75rem 0' : '1rem 1.25rem 0', overflowY: 'auto' }}>
-          {!sidebarCollapsed && (
-            <p style={{ color: '#1e1e1e', fontSize: '0.62rem', letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: '1rem' }}>Seções</p>
-          )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
-            {ETAPAS.map((nome, i) => (
-              <button
-                key={i}
-                onClick={() => { setEtapa(i); setErros([]); }}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: sidebarCollapsed ? 'center' : 'flex-start', gap: '0.875rem', padding: '0.625rem 0.5rem', background: i === etapa ? 'rgba(255,107,0,0.07)' : 'transparent', border: 'none', borderBottom: '1px solid #0d0d0d', cursor: 'pointer', textAlign: 'left', width: '100%', borderRadius: '6px', transition: 'background 0.2s' }}
-                onMouseEnter={e => { if (i !== etapa) e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
-                onMouseLeave={e => { if (i !== etapa) e.currentTarget.style.background = 'transparent'; }}
-              >
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0, background: i < etapa ? '#FF6B00' : i === etapa ? '#FF6B00' : 'transparent', border: i <= etapa ? '2px solid #FF6B00' : '2px solid #2a2a2a', opacity: i < etapa ? 0.45 : 1, transition: 'all 0.3s' }} />
-                {!sidebarCollapsed && (
-                  <span style={{ fontSize: '0.78rem', color: i === etapa ? '#fff' : i < etapa ? '#383838' : '#242424', fontWeight: i === etapa ? 500 : 300, lineHeight: 1.3, transition: 'color 0.3s' }}>
-                    {nome}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Progress */}
-        {!sidebarCollapsed && (
-          <div style={{ padding: '1.25rem 2rem 1.75rem', flexShrink: 0 }}>
-            <div style={{ height: '2px', background: '#141414', borderRadius: '2px', marginBottom: '0.5rem', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${progress}%`, background: '#FF6B00', borderRadius: '2px', transition: 'width 0.5s ease' }} />
+          {/* ZONA 1 — Logo */}
+          {!sidebarCollapsed ? (
+            <div style={{ padding: '1.5rem 1.75rem', borderBottom: '1px solid #0f0f0f', flexShrink: 0 }}>
+              <Image src="/lglaranja.png" alt="ORIUM" width={90} height={28} style={{ objectFit: 'contain' }} />
+              <p style={{ color: '#2a2a2a', fontSize: '0.62rem', letterSpacing: '0.2em', textTransform: 'uppercase', fontFamily: FP, marginTop: '0.5rem', marginBottom: 0 }}>GERADOR DE CONTRATOS</p>
             </div>
-            <p style={{ color: '#2a2a2a', fontSize: '0.72rem', margin: 0 }}>{Math.round(progress)}% concluído</p>
+          ) : (
+            <div style={{ flexShrink: 0, height: '60px', borderBottom: '1px solid #0f0f0f' }} />
+          )}
+
+          {/* ZONA 2 — Etapas */}
+          <div style={{ flex: 1, overflowY: 'hidden' }}>
+            {!sidebarCollapsed && (
+              <p style={{ color: '#1a1a1a', fontSize: '0.58rem', letterSpacing: '0.25em', textTransform: 'uppercase', padding: '1.25rem 1.75rem 0.75rem', margin: 0 }}>ETAPAS</p>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {ETAPAS.map((nome, i) => (
+                <button
+                  key={i}
+                  onClick={() => { setEtapa(i); setErros([]); }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: sidebarCollapsed ? 'center' : 'flex-start', gap: '0.75rem', padding: sidebarCollapsed ? '0.875rem 0' : '0.7rem 1.75rem', background: i === etapa ? 'rgba(255,107,0,0.06)' : 'transparent', borderTop: 'none', borderRight: 'none', borderBottom: 'none', borderLeft: sidebarCollapsed ? 'none' : `2px solid ${i === etapa ? '#FF6B00' : 'transparent'}`, outline: 'none', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.2s', boxSizing: 'border-box' as const }}
+                  onMouseEnter={e => { if (i !== etapa) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.02)'; }}
+                  onMouseLeave={e => { if (i !== etapa) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                >
+                  <span style={{ fontFamily: FA, fontSize: '0.65rem', letterSpacing: '0.05em', minWidth: '20px', flexShrink: 0, color: i === etapa ? '#FF6B00' : i < etapa ? '#3a3a3a' : '#1e1e1e', transition: 'color 0.2s' }}>
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  {!sidebarCollapsed && (
+                    <span style={{ fontSize: '0.78rem', color: i === etapa ? '#fff' : i < etapa ? '#3a3a3a' : '#2e2e2e', fontFamily: FP, fontWeight: i === etapa ? 500 : 400, lineHeight: 1.3, transition: 'color 0.2s' }}>
+                      {nome}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
-        )}
-      </nav>
+
+          {/* ZONA 3 — Progresso */}
+          {!sidebarCollapsed && (
+            <div style={{ borderTop: '1px solid #0f0f0f', padding: '1.25rem 1.75rem', flexShrink: 0 }}>
+              <p style={{ color: '#1a1a1a', fontSize: '0.58rem', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '0.625rem' }}>PROGRESSO</p>
+              <div style={{ height: '2px', background: '#111', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${progress}%`, background: '#FF6B00', borderRadius: '2px', transition: 'width 0.5s ease' }} />
+              </div>
+              <p style={{ color: '#2a2a2a', fontSize: '0.7rem', marginTop: '0.5rem' }}>{Math.round(progress)}% concluído</p>
+            </div>
+          )}
+
+          {/* ZONA 4 — Hub */}
+          <div style={{ borderTop: '1px solid #0f0f0f', padding: sidebarCollapsed ? '1rem 0' : '1rem 1.75rem 1.5rem', flexShrink: 0, display: 'flex', justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}>
+            <a
+              href="/hub"
+              title="Voltar ao painel"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#222', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none', transition: 'color 0.2s', fontFamily: FP }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#222'; }}
+            >
+              <span>←</span>
+              {!sidebarCollapsed && <span>PAINEL</span>}
+            </a>
+          </div>
+
+        </div>
+      </div>
 
       {/* Conteúdo */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', zIndex: 1, minWidth: 0 }}>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import NextImage from 'next/image';
 
 const DIMENSOES = [
   'Primeira Impressão',
@@ -29,7 +30,6 @@ interface FormState {
   proximosPassos: string;
 }
 
-// Cores sólidas e legíveis para o PDF
 const BADGE = {
   Crítico: { bg: '#DC2626', text: '#ffffff', border: '#991b1b' },
   Atenção: { bg: '#D97706', text: '#ffffff', border: '#92400e' },
@@ -75,6 +75,13 @@ function formatarInvestimento(val: string): string {
   return val.trim();
 }
 
+const ALL_STEPS = ['Informações', ...DIMENSOES, 'Conclusões'];
+const STEP_SUBTITLES = [
+  'Identifique o cliente e utilize o prompt abaixo com a IA.',
+  ...DIMENSOES.map((_, i) => `Dimensão ${i + 1} de 8 — classifique e documente as observações.`),
+  'Defina o investimento sugerido e os próximos passos.',
+];
+
 export default function RaioXPage() {
   const [autenticado, setAutenticado] = useState(false);
   const [senha, setSenha] = useState('');
@@ -83,6 +90,8 @@ export default function RaioXPage() {
   const [gerando, setGerando] = useState(false);
   const [promptAberto, setPromptAberto] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [step, setStep] = useState(0);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const [form, setForm] = useState<FormState>({
     nomeCliente: '',
@@ -133,7 +142,6 @@ export default function RaioXPage() {
 
     setGerando(true);
     try {
-      // Carrega Google Fonts
       if (!document.getElementById('raio-x-gfonts')) {
         const link = document.createElement('link');
         link.id = 'raio-x-gfonts';
@@ -151,7 +159,6 @@ export default function RaioXPage() {
       const PX_W = 794;
       const PX_H = 1123;
 
-      // Logo em base64 para evitar CORS no html2canvas
       const logoBase64 = await new Promise<string>(resolve => {
         const img = new Image();
         img.crossOrigin = 'anonymous';
@@ -207,35 +214,28 @@ export default function RaioXPage() {
       const TOP_BAR = 'position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#FF6B00,#FF8C00 50%,#FF6B00);';
       const LABEL   = 'color:#555;font-size:13px;letter-spacing:4px;text-transform:uppercase;';
 
-      // ── Capa ───────────────────────────────────────────────────────────────────
       await addPage(`
         <div style="${POPPINS}width:${PX_W}px;height:${PX_H}px;background:#080808;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:80px;box-sizing:border-box;">
           <div style="${TOP_BAR}"></div>
           <div style="position:absolute;bottom:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#FF6B00,#FF8C00 50%,#FF6B00);"></div>
-
           ${logoBase64
             ? `<img src="${logoBase64}" style="height:52px;margin-bottom:80px;object-fit:contain;" />`
             : `<div style="height:132px;"></div>`}
-
           <div style="text-align:center;margin-bottom:48px;">
             <div style="${ANTON}font-size:84px;color:#FF6B00;letter-spacing:6px;line-height:1;margin-bottom:8px;">RAIO-X</div>
             <div style="${ANTON}font-size:34px;color:#fff;letter-spacing:18px;">ORIUM</div>
           </div>
-
           <div style="width:56px;height:3px;background:#FF6B00;margin-bottom:48px;"></div>
-
           <div style="text-align:center;">
             <div style="${LABEL}margin-bottom:14px;">Diagnóstico para</div>
             <div style="${ANTON}font-size:42px;color:#fff;margin-bottom:10px;">${form.nomeCliente}</div>
             <div style="color:#FF6B00;font-size:17px;margin-bottom:30px;font-weight:600;">${form.segmentoCliente}</div>
             <div style="color:#444;font-size:14px;">${dataFormatada}</div>
           </div>
-
           <div style="position:absolute;bottom:28px;color:#2a2a2a;font-size:10px;letter-spacing:3px;text-transform:uppercase;">Uso Interno · Orium Agency</div>
         </div>
       `);
 
-      // ── Dimensões (omite as que não têm classificação E nem observação) ────────
       for (let i = 0; i < DIMENSOES.length; i++) {
         const dim = form.dimensoes[i];
         if (!dim.classificacao && !dim.observacao.trim()) continue;
@@ -260,20 +260,16 @@ export default function RaioXPage() {
           <div style="${POPPINS}width:${PX_W}px;height:${PX_H}px;background:#080808;padding:70px 70px 100px 70px;box-sizing:border-box;position:relative;">
             <div style="${TOP_BAR}"></div>
             <div style="${ANTON}font-size:200px;color:#FF6B00;position:absolute;right:40px;top:10px;opacity:0.05;line-height:1;">${String(i + 1).padStart(2, '0')}</div>
-
             <div style="margin-bottom:32px;">
               <div style="${LABEL}margin-bottom:10px;">DIMENSÃO ${i + 1} DE ${DIMENSOES.length}</div>
               <div style="${ANTON}font-size:52px;color:#fff;line-height:1.1;margin-bottom:22px;">${DIMENSOES[i]}</div>
               ${badgeHtml}
             </div>
-
             <div style="width:48px;height:2px;background:#FF6B00;margin-bottom:38px;"></div>
-
             <div>
               <div style="${LABEL}margin-bottom:16px;">ANÁLISE E OBSERVAÇÕES</div>
               <div style="color:#d0d0d0;font-size:20px;line-height:2.0;max-width:620px;">${obs}</div>
             </div>
-
             <div style="position:absolute;bottom:36px;left:70px;right:70px;border-top:1px solid #1a1a1a;padding-top:16px;display:flex;justify-content:space-between;">
               <div style="color:#2a2a2a;font-size:13px;letter-spacing:2px;">ORIUM AGENCY · RAIO-X</div>
               <div style="color:#2a2a2a;font-size:13px;">${form.nomeCliente} · ${form.dataAnalise}</div>
@@ -282,7 +278,6 @@ export default function RaioXPage() {
         `);
       }
 
-      // ── Resumo final ───────────────────────────────────────────────────────────
       const criticos = DIMENSOES.map((n, i) => ({ n, i })).filter(({ i }) => form.dimensoes[i].classificacao === 'Crítico');
       const atencao  = DIMENSOES.map((n, i) => ({ n, i })).filter(({ i }) => form.dimensoes[i].classificacao === 'Atenção');
       const top3 = [...criticos, ...atencao].slice(0, 3);
@@ -310,34 +305,27 @@ export default function RaioXPage() {
       const investimentoFormatado = formatarInvestimento(form.investimento);
       const passosHtml = form.proximosPassos.replace(/\n/g, '<br/>');
 
-      // Layout em flex-column para evitar sobreposição
       await addPage(`
         <div style="${POPPINS}width:${PX_W}px;height:${PX_H}px;background:#080808;padding:60px 70px 0 70px;box-sizing:border-box;position:relative;display:flex;flex-direction:column;">
           <div style="${TOP_BAR}"></div>
-
           <div style="margin-bottom:36px;margin-top:10px;">
             <div style="color:#FF6B00;font-size:10px;letter-spacing:4px;text-transform:uppercase;margin-bottom:10px;">RESUMO EXECUTIVO</div>
             <div style="${ANTON}font-size:50px;color:#fff;line-height:1;">DIAGNÓSTICO FINAL</div>
           </div>
-
           <div style="margin-bottom:28px;">
             <div style="${LABEL}margin-bottom:14px;">TOP 3 PRIORIDADES</div>
             ${top3Html}
           </div>
-
           <div style="width:100%;height:1px;background:#1a1a1a;margin-bottom:28px;"></div>
-
           <div style="margin-bottom:24px;">
             <div style="${LABEL}margin-bottom:10px;">INVESTIMENTO SUGERIDO</div>
             <div style="${ANTON}font-size:38px;color:#FF6B00;line-height:1;">${investimentoFormatado}</div>
           </div>
-
           ${form.proximosPassos ? `
           <div style="margin-bottom:24px;">
             <div style="${LABEL}margin-bottom:10px;">PRÓXIMOS PASSOS</div>
             <div style="color:#d0d0d0;font-size:17px;line-height:2.0;max-width:640px;${POPPINS}">${passosHtml}</div>
           </div>` : ''}
-
           <div style="margin-top:auto;border-top:1px solid #1a1a1a;padding:16px 0 36px 0;display:flex;justify-content:space-between;">
             <div style="color:#2a2a2a;font-size:13px;letter-spacing:2px;">ORIUM AGENCY · RAIO-X</div>
             <div style="color:#2a2a2a;font-size:13px;">${dataFormatada}</div>
@@ -359,223 +347,290 @@ export default function RaioXPage() {
   // ── Tela de senha ──────────────────────────────────────────────────────────────
   if (!autenticado) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center px-6">
-        <div className="w-full max-w-sm">
-          <div className="text-center mb-10">
-            <div className="text-orange-500 text-xs font-semibold tracking-[4px] uppercase mb-3">Acesso Restrito</div>
-            <h1 className="text-white font-bold text-3xl mb-1">RAIO-X ORIUM</h1>
-            <p className="text-zinc-500 text-sm">Ferramenta interna de diagnóstico</p>
+      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '440px', padding: '0 2rem' }}>
+          <div style={{ marginBottom: '3rem' }}>
+            <NextImage src="/lglaranja.png" alt="ORIUM" width={120} height={40} style={{ objectFit: 'contain' }} />
           </div>
-          <form onSubmit={handleSenha} className="space-y-4">
-            <div>
-              <input
-                type="password"
-                placeholder="Senha de acesso"
-                value={senha}
-                onChange={e => { setSenha(e.target.value); setErroSenha(false); }}
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-xl text-white px-4 py-3 text-center focus:outline-none focus:border-orange-500 transition placeholder:text-zinc-600"
-                autoFocus
-              />
-              {erroSenha && (
-                <p className="text-red-400 text-xs text-center mt-2">Senha incorreta. Tente novamente.</p>
-              )}
-            </div>
+          <p style={{ color: '#FF6B00', fontSize: '0.72rem', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: '1rem' }}>ACESSO INTERNO</p>
+          <h1 style={{ fontFamily: 'Anton, sans-serif', fontSize: 'clamp(3rem, 6vw, 4.5rem)', color: '#fff', letterSpacing: '0.02em', lineHeight: 0.95, marginBottom: '1.75rem' }}>RAIO-X</h1>
+          <p style={{ color: '#555', fontSize: '1rem', lineHeight: 1.75, marginBottom: '3rem' }}>Ferramenta interna de diagnóstico estratégico.</p>
+          <form onSubmit={handleSenha} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <input
+              type="password"
+              placeholder="Senha de acesso"
+              value={senha}
+              onChange={e => { setSenha(e.target.value); setErroSenha(false); }}
+              autoFocus
+              style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${erroSenha ? '#ef4444' : '#1e1e1e'}`, borderRadius: '10px', padding: '1rem 1.25rem', color: '#fff', fontSize: '0.95rem', fontFamily: 'Poppins, sans-serif', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s' }}
+              onFocus={e => { if (!erroSenha) e.target.style.borderColor = '#FF6B00'; }}
+              onBlur={e => { if (!erroSenha) e.target.style.borderColor = '#1e1e1e'; }}
+            />
+            {erroSenha && <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center' }}>Senha incorreta. Tente novamente.</p>}
             <button
               type="submit"
               disabled={carregando || !senha}
-              className="w-full bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold py-3 rounded-xl transition"
+              style={{ width: '100%', background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '1rem', color: '#000', fontFamily: 'Anton, sans-serif', fontSize: '1rem', letterSpacing: '0.15em', cursor: carregando || !senha ? 'not-allowed' : 'pointer', boxShadow: '0 4px 20px rgba(255,107,0,0.2)', opacity: carregando || !senha ? 0.5 : 1, transition: 'all 0.2s' }}
             >
-              {carregando ? 'Verificando...' : 'Entrar'}
+              {carregando ? '...' : 'ACESSAR'}
             </button>
           </form>
-
         </div>
       </div>
     );
   }
 
-  // ── Formulário ─────────────────────────────────────────────────────────────────
-  const inputClass = "w-full bg-zinc-900 border border-zinc-800 rounded-xl text-white px-4 py-3 focus:outline-none focus:border-orange-500 transition placeholder:text-zinc-600";
-  const labelClass = "block text-zinc-400 text-[10px] font-semibold uppercase tracking-widest mb-2";
+  // ── Layout principal ───────────────────────────────────────────────────────────
 
-  return (
-    <div className="min-h-screen bg-black">
-      {/* Header fixo */}
-      <div className="sticky top-0 z-40 bg-black/90 backdrop-blur-sm border-b border-zinc-900">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-5">
-            <a
-              href="/hub"
-              style={{ color: '#2a2a2a', fontSize: '0.68rem', letterSpacing: '0.2em', textDecoration: 'none', textTransform: 'uppercase', transition: 'color 0.2s', whiteSpace: 'nowrap' }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#2a2a2a'; }}
-            >← menu</a>
-            <div style={{ width: '1px', height: '22px', background: '#1a1a1a' }} />
-            <div>
-              <div className="text-orange-500 text-[10px] tracking-[4px] uppercase font-semibold mb-0.5">Ferramenta Interna</div>
-              <h1 className="text-white font-bold text-lg leading-none">RAIO-X ORIUM</h1>
-            </div>
-          </div>
-          <button
-            onClick={gerarPDF}
-            disabled={gerando}
-            className="bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold px-6 py-2.5 rounded-xl transition text-sm"
-          >
-            {gerando ? 'Gerando...' : 'Gerar PDF'}
-          </button>
-        </div>
-      </div>
+  const totalSteps = ALL_STEPS.length;
+  const progress = ((step + 1) / totalSteps) * 100;
 
-      <div className="max-w-4xl mx-auto px-6 py-10 space-y-6">
+  const IS: React.CSSProperties = {
+    width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid #1e1e1e',
+    borderRadius: '10px', padding: '1rem 1.25rem', color: '#fff', fontSize: '0.95rem',
+    fontFamily: 'Poppins, sans-serif', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s',
+  };
+  const onF = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => { e.target.style.borderColor = '#FF6B00'; };
+  const onB = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => { e.target.style.borderColor = '#1e1e1e'; };
+  const LB: React.CSSProperties = { display: 'block', color: '#444', fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '0.5rem', fontFamily: 'Poppins, sans-serif' };
 
-        {/* Prompt de Análise */}
-        <div style={{ border: '1px solid #222', borderRadius: '12px', overflow: 'hidden', background: '#111' }}>
-          <button
-            onClick={() => setPromptAberto(p => !p)}
-            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.875rem 1.25rem', background: 'transparent', border: 'none', cursor: 'pointer', color: '#aaa', fontSize: '0.85rem', fontFamily: 'inherit' }}
-          >
-            <span>Prompt de Análise</span>
-            <span style={{ fontSize: '0.75rem', display: 'inline-block', transform: promptAberto ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▾</span>
-          </button>
-          {promptAberto && (
-            <div style={{ borderTop: '1px solid #222', padding: '1rem' }}>
-              <div style={{ position: 'relative' }}>
-                <pre style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: '8px', padding: '1rem', paddingTop: '2.5rem', color: '#aaa', fontSize: '0.78rem', lineHeight: 1.65, whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0, maxHeight: '300px', overflowY: 'auto', fontFamily: 'monospace' }}>
-                  {PROMPT_ANALISE}
-                </pre>
-                <button
-                  onClick={copiarPrompt}
-                  style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', background: copiado ? '#444' : '#FF6B00', border: 'none', borderRadius: '6px', padding: '0.375rem 0.75rem', color: '#fff', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', transition: 'background 0.2s', letterSpacing: '0.05em' }}
-                >
-                  {copiado ? 'Copiado ✓' : 'Copiar'}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Informações do cliente */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
-          <h2 className="text-white font-bold text-base mb-5">Informações do Cliente</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className={labelClass}>Nome do Cliente</label>
-              <input
-                type="text"
-                placeholder="Ex: Restaurante do João"
-                value={form.nomeCliente}
-                onChange={e => setForm(p => ({ ...p, nomeCliente: e.target.value }))}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Segmento</label>
-              <input
-                type="text"
-                placeholder="Ex: Alimentação"
-                value={form.segmentoCliente}
-                onChange={e => setForm(p => ({ ...p, segmentoCliente: e.target.value }))}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Data da Análise</label>
-              <input
-                type="date"
-                value={form.dataAnalise}
-                onChange={e => setForm(p => ({ ...p, dataAnalise: e.target.value }))}
-                className={inputClass}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Dimensões */}
-        <div>
-          <h2 className="text-white font-bold text-base mb-4">Dimensões de Avaliação</h2>
-          <div className="space-y-3">
-            {DIMENSOES.map((nome, i) => {
-              const dim = form.dimensoes[i];
-              return (
-                <div key={i} className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
-                  <div className="flex items-start justify-between gap-4 mb-4 flex-wrap">
-                    <div>
-                      <div className="text-orange-500 text-[10px] font-bold tracking-widest uppercase mb-1">
-                        {String(i + 1).padStart(2, '0')}
-                      </div>
-                      <h3 className="text-white font-semibold">{nome}</h3>
-                    </div>
-                    <div className="flex gap-2 flex-wrap">
-                      {(['Crítico', 'Atenção', 'Sólido'] as const).map(c => (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => setDimensao(i, 'classificacao', dim.classificacao === c ? '' : c)}
-                          className={`px-4 py-1.5 rounded-full text-xs font-bold border transition ${
-                            dim.classificacao === c
-                              ? c === 'Crítico'
-                                ? 'bg-red-950 text-red-300 border-red-700'
-                                : c === 'Atenção'
-                                  ? 'bg-amber-950 text-amber-300 border-amber-700'
-                                  : 'bg-green-950 text-green-300 border-green-700'
-                              : 'bg-transparent text-zinc-500 border-zinc-800 hover:border-zinc-600 hover:text-zinc-300'
-                          }`}
-                        >
-                          {c}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label className={labelClass}>Observações</label>
-                    <textarea
-                      rows={3}
-                      placeholder="Descreva os pontos observados nesta dimensão..."
-                      value={dim.observacao}
-                      onChange={e => setDimensao(i, 'observacao', e.target.value)}
-                      className={`${inputClass} resize-none`}
-                    />
-                  </div>
+  function renderContent() {
+    // Step 0 — Informações
+    if (step === 0) {
+      return (
+        <div style={{ maxWidth: '680px', display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+          {/* Prompt */}
+          <div style={{ border: '1px solid #1e1e1e', borderRadius: '12px', overflow: 'hidden', background: 'rgba(255,255,255,0.02)' }}>
+            <button
+              onClick={() => setPromptAberto(p => !p)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.875rem 1.25rem', background: 'transparent', border: 'none', cursor: 'pointer', color: '#aaa', fontSize: '0.85rem', fontFamily: 'Poppins, sans-serif' }}
+            >
+              <span>Prompt de Análise</span>
+              <span style={{ fontSize: '0.75rem', display: 'inline-block', transform: promptAberto ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▾</span>
+            </button>
+            {promptAberto && (
+              <div style={{ borderTop: '1px solid #1e1e1e', padding: '1rem' }}>
+                <div style={{ position: 'relative' }}>
+                  <pre style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid #1e1e1e', borderRadius: '8px', padding: '1rem', paddingTop: '2.5rem', color: '#aaa', fontSize: '0.78rem', lineHeight: 1.65, whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0, maxHeight: '300px', overflowY: 'auto', fontFamily: 'monospace' }}>
+                    {PROMPT_ANALISE}
+                  </pre>
+                  <button
+                    onClick={copiarPrompt}
+                    style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', background: copiado ? '#444' : '#FF6B00', border: 'none', borderRadius: '6px', padding: '0.375rem 0.75rem', color: '#fff', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', transition: 'background 0.2s', letterSpacing: '0.05em' }}
+                  >
+                    {copiado ? 'Copiado ✓' : 'Copiar'}
+                  </button>
                 </div>
+              </div>
+            )}
+          </div>
+          {/* Dados do cliente */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
+            <div>
+              <label style={LB}>Nome do Cliente</label>
+              <input type="text" placeholder="Ex: Restaurante do João" value={form.nomeCliente} onChange={e => setForm(p => ({ ...p, nomeCliente: e.target.value }))} onFocus={onF} onBlur={onB} style={IS} />
+            </div>
+            <div>
+              <label style={LB}>Segmento</label>
+              <input type="text" placeholder="Ex: Alimentação" value={form.segmentoCliente} onChange={e => setForm(p => ({ ...p, segmentoCliente: e.target.value }))} onFocus={onF} onBlur={onB} style={IS} />
+            </div>
+            <div>
+              <label style={LB}>Data da Análise</label>
+              <input type="date" value={form.dataAnalise} onChange={e => setForm(p => ({ ...p, dataAnalise: e.target.value }))} onFocus={onF} onBlur={onB} style={IS} />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Steps 1–8 — Dimensões
+    if (step >= 1 && step <= 8) {
+      const di = step - 1;
+      const dim = form.dimensoes[di];
+      return (
+        <div style={{ maxWidth: '680px', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <div style={{ display: 'flex', gap: '0.625rem', flexWrap: 'wrap' }}>
+            {(['Crítico', 'Atenção', 'Sólido'] as const).map(c => {
+              const active = dim.classificacao === c;
+              const col = c === 'Crítico' ? '#ef4444' : c === 'Atenção' ? '#f59e0b' : '#22c55e';
+              return (
+                <button
+                  key={c}
+                  onClick={() => setDimensao(di, 'classificacao', active ? '' : c)}
+                  style={{ padding: '0.625rem 1.75rem', borderRadius: '8px', border: `1px solid ${active ? col : '#1e1e1e'}`, background: active ? `${col}1a` : 'rgba(255,255,255,0.03)', color: active ? col : '#555', fontSize: '0.88rem', fontFamily: 'Poppins, sans-serif', fontWeight: active ? 600 : 400, cursor: 'pointer', transition: 'all 0.15s' }}
+                >
+                  {c}
+                </button>
               );
             })}
           </div>
-        </div>
-
-        {/* Conclusões */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 space-y-4">
-          <h2 className="text-white font-bold text-base mb-2">Conclusões</h2>
           <div>
-            <label className={labelClass}>Investimento Sugerido</label>
-            <input
-              type="text"
-              placeholder="Ex: 2500 ou R$ 2.500"
-              value={form.investimento}
-              onChange={e => setForm(p => ({ ...p, investimento: e.target.value }))}
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className={labelClass}>Próximos Passos</label>
+            <label style={LB}>Observações</label>
             <textarea
-              rows={5}
-              placeholder="Descreva as ações recomendadas para o cliente..."
-              value={form.proximosPassos}
-              onChange={e => setForm(p => ({ ...p, proximosPassos: e.target.value }))}
-              className={`${inputClass} resize-none`}
+              rows={10}
+              placeholder="Descreva os pontos observados nesta dimensão..."
+              value={dim.observacao}
+              onChange={e => setDimensao(di, 'observacao', e.target.value)}
+              onFocus={onF} onBlur={onB}
+              style={{ ...IS, resize: 'none', lineHeight: 1.65 }}
             />
           </div>
         </div>
+      );
+    }
 
-        {/* Botão inferior */}
-        <div className="flex justify-end pb-12">
+    // Step 9 — Conclusões
+    return (
+      <div style={{ maxWidth: '680px', display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+        <div>
+          <label style={LB}>Investimento Sugerido</label>
+          <input type="text" placeholder="Ex: 2500 ou R$ 2.500" value={form.investimento} onChange={e => setForm(p => ({ ...p, investimento: e.target.value }))} onFocus={onF} onBlur={onB} style={IS} />
+        </div>
+        <div>
+          <label style={LB}>Próximos Passos</label>
+          <textarea rows={8} placeholder="Descreva as ações recomendadas para o cliente..." value={form.proximosPassos} onChange={e => setForm(p => ({ ...p, proximosPassos: e.target.value }))} onFocus={onF} onBlur={onB} style={{ ...IS, resize: 'none', lineHeight: 1.65 }} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', fontFamily: 'Poppins, sans-serif', display: 'flex' }}>
+      <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%)' }} />
+
+      {/* Sidebar */}
+      <div style={{ position: 'relative', width: sidebarCollapsed ? '60px' : '260px', flexShrink: 0, height: '100%', zIndex: 10, transition: 'width 0.3s ease' }}>
+        <button
+          onClick={() => setSidebarCollapsed(c => !c)}
+          title={sidebarCollapsed ? 'Expandir' : 'Recolher'}
+          style={{ position: 'absolute', right: '-12px', top: '50%', transform: 'translateY(-50%)', zIndex: 20, width: '24px', height: '24px', background: '#0a0a0a', border: '1px solid #1e1e1e', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#333', fontSize: '0.65rem', transition: 'all 0.2s' }}
+          onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#FF6B00'; b.style.color = '#FF6B00'; }}
+          onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#1e1e1e'; b.style.color = '#333'; }}
+        >
+          {sidebarCollapsed ? '›' : '‹'}
+        </button>
+
+        <div style={{ width: '100%', height: '100%', borderRight: '1px solid #0f0f0f', display: 'flex', flexDirection: 'column', background: 'rgba(8,8,8,0.97)', backdropFilter: 'blur(16px)', overflow: 'hidden' }}>
+
+          {/* ZONA 1 */}
+          {!sidebarCollapsed ? (
+            <div style={{ padding: '1.5rem 1.75rem', borderBottom: '1px solid #0f0f0f', flexShrink: 0 }}>
+              <NextImage src="/lglaranja.png" alt="ORIUM" width={90} height={28} style={{ objectFit: 'contain' }} />
+              <p style={{ color: '#2a2a2a', fontSize: '0.62rem', letterSpacing: '0.2em', textTransform: 'uppercase', fontFamily: 'Poppins, sans-serif', marginTop: '0.5rem', marginBottom: 0 }}>DIAGNÓSTICO DIGITAL</p>
+            </div>
+          ) : (
+            <div style={{ flexShrink: 0, height: '60px', borderBottom: '1px solid #0f0f0f' }} />
+          )}
+
+          {/* ZONA 2 */}
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            {!sidebarCollapsed && (
+              <p style={{ color: '#1a1a1a', fontSize: '0.58rem', letterSpacing: '0.25em', textTransform: 'uppercase', padding: '1.25rem 1.75rem 0.75rem', margin: 0 }}>ETAPAS</p>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {ALL_STEPS.map((nome, i) => (
+                <button
+                  key={i}
+                  onClick={() => setStep(i)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: sidebarCollapsed ? 'center' : 'flex-start', gap: '0.75rem', padding: sidebarCollapsed ? '0.875rem 0' : '0.7rem 1.75rem', background: i === step ? 'rgba(255,107,0,0.06)' : 'transparent', borderTop: 'none', borderRight: 'none', borderBottom: 'none', borderLeft: sidebarCollapsed ? 'none' : `2px solid ${i === step ? '#FF6B00' : 'transparent'}`, outline: 'none', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.2s', boxSizing: 'border-box' as const }}
+                  onMouseEnter={e => { if (i !== step) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.02)'; }}
+                  onMouseLeave={e => { if (i !== step) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                >
+                  <span style={{ fontFamily: 'Anton, sans-serif', fontSize: '0.65rem', letterSpacing: '0.05em', minWidth: '20px', flexShrink: 0, color: i === step ? '#FF6B00' : i < step ? '#3a3a3a' : '#1e1e1e', transition: 'color 0.2s' }}>
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  {!sidebarCollapsed && (
+                    <span style={{ fontSize: '0.78rem', color: i === step ? '#fff' : i < step ? '#3a3a3a' : '#2e2e2e', fontFamily: 'Poppins, sans-serif', fontWeight: i === step ? 500 : 400, lineHeight: 1.3, transition: 'color 0.2s' }}>
+                      {nome}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ZONA 3 */}
+          {!sidebarCollapsed && (
+            <div style={{ borderTop: '1px solid #0f0f0f', padding: '1.25rem 1.75rem', flexShrink: 0 }}>
+              <p style={{ color: '#1a1a1a', fontSize: '0.58rem', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '0.625rem' }}>PROGRESSO</p>
+              <div style={{ height: '2px', background: '#111', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${progress}%`, background: '#FF6B00', borderRadius: '2px', transition: 'width 0.5s ease' }} />
+              </div>
+              <p style={{ color: '#2a2a2a', fontSize: '0.7rem', marginTop: '0.5rem' }}>{Math.round(progress)}% concluído</p>
+            </div>
+          )}
+
+          {/* ZONA 4 */}
+          <div style={{ borderTop: '1px solid #0f0f0f', padding: sidebarCollapsed ? '1rem 0' : '1rem 1.75rem 1.5rem', flexShrink: 0, display: 'flex', justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}>
+            <a
+              href="/hub"
+              title="Voltar ao painel"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#222', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none', transition: 'color 0.2s', fontFamily: 'Poppins, sans-serif' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#222'; }}
+            >
+              <span>←</span>
+              {!sidebarCollapsed && <span>PAINEL</span>}
+            </a>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Conteúdo */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
+        {/* Header */}
+        <div style={{ padding: '3rem 5rem 2.5rem', borderBottom: '1px solid #141414', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '2rem' }}>
+          <div>
+            <p style={{ color: '#FF6B00', fontSize: '0.68rem', letterSpacing: '0.3em', marginBottom: '0.75rem', textTransform: 'uppercase' }}>Etapa {step + 1} de {totalSteps}</p>
+            <h2 style={{ fontFamily: 'Anton, sans-serif', fontSize: 'clamp(1.8rem, 3vw, 2.8rem)', color: '#fff', letterSpacing: '0.04em', lineHeight: 1, marginBottom: '0.5rem' }}>
+              {ALL_STEPS[step].toUpperCase()}
+            </h2>
+            <p style={{ color: '#555', fontSize: '0.95rem' }}>{STEP_SUBTITLES[step]}</p>
+          </div>
           <button
             onClick={gerarPDF}
             disabled={gerando}
-            className="bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold px-10 py-4 rounded-2xl transition text-base"
+            style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.875rem 2rem', color: '#fff', fontSize: '0.85rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.12em', cursor: gerando ? 'not-allowed' : 'pointer', opacity: gerando ? 0.6 : 1, transition: 'all 0.2s', boxShadow: '0 4px 20px rgba(255,107,0,0.2)', flexShrink: 0, whiteSpace: 'nowrap' }}
+            onMouseEnter={e => { if (!gerando) e.currentTarget.style.background = '#e55f00'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#FF6B00'; }}
           >
-            {gerando ? 'Gerando PDF...' : 'Gerar PDF'}
+            {gerando ? 'GERANDO...' : 'GERAR PDF'}
           </button>
+        </div>
+
+        {/* Body */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '3rem 5rem' }}>
+          {renderContent()}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: '1.75rem 5rem', borderTop: '1px solid #141414', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, background: 'rgba(8,8,8,0.9)', backdropFilter: 'blur(8px)' }}>
+          {step > 0 ? (
+            <button
+              onClick={() => setStep(s => s - 1)}
+              style={{ background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '8px', padding: '0.875rem 2rem', color: '#666', fontSize: '0.9rem', fontFamily: 'Poppins, sans-serif', cursor: 'pointer', transition: 'all 0.2s' }}
+              onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#444'; b.style.color = '#ccc'; }}
+              onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#1e1e1e'; b.style.color = '#666'; }}
+            >← Voltar</button>
+          ) : <div />}
+          {step < totalSteps - 1 ? (
+            <button
+              onClick={() => setStep(s => s + 1)}
+              style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.875rem 2.75rem', color: '#fff', fontSize: '0.9rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.15em', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 20px rgba(255,107,0,0.2)' }}
+              onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = '#e55f00'; b.style.boxShadow = '0 6px 28px rgba(255,107,0,0.35)'; }}
+              onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = '#FF6B00'; b.style.boxShadow = '0 4px 20px rgba(255,107,0,0.2)'; }}
+            >CONTINUAR →</button>
+          ) : (
+            <button
+              onClick={gerarPDF}
+              disabled={gerando}
+              style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.875rem 2.75rem', color: '#fff', fontSize: '0.9rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.15em', cursor: gerando ? 'not-allowed' : 'pointer', opacity: gerando ? 0.6 : 1, transition: 'all 0.2s', boxShadow: '0 4px 20px rgba(255,107,0,0.2)' }}
+              onMouseEnter={e => { if (!gerando) e.currentTarget.style.background = '#e55f00'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#FF6B00'; }}
+            >{gerando ? 'GERANDO...' : 'GERAR PDF'}</button>
+          )}
         </div>
       </div>
     </div>

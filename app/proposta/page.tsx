@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import NextImage from 'next/image';
 
 // ── Serviços pré-definidos ────────────────────────────────────────────────────
 
@@ -91,17 +92,16 @@ const PASSOS_DEFAULT: ProximoPasso[] = [
 ];
 
 function novaFase(): Fase {
-  return {
-    nome: '',
-    subtitulo: '',
-    descricao: '',
-    servicosSelecionados: [],
-    objetivo: '',
-    valor: '',
-    prazo: '',
-    aberta: true,
-  };
+  return { nome: '', subtitulo: '', descricao: '', servicosSelecionados: [], objetivo: '', valor: '', prazo: '', aberta: true };
 }
+
+const STEPS_PROPOSTA = ['DADOS DO CLIENTE', 'FASES DA PROPOSTA', 'PRÓXIMOS PASSOS', 'PAGAMENTO E CONTATO'];
+const STEP_SUBTITLES = [
+  'Identifique o cliente e defina os dados da proposta.',
+  'Configure as fases e selecione os serviços incluídos.',
+  'Defina as etapas após a aprovação da proposta.',
+  'Condições de pagamento, contato e geração do PDF.',
+];
 
 // ── Componente ────────────────────────────────────────────────────────────────
 
@@ -111,6 +111,8 @@ export default function PropostaPage() {
   const [erroSenha, setErroSenha] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [gerando, setGerando] = useState(false);
+  const [step, setStep] = useState(0);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const [categoriasColapsadas, setCategoriasColapsadas] = useState<Set<string>>(new Set());
 
@@ -162,17 +164,11 @@ export default function PropostaPage() {
   }
 
   function toggleFase(i: number) {
-    setForm(p => ({
-      ...p,
-      fases: p.fases.map((f, idx) => idx === i ? { ...f, aberta: !f.aberta } : f),
-    }));
+    setForm(p => ({ ...p, fases: p.fases.map((f, idx) => idx === i ? { ...f, aberta: !f.aberta } : f) }));
   }
 
   function setFase(i: number, campo: 'nome' | 'subtitulo' | 'descricao' | 'objetivo' | 'valor' | 'prazo', valor: string) {
-    setForm(p => ({
-      ...p,
-      fases: p.fases.map((f, idx) => idx === i ? { ...f, [campo]: valor } : f),
-    }));
+    setForm(p => ({ ...p, fases: p.fases.map((f, idx) => idx === i ? { ...f, [campo]: valor } : f) }));
   }
 
   // ── Serviços ────────────────────────────────────────────────────────────────
@@ -182,12 +178,7 @@ export default function PropostaPage() {
       fases: p.fases.map((f, idx) => {
         if (idx !== fi) return f;
         const sel = f.servicosSelecionados;
-        return {
-          ...f,
-          servicosSelecionados: sel.includes(servicoId)
-            ? sel.filter(id => id !== servicoId)
-            : [...sel, servicoId],
-        };
+        return { ...f, servicosSelecionados: sel.includes(servicoId) ? sel.filter(id => id !== servicoId) : [...sel, servicoId] };
       }),
     }));
   }
@@ -203,21 +194,16 @@ export default function PropostaPage() {
 
   // ── Próximos passos ─────────────────────────────────────────────────────────
   function setPasso(i: number, campo: keyof ProximoPasso, valor: string) {
-    setForm(p => ({
-      ...p,
-      proximosPassos: p.proximosPassos.map((ps, idx) => idx === i ? { ...ps, [campo]: valor } : ps),
-    }));
+    setForm(p => ({ ...p, proximosPassos: p.proximosPassos.map((ps, idx) => idx === i ? { ...ps, [campo]: valor } : ps) }));
   }
 
-  // ── Formatação de valor ──────────────────────────────────────────────────────
+  // ── Formatação de valor ─────────────────────────────────────────────────────
   function formatarValorPDF(valor: string): string {
     const v = valor.trim();
     if (!v) return 'A DEFINIR';
     if (/^\d[\d.,\s]*$/.test(v)) {
       const num = parseFloat(v.replace(/\./g, '').replace(',', '.').replace(/\s/g, ''));
-      if (!isNaN(num)) {
-        return 'R$ ' + num.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-      }
+      if (!isNaN(num)) return 'R$ ' + num.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     }
     return v;
   }
@@ -297,26 +283,12 @@ export default function PropostaPage() {
       let isFirst = true;
       const addPage = async (html: string) => {
         const el = document.createElement('div');
-        el.style.cssText = [
-          'position:fixed', 'left:-9999px', 'top:0',
-          `width:${PX_W}px`, `height:${PX_H}px`,
-          'background:#080808', 'overflow:hidden',
-          "font-family:'Poppins',Arial,sans-serif",
-          'box-sizing:border-box',
-        ].join(';');
+        el.style.cssText = ['position:fixed', 'left:-9999px', 'top:0', `width:${PX_W}px`, `height:${PX_H}px`, 'background:#080808', 'overflow:hidden', "font-family:'Poppins',Arial,sans-serif", 'box-sizing:border-box'].join(';');
         el.innerHTML = html;
         document.body.appendChild(el);
         try {
           await new Promise(r => setTimeout(r, 100));
-          const canvas = await html2canvas(el, {
-            backgroundColor: '#080808',
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            logging: false,
-            width: PX_W,
-            height: PX_H,
-          });
+          const canvas = await html2canvas(el, { backgroundColor: '#080808', scale: 2, useCORS: true, allowTaint: true, logging: false, width: PX_W, height: PX_H });
           const imgData = canvas.toDataURL('image/jpeg', 0.93);
           if (!isFirst) doc.addPage();
           isFirst = false;
@@ -326,16 +298,11 @@ export default function PropostaPage() {
         }
       };
 
-      // === PÁGINA 1: CAPA ===
       const nomeFontSize = form.nomeCliente.length > 12 ? '64' : form.nomeCliente.length > 8 ? '80' : '96';
       await addPage(`
         <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:80px;box-sizing:border-box;">
-          <div style="${BAR}"></div>
-          <div style="${BBAR}"></div>
-          <div style="position:absolute;top:56px;display:flex;flex-direction:column;align-items:center;gap:8px;">
-            ${logoSm}
-            <div style="color:#2a2a2a;font-size:9px;letter-spacing:5px;text-transform:uppercase;margin-top:5px;${P}">ESTRUTURA · PRESENÇA · RESULTADOS</div>
-          </div>
+          <div style="${BAR}"></div><div style="${BBAR}"></div>
+          <div style="position:absolute;top:56px;display:flex;flex-direction:column;align-items:center;gap:8px;">${logoSm}<div style="color:#2a2a2a;font-size:9px;letter-spacing:5px;text-transform:uppercase;margin-top:5px;${P}">ESTRUTURA · PRESENÇA · RESULTADOS</div></div>
           <div style="text-align:center;">
             <div style="color:#FF6B00;font-size:11px;letter-spacing:8px;text-transform:uppercase;margin-bottom:22px;font-weight:600;${P}">PROPOSTA COMERCIAL</div>
             <div style="${A}font-size:${nomeFontSize}px;color:#fff;letter-spacing:3px;line-height:0.9;margin-bottom:18px;text-transform:uppercase;">${form.nomeCliente.trim().toUpperCase()}</div>
@@ -343,178 +310,79 @@ export default function PropostaPage() {
             <div style="${A}font-size:20px;color:#fff;letter-spacing:6px;margin-bottom:10px;">ESTRUTURAÇÃO DIGITAL</div>
             <div style="color:#FF6B00;font-size:11px;letter-spacing:4px;${P}">PRESENÇA · AUTORIDADE · CRESCIMENTO</div>
           </div>
-          <div style="position:absolute;bottom:54px;display:flex;flex-direction:column;align-items:center;gap:8px;">
-            ${logoXs}
-            <div style="color:#1a1a1a;font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-top:3px;${P}">ESTRUTURAMOS O QUE GERA RESULTADOS.</div>
-          </div>
+          <div style="position:absolute;bottom:54px;display:flex;flex-direction:column;align-items:center;gap:8px;">${logoXs}<div style="color:#1a1a1a;font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-top:3px;${P}">ESTRUTURAMOS O QUE GERA RESULTADOS.</div></div>
         </div>
       `);
 
-      // === PÁGINA 2: SOBRE A ORIUM (fixa) ===
       await addPage(`
         <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;box-sizing:border-box;position:relative;display:flex;flex-direction:column;">
           <div style="${BAR}"></div>
-          <div style="padding:44px 70px 20px 70px;">
-            <div style="margin-bottom:12px;">${logoXs}</div>
-            <div style="${A}font-size:44px;color:#fff;line-height:1;margin-bottom:8px;">Sobre a <span style="color:#FF6B00;">ORIUM</span></div>
-            <div style="color:#555;font-size:14px;max-width:540px;line-height:1.7;${P}">Estruturação de presença digital para marcas que desejam ser percebidas com mais clareza, autoridade e profissionalismo.</div>
-          </div>
+          <div style="padding:44px 70px 20px 70px;"><div style="margin-bottom:12px;">${logoXs}</div><div style="${A}font-size:44px;color:#fff;line-height:1;margin-bottom:8px;">Sobre a <span style="color:#FF6B00;">ORIUM</span></div><div style="color:#555;font-size:14px;max-width:540px;line-height:1.7;${P}">Estruturação de presença digital para marcas que desejam ser percebidas com mais clareza, autoridade e profissionalismo.</div></div>
           <div style="padding:0 70px;flex:1;display:flex;flex-direction:column;gap:12px;">
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-              <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;">
-                <div style="color:#FF6B00;font-size:10px;letter-spacing:4px;font-weight:700;margin-bottom:6px;${P}">QUEM SOMOS</div>
-                <div style="color:#999;font-size:13px;line-height:1.75;${P}">A ORIUM é uma agência de estruturação digital especializada em construir presença profissional para negócios que querem crescer com estratégia e consistência.</div>
-              </div>
-              <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;">
-                <div style="color:#FF6B00;font-size:10px;letter-spacing:4px;font-weight:700;margin-bottom:6px;${P}">O QUE FAZEMOS</div>
-                <div style="color:#999;font-size:13px;line-height:1.75;${P}">Estruturamos a base digital: identidade visual, posicionamento, site, conteúdo e presença local — tudo conectado e alinhado com os objetivos do negócio.</div>
-              </div>
-              <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;">
-                <div style="color:#FF6B00;font-size:10px;letter-spacing:4px;font-weight:700;margin-bottom:6px;${P}">COMO TRABALHAMOS</div>
-                <div style="color:#999;font-size:13px;line-height:1.75;${P}">Cada projeto começa com diagnóstico estratégico. Entendemos o negócio, o público e os objetivos antes de qualquer entrega. Clareza primeiro, execução depois.</div>
-              </div>
+              <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;"><div style="color:#FF6B00;font-size:10px;letter-spacing:4px;font-weight:700;margin-bottom:6px;${P}">QUEM SOMOS</div><div style="color:#999;font-size:13px;line-height:1.75;${P}">A ORIUM é uma agência de estruturação digital especializada em construir presença profissional para negócios que querem crescer com estratégia e consistência.</div></div>
+              <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;"><div style="color:#FF6B00;font-size:10px;letter-spacing:4px;font-weight:700;margin-bottom:6px;${P}">O QUE FAZEMOS</div><div style="color:#999;font-size:13px;line-height:1.75;${P}">Estruturamos a base digital: identidade visual, posicionamento, site, conteúdo e presença local — tudo conectado e alinhado com os objetivos do negócio.</div></div>
+              <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;"><div style="color:#FF6B00;font-size:10px;letter-spacing:4px;font-weight:700;margin-bottom:6px;${P}">COMO TRABALHAMOS</div><div style="color:#999;font-size:13px;line-height:1.75;${P}">Cada projeto começa com diagnóstico estratégico. Entendemos o negócio, o público e os objetivos antes de qualquer entrega. Clareza primeiro, execução depois.</div></div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-              <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;">
-                <div style="color:#FF6B00;font-size:10px;letter-spacing:4px;font-weight:700;margin-bottom:6px;${P}">NOSSO COMPROMISSO</div>
-                <div style="color:#999;font-size:13px;line-height:1.75;${P}">Não entregamos apenas peças — entregamos estrutura. Cada decisão criativa tem propósito estratégico. Nosso trabalho gera percepção, confiança e resultado mensurável.</div>
-              </div>
-              <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;">
-                <div style="color:#FF6B00;font-size:10px;letter-spacing:4px;font-weight:700;margin-bottom:6px;${P}">NOSSO DIFERENCIAL</div>
-                <div style="color:#999;font-size:13px;line-height:1.75;${P}">Combinamos estratégia, design e tecnologia em um processo integrado. Cada entrega é pensada para gerar impacto real no posicionamento e na percepção da sua marca.</div>
-              </div>
+              <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;"><div style="color:#FF6B00;font-size:10px;letter-spacing:4px;font-weight:700;margin-bottom:6px;${P}">NOSSO COMPROMISSO</div><div style="color:#999;font-size:13px;line-height:1.75;${P}">Não entregamos apenas peças — entregamos estrutura. Cada decisão criativa tem propósito estratégico. Nosso trabalho gera percepção, confiança e resultado mensurável.</div></div>
+              <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;"><div style="color:#FF6B00;font-size:10px;letter-spacing:4px;font-weight:700;margin-bottom:6px;${P}">NOSSO DIFERENCIAL</div><div style="color:#999;font-size:13px;line-height:1.75;${P}">Combinamos estratégia, design e tecnologia em um processo integrado. Cada entrega é pensada para gerar impacto real no posicionamento e na percepção da sua marca.</div></div>
             </div>
-            <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:20px;">
-              <div style="${A}font-size:13px;color:#FF6B00;letter-spacing:4px;margin-bottom:14px;">METODOLOGIA ORIUM™</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;">
-                ${metodologiaHtml}
-              </div>
-            </div>
+            <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:20px;"><div style="${A}font-size:13px;color:#FF6B00;letter-spacing:4px;margin-bottom:14px;">METODOLOGIA ORIUM™</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;">${metodologiaHtml}</div></div>
           </div>
-          <div style="background:#FF6B00;padding:14px 70px;display:flex;justify-content:center;align-items:center;margin-top:14px;">
-            <div style="${A}font-size:11px;color:#000;letter-spacing:3px;">ESTRUTURAMOS O QUE GERA PERCEPÇÃO, PRESENÇA E RESULTADO.</div>
-          </div>
+          <div style="background:#FF6B00;padding:14px 70px;display:flex;justify-content:center;align-items:center;margin-top:14px;"><div style="${A}font-size:11px;color:#000;letter-spacing:3px;">ESTRUTURAMOS O QUE GERA PERCEPÇÃO, PRESENÇA E RESULTADO.</div></div>
         </div>
       `);
 
-      // === PÁGINAS 3+: UMA POR FASE ===
       for (let i = 0; i < form.fases.length; i++) {
         const fase = form.fases[i];
         const num = String(i + 1).padStart(2, '0');
-
-        const servicosSel = fase.servicosSelecionados
-          .map(id => TODOS_SERVICOS.find(s => s.id === id))
-          .filter((s): s is Servico => !!s);
-
-        const entregasHtml = servicosSel.map(s => `
-          <div style="margin-bottom:10px;padding:12px 16px;background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;">
-            <div style="color:#fff;font-size:16px;font-weight:700;margin-bottom:4px;${P}">${s.nome}</div>
-            <div style="color:#666;font-size:14px;line-height:1.6;${P}">${s.descricao}</div>
-          </div>
-        `).join('');
-
+        const servicosSel = fase.servicosSelecionados.map(id => TODOS_SERVICOS.find(s => s.id === id)).filter((s): s is Servico => !!s);
+        const entregasHtml = servicosSel.map(s => `<div style="margin-bottom:10px;padding:12px 16px;background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;"><div style="color:#fff;font-size:16px;font-weight:700;margin-bottom:4px;${P}">${s.nome}</div><div style="color:#666;font-size:14px;line-height:1.6;${P}">${s.descricao}</div></div>`).join('');
         const faseNome = fase.nome.trim() || `FASE ${i + 1}`;
-        const faseSubtitulo = fase.subtitulo.trim();
-        const faseDescricao = fase.descricao.trim();
         const faseValorFormatado = formatarValorPDF(fase.valor);
-        const fasePrazo = fase.prazo.trim();
 
         await addPage(`
           <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;box-sizing:border-box;position:relative;display:flex;flex-direction:column;">
             <div style="${BAR}"></div>
-            <div style="padding:30px 70px 18px 70px;border-bottom:1px solid #161616;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;">
-              ${logoXs}
-              <div style="color:#2a2a2a;font-size:12px;letter-spacing:4px;text-transform:uppercase;${P}">PROPOSTA COMERCIAL</div>
-            </div>
+            <div style="padding:30px 70px 18px 70px;border-bottom:1px solid #161616;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;">${logoXs}<div style="color:#2a2a2a;font-size:12px;letter-spacing:4px;text-transform:uppercase;${P}">PROPOSTA COMERCIAL</div></div>
             <div style="padding:26px 70px;flex:1;position:relative;z-index:1;overflow:hidden;">
               <div style="color:#FF6B00;font-size:13px;letter-spacing:6px;font-weight:700;margin-bottom:6px;${P}">FASE ${num}</div>
               <div style="${A}font-size:54px;color:#fff;line-height:0.95;margin-bottom:10px;text-transform:uppercase;">${faseNome.toUpperCase()}</div>
-              ${faseSubtitulo ? `<div style="color:#FF6B00;font-size:16px;margin-bottom:18px;font-weight:600;${P}">${faseSubtitulo}</div>` : ''}
+              ${fase.subtitulo.trim() ? `<div style="color:#FF6B00;font-size:16px;margin-bottom:18px;font-weight:600;${P}">${fase.subtitulo.trim()}</div>` : ''}
               <div style="width:44px;height:2px;background:#FF6B00;margin-bottom:18px;"></div>
-              ${faseDescricao ? `<div style="color:#888;font-size:17px;line-height:2.0;margin-bottom:22px;max-width:600px;${P}">${faseDescricao.replace(/\n/g, '<br/>')}</div>` : ''}
-              ${entregasHtml ? `
-                <div>
-                  <div style="color:#3a3a3a;font-size:13px;letter-spacing:4px;text-transform:uppercase;margin-bottom:10px;${P}">O QUE SERÁ DESENVOLVIDO</div>
-                  ${entregasHtml}
-                </div>
-              ` : ''}
+              ${fase.descricao.trim() ? `<div style="color:#888;font-size:17px;line-height:2.0;margin-bottom:22px;max-width:600px;${P}">${fase.descricao.trim().replace(/\n/g, '<br/>')}</div>` : ''}
+              ${entregasHtml ? `<div><div style="color:#3a3a3a;font-size:13px;letter-spacing:4px;text-transform:uppercase;margin-bottom:10px;${P}">O QUE SERÁ DESENVOLVIDO</div>${entregasHtml}</div>` : ''}
             </div>
             <div style="background:#FF6B00;padding:18px 70px;display:flex;justify-content:space-between;align-items:center;">
-              <div>
-                <div style="${P}color:rgba(0,0,0,0.55);font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:3px;">INVESTIMENTO INICIAL</div>
-                <div style="${A}color:#000;font-size:26px;letter-spacing:2px;">${faseValorFormatado}</div>
-              </div>
-              ${fasePrazo ? `
-              <div style="text-align:right;">
-                <div style="${P}color:rgba(0,0,0,0.55);font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:3px;">PRAZO</div>
-                <div style="${A}color:#000;font-size:22px;letter-spacing:2px;">${fasePrazo}</div>
-              </div>
-              ` : ''}
+              <div><div style="${P}color:rgba(0,0,0,0.55);font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:3px;">INVESTIMENTO INICIAL</div><div style="${A}color:#000;font-size:26px;letter-spacing:2px;">${faseValorFormatado}</div></div>
+              ${fase.prazo.trim() ? `<div style="text-align:right;"><div style="${P}color:rgba(0,0,0,0.55);font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:3px;">PRAZO</div><div style="${A}color:#000;font-size:22px;letter-spacing:2px;">${fase.prazo.trim()}</div></div>` : ''}
             </div>
           </div>
         `);
       }
 
-      // === PÁGINA FINAL: PRÓXIMOS PASSOS ===
       await addPage(`
         <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;padding:48px 70px 0 70px;box-sizing:border-box;position:relative;display:flex;flex-direction:column;">
           <div style="${BAR}"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;">
-            ${logoXs}
-            <div style="color:#2a2a2a;font-size:12px;letter-spacing:4px;text-transform:uppercase;${P}">PROPOSTA COMERCIAL</div>
-          </div>
-          <div style="margin-bottom:22px;">
-            <div style="color:#FF6B00;font-size:12px;letter-spacing:6px;font-weight:700;margin-bottom:6px;${P}">CONTINUIDADE DE RESULTADOS</div>
-            <div style="${A}font-size:42px;color:#fff;line-height:1;margin-bottom:10px;">PRÓXIMOS PASSOS</div>
-            <div style="color:#555;font-size:14px;max-width:500px;line-height:1.75;${P}">Após a aprovação desta proposta, seguiremos um caminho estruturado para garantir que cada etapa seja executada com clareza e alinhamento estratégico.</div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
-            ${passosHtml}
-          </div>
-          ${form.condicoesPagamento.trim() ? `
-          <div style="border-top:1px solid #161616;padding:10px 0 14px 0;text-align:center;">
-            <div style="${P}color:#2e2e2e;font-size:11px;letter-spacing:2px;">${form.condicoesPagamento.trim()}</div>
-          </div>
-          ` : ''}
-          <div style="background:linear-gradient(135deg,#0d0d0d,#0a0a00);border:1px solid #2a2000;border-radius:12px;padding:22px;margin-bottom:18px;">
-            <div style="${A}font-size:13px;color:#FF6B00;letter-spacing:4px;margin-bottom:10px;">COMPROMISSO ORIUM</div>
-            <div style="color:#aaa;font-size:14px;line-height:2.0;max-width:560px;${P}">Nosso compromisso vai além das entregas. Trabalhamos para construir estrutura real que gera crescimento sustentável. Cada ação é pensada para fortalecer a percepção da sua marca e ampliar seus resultados ao longo do tempo.</div>
-          </div>
-          <div style="text-align:center;padding:14px 0;">
-            <div style="${A}font-size:18px;color:#fff;letter-spacing:2px;margin-bottom:6px;">Aqui começa uma parceria estratégica</div>
-            <div style="color:#FF6B00;font-size:13px;letter-spacing:2px;${P}">focada em evolução constante.</div>
-          </div>
-          <div style="margin-top:auto;border-top:1px solid #161616;padding:14px 0 28px 0;display:flex;justify-content:space-between;">
-            <div style="color:#1e1e1e;font-size:12px;letter-spacing:2px;${P}">ORIUM AGENCY · PROPOSTA COMERCIAL</div>
-            <div style="color:#1e1e1e;font-size:12px;${P}">${form.nomeCliente.trim()} · ${dataFormatada}</div>
-          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;">${logoXs}<div style="color:#2a2a2a;font-size:12px;letter-spacing:4px;text-transform:uppercase;${P}">PROPOSTA COMERCIAL</div></div>
+          <div style="margin-bottom:22px;"><div style="color:#FF6B00;font-size:12px;letter-spacing:6px;font-weight:700;margin-bottom:6px;${P}">CONTINUIDADE DE RESULTADOS</div><div style="${A}font-size:42px;color:#fff;line-height:1;margin-bottom:10px;">PRÓXIMOS PASSOS</div><div style="color:#555;font-size:14px;max-width:500px;line-height:1.75;${P}">Após a aprovação desta proposta, seguiremos um caminho estruturado para garantir que cada etapa seja executada com clareza e alinhamento estratégico.</div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">${passosHtml}</div>
+          ${form.condicoesPagamento.trim() ? `<div style="border-top:1px solid #161616;padding:10px 0 14px 0;text-align:center;"><div style="${P}color:#2e2e2e;font-size:11px;letter-spacing:2px;">${form.condicoesPagamento.trim()}</div></div>` : ''}
+          <div style="background:linear-gradient(135deg,#0d0d0d,#0a0a00);border:1px solid #2a2000;border-radius:12px;padding:22px;margin-bottom:18px;"><div style="${A}font-size:13px;color:#FF6B00;letter-spacing:4px;margin-bottom:10px;">COMPROMISSO ORIUM</div><div style="color:#aaa;font-size:14px;line-height:2.0;max-width:560px;${P}">Nosso compromisso vai além das entregas. Trabalhamos para construir estrutura real que gera crescimento sustentável. Cada ação é pensada para fortalecer a percepção da sua marca e ampliar seus resultados ao longo do tempo.</div></div>
+          <div style="text-align:center;padding:14px 0;"><div style="${A}font-size:18px;color:#fff;letter-spacing:2px;margin-bottom:6px;">Aqui começa uma parceria estratégica</div><div style="color:#FF6B00;font-size:13px;letter-spacing:2px;${P}">focada em evolução constante.</div></div>
+          <div style="margin-top:auto;border-top:1px solid #161616;padding:14px 0 28px 0;display:flex;justify-content:space-between;"><div style="color:#1e1e1e;font-size:12px;letter-spacing:2px;${P}">ORIUM AGENCY · PROPOSTA COMERCIAL</div><div style="color:#1e1e1e;font-size:12px;${P}">${form.nomeCliente.trim()} · ${dataFormatada}</div></div>
         </div>
       `);
 
-      // === PÁGINA DE ENCERRAMENTO ===
-      const contatoResp = form.contato.responsavel.trim();
-      const contatoWpp = form.contato.whatsapp.trim();
-      const contatoEmail = form.contato.email.trim();
-      const contatoInsta = form.contato.instagram.trim();
-
+      const ct = form.contato;
       await addPage(`
         <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:80px;box-sizing:border-box;">
-          <div style="${BAR}"></div>
-          <div style="${BBAR}"></div>
+          <div style="${BAR}"></div><div style="${BBAR}"></div>
           <div style="margin-bottom:48px;">${logoLg}</div>
-          <div style="text-align:center;margin-bottom:28px;">
-            <div style="${A}font-size:68px;color:#fff;letter-spacing:4px;line-height:0.9;">CONTINUIDADE</div>
-            <div style="${A}font-size:68px;color:#FF6B00;letter-spacing:4px;line-height:0.9;">GERA RESULTADOS.</div>
-          </div>
+          <div style="text-align:center;margin-bottom:28px;"><div style="${A}font-size:68px;color:#fff;letter-spacing:4px;line-height:0.9;">CONTINUIDADE</div><div style="${A}font-size:68px;color:#FF6B00;letter-spacing:4px;line-height:0.9;">GERA RESULTADOS.</div></div>
           <div style="width:60px;height:3px;background:#FF6B00;margin-bottom:32px;"></div>
-          ${(contatoResp || contatoWpp || contatoEmail || contatoInsta) ? `
-          <div style="margin-bottom:28px;padding:14px 32px;border:1px solid #1a1a1a;border-radius:10px;display:flex;flex-wrap:wrap;gap:20px;justify-content:center;align-items:center;">
-            ${contatoResp ? `<div style="${P}color:#3a3a3a;font-size:11px;letter-spacing:1px;">${contatoResp}</div>` : ''}
-            ${contatoWpp ? `<div style="${P}color:#252525;font-size:10px;">·</div><div style="${P}color:#3a3a3a;font-size:11px;letter-spacing:1px;">${contatoWpp}</div>` : ''}
-            ${contatoEmail ? `<div style="${P}color:#252525;font-size:10px;">·</div><div style="${P}color:#3a3a3a;font-size:11px;letter-spacing:1px;">${contatoEmail}</div>` : ''}
-            ${contatoInsta ? `<div style="${P}color:#252525;font-size:10px;">·</div><div style="${P}color:#3a3a3a;font-size:11px;letter-spacing:1px;">${contatoInsta}</div>` : ''}
-          </div>
-          ` : ''}
+          ${(ct.responsavel || ct.whatsapp || ct.email || ct.instagram) ? `<div style="margin-bottom:28px;padding:14px 32px;border:1px solid #1a1a1a;border-radius:10px;display:flex;flex-wrap:wrap;gap:20px;justify-content:center;align-items:center;">${ct.responsavel ? `<div style="${P}color:#3a3a3a;font-size:11px;letter-spacing:1px;">${ct.responsavel}</div>` : ''}${ct.whatsapp ? `<div style="${P}color:#252525;font-size:10px;">·</div><div style="${P}color:#3a3a3a;font-size:11px;letter-spacing:1px;">${ct.whatsapp}</div>` : ''}${ct.email ? `<div style="${P}color:#252525;font-size:10px;">·</div><div style="${P}color:#3a3a3a;font-size:11px;letter-spacing:1px;">${ct.email}</div>` : ''}${ct.instagram ? `<div style="${P}color:#252525;font-size:10px;">·</div><div style="${P}color:#3a3a3a;font-size:11px;letter-spacing:1px;">${ct.instagram}</div>` : ''}</div>` : ''}
           <div style="color:#2a2a2a;font-size:12px;letter-spacing:4px;text-transform:uppercase;text-align:center;${P}">VAMOS SEGUIR, EVOLUIR E ALCANÇAR MAIS JUNTOS.</div>
         </div>
       `);
@@ -533,33 +401,33 @@ export default function PropostaPage() {
   // ── Tela de senha ──────────────────────────────────────────────────────────
   if (!autenticado) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center px-6">
-        <div className="w-full max-w-sm">
-          <div className="text-center mb-10">
-            <div className="text-orange-500 text-xs font-semibold tracking-[4px] uppercase mb-3">Acesso Restrito</div>
-            <h1 className="text-white font-bold text-3xl mb-1">PROPOSTA ORIUM</h1>
-            <p className="text-zinc-500 text-sm">Ferramenta interna de propostas comerciais</p>
+      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '440px', padding: '0 2rem' }}>
+          <div style={{ marginBottom: '3rem' }}>
+            <NextImage src="/lglaranja.png" alt="ORIUM" width={120} height={40} style={{ objectFit: 'contain' }} />
           </div>
-          <form onSubmit={handleSenha} className="space-y-4">
-            <div>
-              <input
-                type="password"
-                placeholder="Senha de acesso"
-                value={senha}
-                onChange={e => { setSenha(e.target.value); setErroSenha(false); }}
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-xl text-white px-4 py-3 text-center focus:outline-none focus:border-orange-500 transition placeholder:text-zinc-600"
-                autoFocus
-              />
-              {erroSenha && (
-                <p className="text-red-400 text-xs text-center mt-2">Senha incorreta. Tente novamente.</p>
-              )}
-            </div>
+          <p style={{ color: '#FF6B00', fontSize: '0.72rem', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: '1rem' }}>ACESSO INTERNO</p>
+          <h1 style={{ fontFamily: 'Anton, sans-serif', fontSize: 'clamp(3rem, 6vw, 4.5rem)', color: '#fff', letterSpacing: '0.02em', lineHeight: 0.95, marginBottom: '1.75rem' }}>PROPOSTA</h1>
+          <p style={{ color: '#555', fontSize: '1rem', lineHeight: 1.75, marginBottom: '3rem' }}>Gerador de propostas comerciais em PDF.</p>
+          <form onSubmit={handleSenha} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <input
+              type="password"
+              placeholder="Senha de acesso"
+              value={senha}
+              onChange={e => { setSenha(e.target.value); setErroSenha(false); }}
+              autoFocus
+              style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${erroSenha ? '#ef4444' : '#1e1e1e'}`, borderRadius: '10px', padding: '1rem 1.25rem', color: '#fff', fontSize: '0.95rem', fontFamily: 'Poppins, sans-serif', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s' }}
+              onFocus={e => { if (!erroSenha) e.target.style.borderColor = '#FF6B00'; }}
+              onBlur={e => { if (!erroSenha) e.target.style.borderColor = '#1e1e1e'; }}
+            />
+            {erroSenha && <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center' }}>Senha incorreta. Tente novamente.</p>}
             <button
               type="submit"
               disabled={carregando || !senha}
-              className="w-full bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold py-3 rounded-xl transition"
+              style={{ width: '100%', background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '1rem', color: '#000', fontFamily: 'Anton, sans-serif', fontSize: '1rem', letterSpacing: '0.15em', cursor: carregando || !senha ? 'not-allowed' : 'pointer', boxShadow: '0 4px 20px rgba(255,107,0,0.2)', opacity: carregando || !senha ? 0.5 : 1, transition: 'all 0.2s' }}
             >
-              {carregando ? 'Verificando...' : 'Entrar'}
+              {carregando ? '...' : 'ACESSAR'}
             </button>
           </form>
         </div>
@@ -567,393 +435,309 @@ export default function PropostaPage() {
     );
   }
 
-  // ── Formulário ─────────────────────────────────────────────────────────────
+  // ── Layout principal ─────────────────────────────────────────────────────────
+
+  const totalSteps = STEPS_PROPOSTA.length;
+  const progress = ((step + 1) / totalSteps) * 100;
+
   const inputClass = "w-full bg-zinc-900 border border-zinc-800 rounded-xl text-white px-4 py-3 focus:outline-none focus:border-orange-500 transition placeholder:text-zinc-600 text-sm";
   const labelClass = "block text-zinc-400 text-[10px] font-semibold uppercase tracking-widest mb-2";
 
-  return (
-    <div className="min-h-screen bg-[#080808]">
-      {/* Header fixo */}
-      <div className="sticky top-0 z-40 bg-[#080808]/90 backdrop-blur-sm border-b border-zinc-900">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-5">
-            <a
-              href="/hub"
-              style={{ color: '#2a2a2a', fontSize: '0.68rem', letterSpacing: '0.2em', textDecoration: 'none', textTransform: 'uppercase', transition: 'color 0.2s', whiteSpace: 'nowrap' }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#2a2a2a'; }}
-            >← menu</a>
-            <div style={{ width: '1px', height: '22px', background: '#1a1a1a' }} />
-            <div>
-              <div className="text-orange-500 text-[10px] tracking-[4px] uppercase font-semibold mb-0.5">Ferramenta Interna</div>
-              <h1 className="text-white font-bold text-lg leading-none">PROPOSTA COMERCIAL</h1>
-            </div>
-          </div>
-          <button
-            onClick={gerarPDF}
-            disabled={gerando}
-            className="bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold px-6 py-2.5 rounded-xl transition text-sm"
-          >
-            {gerando ? 'Gerando...' : 'Gerar PDF'}
-          </button>
-        </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto px-6 py-10 space-y-6">
-
-        {/* 1. DADOS DO CLIENTE */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
-          <h2 className="text-white font-bold text-base mb-5">Dados do Cliente</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Nome do Cliente</label>
-              <input
-                type="text"
-                placeholder="Ex: CORTEX Consultoria"
-                value={form.nomeCliente}
-                onChange={e => setForm(p => ({ ...p, nomeCliente: e.target.value }))}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Segmento</label>
-              <input
-                type="text"
-                placeholder="Ex: Consultoria Financeira"
-                value={form.segmento}
-                onChange={e => setForm(p => ({ ...p, segmento: e.target.value }))}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Data da Proposta</label>
-              <input
-                type="date"
-                value={form.dataProposta}
-                onChange={e => setForm(p => ({ ...p, dataProposta: e.target.value }))}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Validade da Proposta</label>
-              <input
-                type="text"
-                placeholder="Ex: 7 dias"
-                value={form.validadeProposta}
-                onChange={e => setForm(p => ({ ...p, validadeProposta: e.target.value }))}
-                className={inputClass}
-              />
+  function renderContent() {
+    // Step 0 — Dados do Cliente
+    if (step === 0) {
+      return (
+        <div className="space-y-6 max-w-3xl">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className={labelClass}>Nome do Cliente</label>
+                <input type="text" placeholder="Ex: CORTEX Consultoria" value={form.nomeCliente} onChange={e => setForm(p => ({ ...p, nomeCliente: e.target.value }))} className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Segmento</label>
+                <input type="text" placeholder="Ex: Consultoria Financeira" value={form.segmento} onChange={e => setForm(p => ({ ...p, segmento: e.target.value }))} className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Data da Proposta</label>
+                <input type="date" value={form.dataProposta} onChange={e => setForm(p => ({ ...p, dataProposta: e.target.value }))} className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Validade da Proposta</label>
+                <input type="text" placeholder="Ex: 7 dias" value={form.validadeProposta} onChange={e => setForm(p => ({ ...p, validadeProposta: e.target.value }))} className={inputClass} />
+              </div>
             </div>
           </div>
         </div>
+      );
+    }
 
-        {/* 2. FASES */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-white font-bold text-base">Fases da Proposta</h2>
+    // Step 1 — Fases
+    if (step === 1) {
+      return (
+        <div className="space-y-4 max-w-3xl">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-zinc-500 text-sm">Até 3 fases. Configure nome, serviços, valor e prazo de cada uma.</p>
             <button
               onClick={adicionarFase}
               disabled={form.fases.length >= 3}
               className="text-sm bg-zinc-900 border border-zinc-700 hover:border-orange-500 text-zinc-400 hover:text-orange-400 disabled:opacity-30 disabled:cursor-not-allowed px-4 py-2 rounded-xl transition"
             >
-              {form.fases.length >= 3 ? '+ Adicionar Fase (máximo)' : `+ Adicionar Fase (${form.fases.length}/3)`}
+              {form.fases.length >= 3 ? '+ Adicionar (máximo)' : `+ Adicionar Fase (${form.fases.length}/3)`}
             </button>
           </div>
-
-          <div className="space-y-4">
-            {form.fases.map((fase, i) => (
-              <div key={i} className="bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden">
-                {/* Cabeçalho da fase */}
-                <div className="flex items-center p-5 border-b border-zinc-800/60">
-                  <button
-                    onClick={() => toggleFase(i)}
-                    className="flex items-center gap-3 text-left flex-1 min-w-0"
-                  >
-                    <span className="text-orange-500 text-xs font-bold tracking-widest shrink-0">
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                    <span className="text-white font-semibold truncate">
-                      {fase.nome || `Fase ${i + 1}`}
-                    </span>
-                    {fase.servicosSelecionados.length > 0 && (
-                      <span className="text-orange-500/60 text-xs shrink-0">
-                        {fase.servicosSelecionados.length} serviço{fase.servicosSelecionados.length !== 1 ? 's' : ''}
-                      </span>
-                    )}
-                    <span className="text-zinc-600 text-xs ml-auto mr-3 shrink-0">
-                      {fase.aberta ? '▾' : '▸'}
-                    </span>
-                  </button>
-                  {form.fases.length > 1 && (
-                    <button
-                      onClick={() => removerFase(i)}
-                      className="text-zinc-600 hover:text-red-400 text-xs transition px-2 py-1 rounded-lg hover:bg-red-950/30 shrink-0"
-                    >
-                      Remover
-                    </button>
-                  )}
-                </div>
-
-                {fase.aberta && (
-                  <div className="p-5 space-y-5">
-                    {/* Info básica da fase */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className={labelClass}>Nome da Fase</label>
-                        <input
-                          type="text"
-                          placeholder="Ex: Estruturação Digital"
-                          value={fase.nome}
-                          onChange={e => setFase(i, 'nome', e.target.value)}
-                          className={inputClass}
-                        />
-                      </div>
-                      <div>
-                        <label className={labelClass}>Subtítulo (laranja no PDF)</label>
-                        <input
-                          type="text"
-                          placeholder="Ex: Organização da base digital do cliente"
-                          value={fase.subtitulo}
-                          onChange={e => setFase(i, 'subtitulo', e.target.value)}
-                          className={inputClass}
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className={labelClass}>Descrição</label>
-                      <textarea
-                        rows={3}
-                        placeholder="Descreva o que esta fase contempla..."
-                        value={fase.descricao}
-                        onChange={e => setFase(i, 'descricao', e.target.value)}
-                        className={`${inputClass} resize-none`}
-                      />
-                    </div>
-
-                    {/* Seleção de serviços */}
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <label className={labelClass}>Serviços incluídos</label>
-                        {fase.servicosSelecionados.length > 0 && (
-                          <span className="text-orange-500 text-xs font-semibold">
-                            {fase.servicosSelecionados.length} selecionado{fase.servicosSelecionados.length !== 1 ? 's' : ''}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="space-y-3">
-                        {SERVICOS_POR_CATEGORIA.map(cat => {
-                          const colapsada = categoriasColapsadas.has(cat.nome);
-                          const selecionadosNaCat = cat.servicos.filter(s =>
-                            fase.servicosSelecionados.includes(s.id)
-                          ).length;
-
-                          return (
-                            <div key={cat.nome} className="border border-zinc-800 rounded-xl overflow-hidden">
-                              {/* Header da categoria */}
-                              <button
-                                onClick={() => toggleCategoria(cat.nome)}
-                                className="w-full flex items-center justify-between px-4 py-3 bg-zinc-900/60 hover:bg-zinc-900 transition text-left"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <span className="text-zinc-300 text-xs font-bold tracking-widest">
-                                    {cat.nome}
-                                  </span>
-                                  {selecionadosNaCat > 0 && (
-                                    <span className="bg-orange-500/20 text-orange-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                      {selecionadosNaCat}
-                                    </span>
-                                  )}
-                                </div>
-                                <span className="text-zinc-600 text-xs transition-transform duration-200"
-                                  style={{ display: 'inline-block', transform: colapsada ? 'rotate(-90deg)' : 'rotate(0deg)' }}>
-                                  ▾
-                                </span>
-                              </button>
-
-                              {/* Cards de serviços */}
-                              {!colapsada && (
-                                <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-2 bg-zinc-950/40">
-                                  {cat.servicos.map(servico => {
-                                    const selecionado = fase.servicosSelecionados.includes(servico.id);
-                                    return (
-                                      <button
-                                        key={servico.id}
-                                        onClick={() => toggleServico(i, servico.id)}
-                                        className={`text-left p-3 rounded-lg border transition-all duration-150 ${
-                                          selecionado
-                                            ? 'border-orange-500 bg-orange-500/10'
-                                            : 'border-zinc-800 bg-[#111] hover:border-zinc-600'
-                                        }`}
-                                      >
-                                        <div className="flex items-start gap-2">
-                                          <div className={`mt-0.5 w-4 h-4 rounded shrink-0 flex items-center justify-center border transition-colors ${
-                                            selecionado
-                                              ? 'bg-orange-500 border-orange-500'
-                                              : 'border-zinc-600 bg-transparent'
-                                          }`}>
-                                            {selecionado && (
-                                              <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                                                <path d="M1 4L3.5 6.5L9 1" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                              </svg>
-                                            )}
-                                          </div>
-                                          <div>
-                                            <div className={`text-xs font-semibold mb-0.5 ${selecionado ? 'text-white' : 'text-zinc-300'}`}>
-                                              {servico.nome}
-                                            </div>
-                                            <div className="text-zinc-500 text-[11px] leading-relaxed">
-                                              {servico.descricao}
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Objetivo, valor e prazo */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className={labelClass}>Objetivo da Fase</label>
-                        <input
-                          type="text"
-                          placeholder="Ex: Consolidar a identidade digital"
-                          value={fase.objetivo}
-                          onChange={e => setFase(i, 'objetivo', e.target.value)}
-                          className={inputClass}
-                        />
-                      </div>
-                      <div>
-                        <label className={labelClass}>Valor da Fase</label>
-                        <input
-                          type="text"
-                          placeholder="Ex: R$ 1.199 ou 1499"
-                          value={fase.valor}
-                          onChange={e => setFase(i, 'valor', e.target.value)}
-                          className={inputClass}
-                        />
-                      </div>
-                      <div>
-                        <label className={labelClass}>Prazo Estimado</label>
-                        <input
-                          type="text"
-                          placeholder="Ex: 2 semanas"
-                          value={fase.prazo}
-                          onChange={e => setFase(i, 'prazo', e.target.value)}
-                          className={inputClass}
-                        />
-                      </div>
-                    </div>
-                  </div>
+          {form.fases.map((fase, i) => (
+            <div key={i} className="bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden">
+              <div className="flex items-center p-5 border-b border-zinc-800/60">
+                <button onClick={() => toggleFase(i)} className="flex items-center gap-3 text-left flex-1 min-w-0">
+                  <span className="text-orange-500 text-xs font-bold tracking-widest shrink-0">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="text-white font-semibold truncate">{fase.nome || `Fase ${i + 1}`}</span>
+                  {fase.servicosSelecionados.length > 0 && <span className="text-orange-500/60 text-xs shrink-0">{fase.servicosSelecionados.length} serviço{fase.servicosSelecionados.length !== 1 ? 's' : ''}</span>}
+                  <span className="text-zinc-600 text-xs ml-auto mr-3 shrink-0">{fase.aberta ? '▾' : '▸'}</span>
+                </button>
+                {form.fases.length > 1 && (
+                  <button onClick={() => removerFase(i)} className="text-zinc-600 hover:text-red-400 text-xs transition px-2 py-1 rounded-lg hover:bg-red-950/30 shrink-0">Remover</button>
                 )}
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 3. PRÓXIMOS PASSOS */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
-          <h2 className="text-white font-bold text-base mb-5">Próximos Passos</h2>
-          <div className="space-y-3">
-            {form.proximosPassos.map((passo, i) => (
-              <div key={i} className="flex gap-4 items-center">
-                <span className="text-orange-500 text-xs font-bold tracking-widest w-6 shrink-0">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <input
-                    type="text"
-                    placeholder="Título"
-                    value={passo.titulo}
-                    onChange={e => setPasso(i, 'titulo', e.target.value)}
-                    className={inputClass}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Descrição"
-                    value={passo.descricao}
-                    onChange={e => setPasso(i, 'descricao', e.target.value)}
-                    className={inputClass}
-                  />
+              {fase.aberta && (
+                <div className="p-5 space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label className={labelClass}>Nome da Fase</label><input type="text" placeholder="Ex: Estruturação Digital" value={fase.nome} onChange={e => setFase(i, 'nome', e.target.value)} className={inputClass} /></div>
+                    <div><label className={labelClass}>Subtítulo (laranja no PDF)</label><input type="text" placeholder="Ex: Organização da base digital" value={fase.subtitulo} onChange={e => setFase(i, 'subtitulo', e.target.value)} className={inputClass} /></div>
+                  </div>
+                  <div><label className={labelClass}>Descrição</label><textarea rows={3} placeholder="Descreva o que esta fase contempla..." value={fase.descricao} onChange={e => setFase(i, 'descricao', e.target.value)} className={`${inputClass} resize-none`} /></div>
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <label className={labelClass}>Serviços incluídos</label>
+                      {fase.servicosSelecionados.length > 0 && <span className="text-orange-500 text-xs font-semibold">{fase.servicosSelecionados.length} selecionado{fase.servicosSelecionados.length !== 1 ? 's' : ''}</span>}
+                    </div>
+                    <div className="space-y-3">
+                      {SERVICOS_POR_CATEGORIA.map(cat => {
+                        const colapsada = categoriasColapsadas.has(cat.nome);
+                        const selecionadosNaCat = cat.servicos.filter(s => fase.servicosSelecionados.includes(s.id)).length;
+                        return (
+                          <div key={cat.nome} className="border border-zinc-800 rounded-xl overflow-hidden">
+                            <button onClick={() => toggleCategoria(cat.nome)} className="w-full flex items-center justify-between px-4 py-3 bg-zinc-900/60 hover:bg-zinc-900 transition text-left">
+                              <div className="flex items-center gap-3">
+                                <span className="text-zinc-300 text-xs font-bold tracking-widest">{cat.nome}</span>
+                                {selecionadosNaCat > 0 && <span className="bg-orange-500/20 text-orange-400 text-[10px] font-bold px-2 py-0.5 rounded-full">{selecionadosNaCat}</span>}
+                              </div>
+                              <span className="text-zinc-600 text-xs" style={{ display: 'inline-block', transform: colapsada ? 'rotate(-90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▾</span>
+                            </button>
+                            {!colapsada && (
+                              <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-2 bg-zinc-950/40">
+                                {cat.servicos.map(servico => {
+                                  const selecionado = fase.servicosSelecionados.includes(servico.id);
+                                  return (
+                                    <button key={servico.id} onClick={() => toggleServico(i, servico.id)} className={`text-left p-3 rounded-lg border transition-all duration-150 ${selecionado ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800 bg-[#111] hover:border-zinc-600'}`}>
+                                      <div className="flex items-start gap-2">
+                                        <div className={`mt-0.5 w-4 h-4 rounded shrink-0 flex items-center justify-center border transition-colors ${selecionado ? 'bg-orange-500 border-orange-500' : 'border-zinc-600 bg-transparent'}`}>
+                                          {selecionado && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                                        </div>
+                                        <div><div className={`text-xs font-semibold mb-0.5 ${selecionado ? 'text-white' : 'text-zinc-300'}`}>{servico.nome}</div><div className="text-zinc-500 text-[11px] leading-relaxed">{servico.descricao}</div></div>
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div><label className={labelClass}>Objetivo da Fase</label><input type="text" placeholder="Ex: Consolidar a identidade digital" value={fase.objetivo} onChange={e => setFase(i, 'objetivo', e.target.value)} className={inputClass} /></div>
+                    <div><label className={labelClass}>Valor da Fase</label><input type="text" placeholder="Ex: R$ 1.199 ou 1499" value={fase.valor} onChange={e => setFase(i, 'valor', e.target.value)} className={inputClass} /></div>
+                    <div><label className={labelClass}>Prazo Estimado</label><input type="text" placeholder="Ex: 2 semanas" value={fase.prazo} onChange={e => setFase(i, 'prazo', e.target.value)} className={inputClass} /></div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // Step 2 — Próximos Passos
+    if (step === 2) {
+      return (
+        <div className="max-w-3xl">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
+            <div className="space-y-3">
+              {form.proximosPassos.map((passo, i) => (
+                <div key={i} className="flex gap-4 items-center">
+                  <span className="text-orange-500 text-xs font-bold tracking-widest w-6 shrink-0">{String(i + 1).padStart(2, '0')}</span>
+                  <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <input type="text" placeholder="Título" value={passo.titulo} onChange={e => setPasso(i, 'titulo', e.target.value)} className={inputClass} />
+                    <input type="text" placeholder="Descrição" value={passo.descricao} onChange={e => setPasso(i, 'descricao', e.target.value)} className={inputClass} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
+      );
+    }
 
-        {/* 4. CONDIÇÕES DE PAGAMENTO */}
+    // Step 3 — Pagamento e Contato
+    return (
+      <div className="space-y-6 max-w-3xl">
         <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
-          <h2 className="text-white font-bold text-base mb-2">Condições de Pagamento</h2>
+          <h3 className="text-white font-bold text-sm mb-1">Condições de Pagamento</h3>
           <p className="text-zinc-500 text-xs mb-4">Exibido discretamente na página de próximos passos do PDF.</p>
-          <input
-            type="text"
-            value={form.condicoesPagamento}
-            onChange={e => setForm(p => ({ ...p, condicoesPagamento: e.target.value }))}
-            className={inputClass}
-          />
+          <input type="text" value={form.condicoesPagamento} onChange={e => setForm(p => ({ ...p, condicoesPagamento: e.target.value }))} className={inputClass} />
         </div>
-
-        {/* 5. CONTATO */}
         <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
-          <h2 className="text-white font-bold text-base mb-1">Contato</h2>
+          <h3 className="text-white font-bold text-sm mb-1">Contato</h3>
           <p className="text-zinc-500 text-xs mb-5">Exibido na página de encerramento do PDF.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Responsável</label>
-              <input
-                type="text"
-                value={form.contato.responsavel}
-                onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, responsavel: e.target.value } }))}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>WhatsApp</label>
-              <input
-                type="text"
-                value={form.contato.whatsapp}
-                onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, whatsapp: e.target.value } }))}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>E-mail</label>
-              <input
-                type="text"
-                value={form.contato.email}
-                onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, email: e.target.value } }))}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Instagram</label>
-              <input
-                type="text"
-                value={form.contato.instagram}
-                onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, instagram: e.target.value } }))}
-                className={inputClass}
-              />
-            </div>
+            <div><label className={labelClass}>Responsável</label><input type="text" value={form.contato.responsavel} onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, responsavel: e.target.value } }))} className={inputClass} /></div>
+            <div><label className={labelClass}>WhatsApp</label><input type="text" value={form.contato.whatsapp} onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, whatsapp: e.target.value } }))} className={inputClass} /></div>
+            <div><label className={labelClass}>E-mail</label><input type="text" value={form.contato.email} onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, email: e.target.value } }))} className={inputClass} /></div>
+            <div><label className={labelClass}>Instagram</label><input type="text" value={form.contato.instagram} onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, instagram: e.target.value } }))} className={inputClass} /></div>
           </div>
         </div>
+      </div>
+    );
+  }
 
-        {/* Botão inferior */}
-        <div className="flex justify-end pb-12">
+  return (
+    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', fontFamily: 'Poppins, sans-serif', display: 'flex' }}>
+      <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%)' }} />
+
+      {/* Sidebar */}
+      <div style={{ position: 'relative', width: sidebarCollapsed ? '60px' : '260px', flexShrink: 0, height: '100%', zIndex: 10, transition: 'width 0.3s ease' }}>
+        <button
+          onClick={() => setSidebarCollapsed(c => !c)}
+          title={sidebarCollapsed ? 'Expandir' : 'Recolher'}
+          style={{ position: 'absolute', right: '-12px', top: '50%', transform: 'translateY(-50%)', zIndex: 20, width: '24px', height: '24px', background: '#0a0a0a', border: '1px solid #1e1e1e', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#333', fontSize: '0.65rem', transition: 'all 0.2s' }}
+          onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#FF6B00'; b.style.color = '#FF6B00'; }}
+          onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#1e1e1e'; b.style.color = '#333'; }}
+        >
+          {sidebarCollapsed ? '›' : '‹'}
+        </button>
+
+        <div style={{ width: '100%', height: '100%', borderRight: '1px solid #0f0f0f', display: 'flex', flexDirection: 'column', background: 'rgba(8,8,8,0.97)', backdropFilter: 'blur(16px)', overflow: 'hidden' }}>
+
+          {/* ZONA 1 */}
+          {!sidebarCollapsed ? (
+            <div style={{ padding: '1.5rem 1.75rem', borderBottom: '1px solid #0f0f0f', flexShrink: 0 }}>
+              <NextImage src="/lglaranja.png" alt="ORIUM" width={90} height={28} style={{ objectFit: 'contain' }} />
+              <p style={{ color: '#2a2a2a', fontSize: '0.62rem', letterSpacing: '0.2em', textTransform: 'uppercase', fontFamily: 'Poppins, sans-serif', marginTop: '0.5rem', marginBottom: 0 }}>PROPOSTA COMERCIAL</p>
+            </div>
+          ) : (
+            <div style={{ flexShrink: 0, height: '60px', borderBottom: '1px solid #0f0f0f' }} />
+          )}
+
+          {/* ZONA 2 */}
+          <div style={{ flex: 1, overflowY: 'hidden' }}>
+            {!sidebarCollapsed && (
+              <p style={{ color: '#1a1a1a', fontSize: '0.58rem', letterSpacing: '0.25em', textTransform: 'uppercase', padding: '1.25rem 1.75rem 0.75rem', margin: 0 }}>ETAPAS</p>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {STEPS_PROPOSTA.map((nome, i) => (
+                <button
+                  key={i}
+                  onClick={() => setStep(i)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: sidebarCollapsed ? 'center' : 'flex-start', gap: '0.75rem', padding: sidebarCollapsed ? '0.875rem 0' : '0.7rem 1.75rem', background: i === step ? 'rgba(255,107,0,0.06)' : 'transparent', borderTop: 'none', borderRight: 'none', borderBottom: 'none', borderLeft: sidebarCollapsed ? 'none' : `2px solid ${i === step ? '#FF6B00' : 'transparent'}`, outline: 'none', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.2s', boxSizing: 'border-box' as const }}
+                  onMouseEnter={e => { if (i !== step) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.02)'; }}
+                  onMouseLeave={e => { if (i !== step) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                >
+                  <span style={{ fontFamily: 'Anton, sans-serif', fontSize: '0.65rem', letterSpacing: '0.05em', minWidth: '20px', flexShrink: 0, color: i === step ? '#FF6B00' : i < step ? '#3a3a3a' : '#1e1e1e', transition: 'color 0.2s' }}>
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  {!sidebarCollapsed && (
+                    <span style={{ fontSize: '0.78rem', color: i === step ? '#fff' : i < step ? '#3a3a3a' : '#2e2e2e', fontFamily: 'Poppins, sans-serif', fontWeight: i === step ? 500 : 400, lineHeight: 1.3, transition: 'color 0.2s' }}>
+                      {nome}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ZONA 3 */}
+          {!sidebarCollapsed && (
+            <div style={{ borderTop: '1px solid #0f0f0f', padding: '1.25rem 1.75rem', flexShrink: 0 }}>
+              <p style={{ color: '#1a1a1a', fontSize: '0.58rem', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '0.625rem' }}>PROGRESSO</p>
+              <div style={{ height: '2px', background: '#111', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${progress}%`, background: '#FF6B00', borderRadius: '2px', transition: 'width 0.5s ease' }} />
+              </div>
+              <p style={{ color: '#2a2a2a', fontSize: '0.7rem', marginTop: '0.5rem' }}>{Math.round(progress)}% concluído</p>
+            </div>
+          )}
+
+          {/* ZONA 4 */}
+          <div style={{ borderTop: '1px solid #0f0f0f', padding: sidebarCollapsed ? '1rem 0' : '1rem 1.75rem 1.5rem', flexShrink: 0, display: 'flex', justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}>
+            <a
+              href="/hub"
+              title="Voltar ao painel"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#222', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none', transition: 'color 0.2s', fontFamily: 'Poppins, sans-serif' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#222'; }}
+            >
+              <span>←</span>
+              {!sidebarCollapsed && <span>PAINEL</span>}
+            </a>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Conteúdo */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
+        {/* Header */}
+        <div style={{ padding: '3rem 5rem 2.5rem', borderBottom: '1px solid #141414', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '2rem' }}>
+          <div>
+            <p style={{ color: '#FF6B00', fontSize: '0.68rem', letterSpacing: '0.3em', marginBottom: '0.75rem', textTransform: 'uppercase' }}>Etapa {step + 1} de {totalSteps}</p>
+            <h2 style={{ fontFamily: 'Anton, sans-serif', fontSize: 'clamp(1.8rem, 3vw, 2.8rem)', color: '#fff', letterSpacing: '0.04em', lineHeight: 1, marginBottom: '0.5rem' }}>
+              {STEPS_PROPOSTA[step]}
+            </h2>
+            <p style={{ color: '#555', fontSize: '0.95rem' }}>{STEP_SUBTITLES[step]}</p>
+          </div>
           <button
             onClick={gerarPDF}
             disabled={gerando}
-            className="bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold px-10 py-4 rounded-2xl transition text-base"
+            style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.875rem 2rem', color: '#fff', fontSize: '0.85rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.12em', cursor: gerando ? 'not-allowed' : 'pointer', opacity: gerando ? 0.6 : 1, transition: 'all 0.2s', boxShadow: '0 4px 20px rgba(255,107,0,0.2)', flexShrink: 0, whiteSpace: 'nowrap' }}
+            onMouseEnter={e => { if (!gerando) e.currentTarget.style.background = '#e55f00'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#FF6B00'; }}
           >
-            {gerando ? 'Gerando PDF...' : 'Gerar PDF'}
+            {gerando ? 'GERANDO...' : 'GERAR PDF'}
           </button>
+        </div>
+
+        {/* Body */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '3rem 5rem' }}>
+          {renderContent()}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: '1.75rem 5rem', borderTop: '1px solid #141414', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, background: 'rgba(8,8,8,0.9)', backdropFilter: 'blur(8px)' }}>
+          {step > 0 ? (
+            <button
+              onClick={() => setStep(s => s - 1)}
+              style={{ background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '8px', padding: '0.875rem 2rem', color: '#666', fontSize: '0.9rem', fontFamily: 'Poppins, sans-serif', cursor: 'pointer', transition: 'all 0.2s' }}
+              onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#444'; b.style.color = '#ccc'; }}
+              onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#1e1e1e'; b.style.color = '#666'; }}
+            >← Voltar</button>
+          ) : <div />}
+          {step < totalSteps - 1 ? (
+            <button
+              onClick={() => setStep(s => s + 1)}
+              style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.875rem 2.75rem', color: '#fff', fontSize: '0.9rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.15em', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 20px rgba(255,107,0,0.2)' }}
+              onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = '#e55f00'; b.style.boxShadow = '0 6px 28px rgba(255,107,0,0.35)'; }}
+              onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = '#FF6B00'; b.style.boxShadow = '0 4px 20px rgba(255,107,0,0.2)'; }}
+            >CONTINUAR →</button>
+          ) : (
+            <button
+              onClick={gerarPDF}
+              disabled={gerando}
+              style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.875rem 2.75rem', color: '#fff', fontSize: '0.9rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.15em', cursor: gerando ? 'not-allowed' : 'pointer', opacity: gerando ? 0.6 : 1, transition: 'all 0.2s', boxShadow: '0 4px 20px rgba(255,107,0,0.2)' }}
+              onMouseEnter={e => { if (!gerando) e.currentTarget.style.background = '#e55f00'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#FF6B00'; }}
+            >{gerando ? 'GERANDO...' : 'GERAR PDF'}</button>
+          )}
         </div>
       </div>
     </div>

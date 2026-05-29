@@ -625,100 +625,94 @@ export default function CalendarioPage() {
       {bgImage}
 
       {/* Sidebar */}
-      <div style={{ width: sidebarCollapsed ? '60px' : '260px', borderRight: '1px solid #141414', display: 'flex', flexDirection: 'column', flexShrink: 0, height: '100%', background: 'rgba(8,8,8,0.95)', backdropFilter: 'blur(12px)', position: 'relative', zIndex: 10, transition: 'width 0.3s ease', overflow: 'hidden' }}>
-        {/* Toggle */}
-        <div style={{ padding: sidebarCollapsed ? '1.5rem 0 0' : '1.5rem 1.5rem 0', display: 'flex', justifyContent: sidebarCollapsed ? 'center' : 'flex-end', flexShrink: 0 }}>
-          <button
-            onClick={() => setSidebarCollapsed(c => !c)}
-            title={sidebarCollapsed ? 'Expandir sidebar' : 'Recolher sidebar'}
-            style={{ background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '6px', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#555', fontSize: '0.8rem', flexShrink: 0 }}
-            onMouseEnter={e => { const b = e.currentTarget; b.style.borderColor = '#444'; b.style.color = '#aaa'; }}
-            onMouseLeave={e => { const b = e.currentTarget; b.style.borderColor = '#1e1e1e'; b.style.color = '#555'; }}
-          >
-            {sidebarCollapsed ? '→' : '←'}
-          </button>
-        </div>
+      <div style={{ position: 'relative', width: sidebarCollapsed ? '60px' : '260px', flexShrink: 0, height: '100%', zIndex: 10, transition: 'width 0.3s ease' }}>
 
-        {/* Logo + voltar */}
-        {!sidebarCollapsed ? (
-          <div style={{ padding: '1.5rem 2rem', flexShrink: 0 }}>
-            <Image src="/lglaranja.png" alt="ORIUM" width={100} height={32} style={{ objectFit: 'contain' }} />
-            <a
-              href="/hub"
-              style={{ display: 'inline-block', marginTop: '1.125rem', color: '#2a2a2a', fontSize: '0.65rem', letterSpacing: '0.2em', textDecoration: 'none', textTransform: 'uppercase', transition: 'color 0.2s' }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#2a2a2a'; }}
-            >← menu</a>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '1.25rem', paddingBottom: '0.5rem', flexShrink: 0 }}>
-            <a
-              href="/hub"
-              title="Voltar ao menu"
-              style={{ color: '#2a2a2a', fontSize: '0.9rem', textDecoration: 'none', transition: 'color 0.2s', lineHeight: 1 }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#2a2a2a'; }}
-            >←</a>
-          </div>
-        )}
+        {/* Toggle — círculo */}
+        <button
+          onClick={() => setSidebarCollapsed(c => !c)}
+          title={sidebarCollapsed ? 'Expandir' : 'Recolher'}
+          style={{ position: 'absolute', right: '-12px', top: '50%', transform: 'translateY(-50%)', zIndex: 20, width: '24px', height: '24px', background: '#0a0a0a', border: '1px solid #1e1e1e', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#333', fontSize: '0.65rem', transition: 'all 0.2s' }}
+          onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#FF6B00'; b.style.color = '#FF6B00'; }}
+          onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#1e1e1e'; b.style.color = '#333'; }}
+        >
+          {sidebarCollapsed ? '›' : '‹'}
+        </button>
 
-        {/* Steps */}
-        <div style={{ flex: 1, padding: sidebarCollapsed ? '0 0.75rem' : '0 2rem', overflowY: 'hidden' }}>
-          {!sidebarCollapsed && (
-            <p style={{ color: '#222', fontSize: '0.65rem', letterSpacing: '0.2em', marginBottom: '1.25rem', textTransform: 'uppercase' }}>Etapas</p>
-          )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-            {STEPS.map((s, i) => (
-              <button
-                key={i}
-                onClick={() => { if (i < step || (i === 0)) setStep(i); }}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-                  gap: '0.875rem', padding: '0.75rem 0.5rem', background: 'transparent',
-                  border: 'none', borderBottom: '1px solid #0f0f0f', cursor: i <= step ? 'pointer' : 'default',
-                  textAlign: 'left', width: '100%', transition: 'background 0.2s', borderRadius: '6px',
-                }}
-                onMouseEnter={e => { if (i !== step && i <= step) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.03)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
-              >
-                <div style={{
-                  width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0, transition: 'all 0.3s',
-                  background: i <= step ? '#FF6B00' : 'transparent',
-                  border: i <= step ? '2px solid #FF6B00' : '2px solid #2a2a2a',
-                }} />
-                {!sidebarCollapsed && (
-                  <p style={{ fontSize: '0.78rem', color: i === step ? '#fff' : i < step ? '#444' : '#2a2a2a', transition: 'color 0.3s', lineHeight: 1.3, margin: 0 }}>
-                    {s.label}
-                  </p>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
+        <div style={{ width: '100%', height: '100%', borderRight: '1px solid #0f0f0f', display: 'flex', flexDirection: 'column', background: 'rgba(8,8,8,0.97)', backdropFilter: 'blur(16px)', overflow: 'hidden' }}>
 
-        {/* Progress */}
-        {!sidebarCollapsed && (
-          <div style={{ padding: '0 2rem 2rem', flexShrink: 0 }}>
-            <div style={{ height: '2px', background: '#141414', borderRadius: '2px', marginBottom: '0.625rem', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${progress}%`, background: '#FF6B00', borderRadius: '2px', transition: 'width 0.5s ease' }} />
+          {/* ZONA 1 — Logo */}
+          {!sidebarCollapsed ? (
+            <div style={{ padding: '1.5rem 1.75rem', borderBottom: '1px solid #0f0f0f', flexShrink: 0 }}>
+              <Image src="/lglaranja.png" alt="ORIUM" width={90} height={28} style={{ objectFit: 'contain' }} />
+              <p style={{ color: '#2a2a2a', fontSize: '0.62rem', letterSpacing: '0.2em', textTransform: 'uppercase', fontFamily: 'Poppins, sans-serif', marginTop: '0.5rem', marginBottom: 0 }}>CALENDÁRIO DE CONTEÚDO</p>
             </div>
-            <p style={{ color: '#2a2a2a', fontSize: '0.72rem' }}>{Math.round(progress)}% concluído</p>
-          </div>
-        )}
+          ) : (
+            <div style={{ flexShrink: 0, height: '60px', borderBottom: '1px solid #0f0f0f' }} />
+          )}
 
-        {/* Sair */}
-        {!sidebarCollapsed && (
-          <div style={{ padding: '0 2rem 1.5rem', flexShrink: 0 }}>
-            <button
-              onClick={() => { clearAuth(); setAutenticado(false); }}
-              style={{ background: 'none', border: 'none', color: '#2a2a2a', fontSize: '0.65rem', letterSpacing: '0.2em', textTransform: 'uppercase', cursor: 'pointer', transition: 'color 0.2s', padding: 0, fontFamily: 'Poppins, sans-serif' }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#2a2a2a'; }}
-            >
-              ← sair
-            </button>
+          {/* ZONA 2 — Etapas */}
+          <div style={{ flex: 1, overflowY: 'hidden' }}>
+            {!sidebarCollapsed && (
+              <p style={{ color: '#1a1a1a', fontSize: '0.58rem', letterSpacing: '0.25em', textTransform: 'uppercase', padding: '1.25rem 1.75rem 0.75rem', margin: 0 }}>ETAPAS</p>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {STEPS.map((s, i) => (
+                <button
+                  key={i}
+                  onClick={() => { if (i <= step) setStep(i); }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: sidebarCollapsed ? 'center' : 'flex-start', gap: '0.75rem', padding: sidebarCollapsed ? '0.875rem 0' : '0.7rem 1.75rem', background: i === step ? 'rgba(255,107,0,0.06)' : 'transparent', borderTop: 'none', borderRight: 'none', borderBottom: 'none', borderLeft: sidebarCollapsed ? 'none' : `2px solid ${i === step ? '#FF6B00' : 'transparent'}`, outline: 'none', cursor: i <= step ? 'pointer' : 'default', textAlign: 'left', width: '100%', transition: 'all 0.2s', boxSizing: 'border-box' as const }}
+                  onMouseEnter={e => { if (i !== step && i <= step) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.02)'; }}
+                  onMouseLeave={e => { if (i !== step) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                >
+                  <span style={{ fontFamily: 'Anton, sans-serif', fontSize: '0.65rem', letterSpacing: '0.05em', minWidth: '20px', flexShrink: 0, color: i === step ? '#FF6B00' : i < step ? '#3a3a3a' : '#1e1e1e', transition: 'color 0.2s' }}>
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  {!sidebarCollapsed && (
+                    <span style={{ fontSize: '0.78rem', color: i === step ? '#fff' : i < step ? '#3a3a3a' : '#2e2e2e', fontFamily: 'Poppins, sans-serif', fontWeight: i === step ? 500 : 400, lineHeight: 1.3, transition: 'color 0.2s' }}>
+                      {s.label}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
-        )}
+
+          {/* ZONA 3 — Progresso */}
+          {!sidebarCollapsed && (
+            <div style={{ borderTop: '1px solid #0f0f0f', padding: '1.25rem 1.75rem', flexShrink: 0 }}>
+              <p style={{ color: '#1a1a1a', fontSize: '0.58rem', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '0.625rem' }}>PROGRESSO</p>
+              <div style={{ height: '2px', background: '#111', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${progress}%`, background: '#FF6B00', borderRadius: '2px', transition: 'width 0.5s ease' }} />
+              </div>
+              <p style={{ color: '#2a2a2a', fontSize: '0.7rem', marginTop: '0.5rem' }}>{Math.round(progress)}% concluído</p>
+            </div>
+          )}
+
+          {/* ZONA 4 — Hub + Sair */}
+          <div style={{ borderTop: '1px solid #0f0f0f', padding: sidebarCollapsed ? '1rem 0' : '1rem 1.75rem 1.5rem', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: sidebarCollapsed ? 'center' : 'flex-start', gap: '0.75rem' }}>
+            <a
+              href="/hub"
+              title="Voltar ao painel"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#222', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none', transition: 'color 0.2s', fontFamily: 'Poppins, sans-serif' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#222'; }}
+            >
+              <span>←</span>
+              {!sidebarCollapsed && <span>PAINEL</span>}
+            </a>
+            {!sidebarCollapsed && (
+              <button
+                onClick={() => { clearAuth(); setAutenticado(false); }}
+                style={{ background: 'none', border: 'none', color: '#1a1a1a', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', cursor: 'pointer', transition: 'color 0.2s', padding: 0, fontFamily: 'Poppins, sans-serif' }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#1a1a1a'; }}
+              >
+                sair
+              </button>
+            )}
+          </div>
+
+        </div>
       </div>
 
       {/* Conteúdo */}
