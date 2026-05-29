@@ -258,13 +258,27 @@ export default function BriefingPage() {
             {sidebarCollapsed ? '→' : '←'}
           </button>
         </div>
-        {/* Logo */}
+        {/* Logo + voltar */}
         {!sidebarCollapsed ? (
           <div style={{ padding: '1.5rem 2rem', flexShrink: 0 }}>
             <Image src="/lglaranja.png" alt="ORIUM" width={100} height={32} style={{ objectFit: 'contain' }} />
+            <a
+              href="/ferramentas"
+              style={{ display: 'inline-block', marginTop: '1.125rem', color: '#2a2a2a', fontSize: '0.65rem', letterSpacing: '0.2em', textDecoration: 'none', textTransform: 'uppercase', transition: 'color 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#2a2a2a'; }}
+            >← ferramentas</a>
           </div>
         ) : (
-          <div style={{ height: '1.5rem', flexShrink: 0 }} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '1.25rem', paddingBottom: '0.5rem', flexShrink: 0 }}>
+            <a
+              href="/ferramentas"
+              title="Voltar às ferramentas"
+              style={{ color: '#2a2a2a', fontSize: '0.9rem', textDecoration: 'none', transition: 'color 0.2s', lineHeight: 1 }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#2a2a2a'; }}
+            >←</a>
+          </div>
         )}
         {/* Steps */}
         <div style={{ flex: 1, padding: sidebarCollapsed ? '0 0.75rem' : '0 2rem', overflowY: 'hidden' }}>

@@ -40,6 +40,14 @@ const FERRAMENTAS = [
       'Estrutura comercial customizável. Fases, serviços e valores em proposta PDF.',
     href: '/proposta',
   },
+  {
+    numero: '04',
+    titulo: 'CONTRATO',
+    tag: 'NOVO',
+    descricao:
+      'Gere contratos de prestação de serviços digitais personalizados em 9 etapas.',
+    href: '/contrato',
+  },
 ];
 
 // ── Componente ───────────────────────────────────────────────────────────────
@@ -185,7 +193,7 @@ export default function FerramentasPage() {
           </div>
 
           {/* Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
             {FERRAMENTAS.map((f) => (
               <Link key={f.href} href={f.href} className="group block">
                 <div
@@ -193,20 +201,28 @@ export default function FerramentasPage() {
                   style={{
                     border: '1px solid rgba(255,255,255,0.08)',
                     borderRadius: '8px',
-                    // A troca de cor da borda no hover é feita via JS
-                    // para poder usar a cor exata #FF6B00 sem Tailwind arbitrary
                     transition: 'transform 300ms ease-out, border-color 300ms ease-out',
                   }}
                   onMouseEnter={e => (e.currentTarget.style.borderColor = '#FF6B00')}
                   onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}
                 >
-                  {/* Número — laranja em repouso, branco no hover via group */}
-                  <span
-                    className="text-[11px] tracking-[2px] mb-10 block transition-colors duration-300 text-[#FF6B00] group-hover:text-white"
-                    style={{ fontWeight: 400 }}
-                  >
-                    {f.numero}
-                  </span>
+                  {/* Número + tag opcional */}
+                  <div className="flex items-center gap-3 mb-10">
+                    <span
+                      className="text-[11px] tracking-[2px] transition-colors duration-300 text-[#FF6B00] group-hover:text-white"
+                      style={{ fontWeight: 400 }}
+                    >
+                      {f.numero}
+                    </span>
+                    {'tag' in f && f.tag && (
+                      <span
+                        className="text-[9px] tracking-[2px] uppercase px-2 py-0.5 rounded"
+                        style={{ background: 'rgba(255,107,0,0.12)', color: '#FF6B00', border: '1px solid rgba(255,107,0,0.25)' }}
+                      >
+                        {f.tag}
+                      </span>
+                    )}
+                  </div>
 
                   {/* Nome */}
                   <h2

@@ -576,9 +576,18 @@ export default function PropostaPage() {
       {/* Header fixo */}
       <div className="sticky top-0 z-40 bg-[#080808]/90 backdrop-blur-sm border-b border-zinc-900">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <div className="text-orange-500 text-[10px] tracking-[4px] uppercase font-semibold mb-0.5">Ferramenta Interna</div>
-            <h1 className="text-white font-bold text-lg leading-none">PROPOSTA COMERCIAL</h1>
+          <div className="flex items-center gap-5">
+            <a
+              href="/ferramentas"
+              style={{ color: '#2a2a2a', fontSize: '0.68rem', letterSpacing: '0.2em', textDecoration: 'none', textTransform: 'uppercase', transition: 'color 0.2s', whiteSpace: 'nowrap' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#2a2a2a'; }}
+            >← menu</a>
+            <div style={{ width: '1px', height: '22px', background: '#1a1a1a' }} />
+            <div>
+              <div className="text-orange-500 text-[10px] tracking-[4px] uppercase font-semibold mb-0.5">Ferramenta Interna</div>
+              <h1 className="text-white font-bold text-lg leading-none">PROPOSTA COMERCIAL</h1>
+            </div>
           </div>
           <button
             onClick={gerarPDF}
