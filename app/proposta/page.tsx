@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import NextImage from 'next/image';
 
 // ── Serviços pré-definidos ────────────────────────────────────────────────────
@@ -105,14 +106,40 @@ const STEP_SUBTITLES = [
 
 // ── Componente ────────────────────────────────────────────────────────────────
 
-export default function PropostaPage() {
+function CharCounter({ value, max }: { value: string; max: number }) {
+  const remaining = max - value.length;
+  return (
+    <div style={{ textAlign: 'right', fontSize: '0.7rem', fontFamily: 'Poppins, sans-serif', color: remaining <= 10 ? '#FF6B00' : '#777', marginTop: '0.25rem' }}>
+      {value.length}/{max}
+    </div>
+  );
+}
+
+function PropostaPage() {
   const [autenticado, setAutenticado] = useState(false);
   const [senha, setSenha] = useState('');
   const [erroSenha, setErroSenha] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [gerando, setGerando] = useState(false);
   const [step, setStep] = useState(0);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (contentRef.current) contentRef.current.scrollTop = 0;
+  }, [step]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [documentoId, setDocumentoId] = useState<string | null>(null);
+  const [savedMsg, setSavedMsg] = useState('');
+  const searchParams = useSearchParams();
+  const docParam = searchParams.get('doc');
+
+  useEffect(() => {
+    if (!autenticado || !docParam) return;
+    fetch(`/api/documentos?id=${docParam}`)
+      .then(r => r.json())
+      .then(data => { if (data.dados) { setForm(data.dados); setDocumentoId(docParam); } })
+      .catch(console.error);
+  }, [autenticado, docParam]);
 
   const [categoriasColapsadas, setCategoriasColapsadas] = useState<Set<string>>(new Set());
 
@@ -390,6 +417,13 @@ export default function PropostaPage() {
       const arquivo = `proposta-${form.nomeCliente.trim().toLowerCase().replace(/\s+/g, '-')}-${form.dataProposta}.pdf`;
       doc.save(arquivo);
 
+      const docId = documentoId || crypto.randomUUID();
+      fetch('/api/documentos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: docId, tipo: 'Proposta', nome: form.nomeCliente || 'Documento sem nome', cliente: form.nomeCliente, dados: form }),
+      }).then(() => { setDocumentoId(docId); setSavedMsg('Salvo em Documentos'); setTimeout(() => setSavedMsg(''), 3000); }).catch(console.error);
+
     } catch (err) {
       console.error('Erro ao gerar PDF:', err);
       alert('Erro ao gerar o PDF. Verifique o console e tente novamente.');
@@ -452,7 +486,8 @@ export default function PropostaPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>Nome do Cliente</label>
-                <input type="text" placeholder="Ex: CORTEX Consultoria" value={form.nomeCliente} onChange={e => setForm(p => ({ ...p, nomeCliente: e.target.value }))} className={inputClass} />
+                <input type="text" maxLength={40} placeholder="Ex: CORTEX Consultoria" value={form.nomeCliente} onChange={e => setForm(p => ({ ...p, nomeCliente: e.target.value }))} className={inputClass} />
+                <CharCounter value={form.nomeCliente} max={40} />
               </div>
               <div>
                 <label className={labelClass}>Segmento</label>
@@ -502,10 +537,10 @@ export default function PropostaPage() {
               {fase.aberta && (
                 <div className="p-5 space-y-5">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label className={labelClass}>Nome da Fase</label><input type="text" placeholder="Ex: Estruturação Digital" value={fase.nome} onChange={e => setFase(i, 'nome', e.target.value)} className={inputClass} /></div>
-                    <div><label className={labelClass}>Subtítulo (laranja no PDF)</label><input type="text" placeholder="Ex: Organização da base digital" value={fase.subtitulo} onChange={e => setFase(i, 'subtitulo', e.target.value)} className={inputClass} /></div>
+                    <div><label className={labelClass}>Nome da Fase</label><input type="text" maxLength={35} placeholder="Ex: Estruturação Digital" value={fase.nome} onChange={e => setFase(i, 'nome', e.target.value)} className={inputClass} /><CharCounter value={fase.nome} max={35} /></div>
+                    <div><label className={labelClass}>Subtítulo (laranja no PDF)</label><input type="text" maxLength={80} placeholder="Ex: Organização da base digital" value={fase.subtitulo} onChange={e => setFase(i, 'subtitulo', e.target.value)} className={inputClass} /><CharCounter value={fase.subtitulo} max={80} /></div>
                   </div>
-                  <div><label className={labelClass}>Descrição</label><textarea rows={3} placeholder="Descreva o que esta fase contempla..." value={fase.descricao} onChange={e => setFase(i, 'descricao', e.target.value)} className={`${inputClass} resize-none`} /></div>
+                  <div><label className={labelClass}>Descrição</label><textarea rows={3} maxLength={280} placeholder="Descreva o que esta fase contempla..." value={fase.descricao} onChange={e => setFase(i, 'descricao', e.target.value)} className={`${inputClass} resize-none`} /><CharCounter value={fase.descricao} max={280} /></div>
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <label className={labelClass}>Serviços incluídos</label>
@@ -548,8 +583,8 @@ export default function PropostaPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div><label className={labelClass}>Objetivo da Fase</label><input type="text" placeholder="Ex: Consolidar a identidade digital" value={fase.objetivo} onChange={e => setFase(i, 'objetivo', e.target.value)} className={inputClass} /></div>
-                    <div><label className={labelClass}>Valor da Fase</label><input type="text" placeholder="Ex: R$ 1.199 ou 1499" value={fase.valor} onChange={e => setFase(i, 'valor', e.target.value)} className={inputClass} /></div>
-                    <div><label className={labelClass}>Prazo Estimado</label><input type="text" placeholder="Ex: 2 semanas" value={fase.prazo} onChange={e => setFase(i, 'prazo', e.target.value)} className={inputClass} /></div>
+                    <div><label className={labelClass}>Valor da Fase</label><input type="text" maxLength={30} placeholder="Ex: R$ 1.199 ou 1499" value={fase.valor} onChange={e => setFase(i, 'valor', e.target.value)} className={inputClass} /><CharCounter value={fase.valor} max={30} /></div>
+                    <div><label className={labelClass}>Prazo Estimado</label><input type="text" maxLength={30} placeholder="Ex: 2 semanas" value={fase.prazo} onChange={e => setFase(i, 'prazo', e.target.value)} className={inputClass} /><CharCounter value={fase.prazo} max={30} /></div>
                   </div>
                 </div>
               )}
@@ -569,8 +604,8 @@ export default function PropostaPage() {
                 <div key={i} className="flex gap-4 items-center">
                   <span className="text-orange-500 text-xs font-bold tracking-widest w-6 shrink-0">{String(i + 1).padStart(2, '0')}</span>
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input type="text" placeholder="Título" value={passo.titulo} onChange={e => setPasso(i, 'titulo', e.target.value)} className={inputClass} />
-                    <input type="text" placeholder="Descrição" value={passo.descricao} onChange={e => setPasso(i, 'descricao', e.target.value)} className={inputClass} />
+                    <div><input type="text" maxLength={60} placeholder="Título" value={passo.titulo} onChange={e => setPasso(i, 'titulo', e.target.value)} className={inputClass} /><CharCounter value={passo.titulo} max={60} /></div>
+                    <div><input type="text" maxLength={120} placeholder="Descrição" value={passo.descricao} onChange={e => setPasso(i, 'descricao', e.target.value)} className={inputClass} /><CharCounter value={passo.descricao} max={120} /></div>
                   </div>
                 </div>
               ))}
@@ -586,16 +621,17 @@ export default function PropostaPage() {
         <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
           <h3 className="text-white font-bold text-sm mb-1">Condições de Pagamento</h3>
           <p className="text-zinc-500 text-xs mb-4">Exibido discretamente na página de próximos passos do PDF.</p>
-          <input type="text" value={form.condicoesPagamento} onChange={e => setForm(p => ({ ...p, condicoesPagamento: e.target.value }))} className={inputClass} />
+          <input type="text" maxLength={120} value={form.condicoesPagamento} onChange={e => setForm(p => ({ ...p, condicoesPagamento: e.target.value }))} className={inputClass} />
+          <CharCounter value={form.condicoesPagamento} max={120} />
         </div>
         <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
           <h3 className="text-white font-bold text-sm mb-1">Contato</h3>
           <p className="text-zinc-500 text-xs mb-5">Exibido na página de encerramento do PDF.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label className={labelClass}>Responsável</label><input type="text" value={form.contato.responsavel} onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, responsavel: e.target.value } }))} className={inputClass} /></div>
-            <div><label className={labelClass}>WhatsApp</label><input type="text" value={form.contato.whatsapp} onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, whatsapp: e.target.value } }))} className={inputClass} /></div>
-            <div><label className={labelClass}>E-mail</label><input type="text" value={form.contato.email} onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, email: e.target.value } }))} className={inputClass} /></div>
-            <div><label className={labelClass}>Instagram</label><input type="text" value={form.contato.instagram} onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, instagram: e.target.value } }))} className={inputClass} /></div>
+            <div><label className={labelClass}>Responsável</label><input type="text" maxLength={50} value={form.contato.responsavel} onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, responsavel: e.target.value } }))} className={inputClass} /><CharCounter value={form.contato.responsavel} max={50} /></div>
+            <div><label className={labelClass}>WhatsApp</label><input type="text" maxLength={20} value={form.contato.whatsapp} onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, whatsapp: e.target.value } }))} className={inputClass} /><CharCounter value={form.contato.whatsapp} max={20} /></div>
+            <div><label className={labelClass}>E-mail</label><input type="text" maxLength={50} value={form.contato.email} onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, email: e.target.value } }))} className={inputClass} /><CharCounter value={form.contato.email} max={50} /></div>
+            <div><label className={labelClass}>Instagram</label><input type="text" maxLength={30} value={form.contato.instagram} onChange={e => setForm(p => ({ ...p, contato: { ...p.contato, instagram: e.target.value } }))} className={inputClass} /><CharCounter value={form.contato.instagram} max={30} /></div>
           </div>
         </div>
       </div>
@@ -669,7 +705,7 @@ export default function PropostaPage() {
           )}
 
           {/* ZONA 4 */}
-          <div style={{ borderTop: '1px solid #0f0f0f', padding: sidebarCollapsed ? '1rem 0' : '1rem 1.75rem 1.5rem', flexShrink: 0, display: 'flex', justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}>
+          <div style={{ borderTop: '1px solid #0f0f0f', padding: sidebarCollapsed ? '1rem 0' : '1rem 1.75rem 1.5rem', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.625rem', alignItems: sidebarCollapsed ? 'center' : 'flex-start' }}>
             <a
               href="/hub"
               title="Voltar ao painel"
@@ -680,6 +716,13 @@ export default function PropostaPage() {
               <span>←</span>
               {!sidebarCollapsed && <span>PAINEL</span>}
             </a>
+            {!sidebarCollapsed && (
+              <a href="/meus-documentos" style={{ color: '#777', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none', transition: 'color 0.2s', fontFamily: 'Poppins, sans-serif' }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#777'; }}>
+                DOCUMENTOS
+              </a>
+            )}
           </div>
 
         </div>
@@ -708,7 +751,7 @@ export default function PropostaPage() {
         </div>
 
         {/* Body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '3rem 5rem' }}>
+        <div ref={contentRef} style={{ flex: 1, overflowY: 'auto', padding: '3rem 5rem' }}>
           {renderContent()}
         </div>
 
@@ -740,6 +783,19 @@ export default function PropostaPage() {
           )}
         </div>
       </div>
+      {savedMsg && (
+        <div style={{ position: 'fixed', bottom: '5rem', right: '2rem', zIndex: 100, background: 'rgba(8,8,8,0.95)', border: '1px solid #FF6B00', borderRadius: '8px', padding: '0.75rem 1.25rem', color: '#FF6B00', fontSize: '0.8rem', fontFamily: 'Poppins, sans-serif', backdropFilter: 'blur(8px)' }}>
+          {savedMsg}
+        </div>
+      )}
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense>
+      <PropostaPage />
+    </Suspense>
   );
 }

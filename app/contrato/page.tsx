@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 
 const FA = 'Anton, sans-serif';
@@ -419,19 +420,45 @@ function MoedaInput({ value, onChange, placeholder = '0,00' }: { value: string; 
 
 // ── Componente principal ──────────────────────────────────────────────────────
 
-export default function ContratoPage() {
+function CharCounter({ value, max }: { value: string; max: number }) {
+  const remaining = max - value.length;
+  return (
+    <div style={{ textAlign: 'right', fontSize: '0.7rem', fontFamily: FP, color: remaining <= 10 ? '#FF6B00' : '#777', marginTop: '0.25rem' }}>
+      {value.length}/{max}
+    </div>
+  );
+}
+
+function ContratoPage() {
   const [autenticado, setAutenticado] = useState(false);
   const [senha, setSenha] = useState('');
   const [erroSenha, setErroSenha] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [etapa, setEtapa] = useState(0);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (contentRef.current) contentRef.current.scrollTop = 0;
+  }, [etapa]);
   const [erros, setErros] = useState<string[]>([]);
   const [form, setForm] = useState<FormState>(estadoInicial());
   const [gruposAbertos, setGruposAbertos] = useState<Record<string, boolean>>({
     'BRANDING E IDENTIDADE': true, 'PRESENÇA DIGITAL': false, 'DESENVOLVIMENTO E TECNOLOGIA': false,
   });
   const [copiado, setCopiado] = useState(false);
+  const [documentoId, setDocumentoId] = useState<string | null>(null);
+  const [savedMsg, setSavedMsg] = useState('');
+  const searchParams = useSearchParams();
+  const docParam = searchParams.get('doc');
+
+  useEffect(() => {
+    if (!autenticado || !docParam) return;
+    fetch(`/api/documentos?id=${docParam}`)
+      .then(r => r.json())
+      .then(data => { if (data.dados) { setForm(data.dados); setDocumentoId(docParam); } })
+      .catch(console.error);
+  }, [autenticado, docParam]);
 
   async function handleSenha(e: React.FormEvent) {
     e.preventDefault();
@@ -472,7 +499,16 @@ export default function ContratoPage() {
   function voltar() { setEtapa(p => Math.max(p - 1, 0)); setErros([]); }
 
   function copiar() {
-    navigator.clipboard.writeText(gerarContrato(form)).then(() => { setCopiado(true); setTimeout(() => setCopiado(false), 2500); });
+    navigator.clipboard.writeText(gerarContrato(form)).then(() => {
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2500);
+      const docId = documentoId || crypto.randomUUID();
+      fetch('/api/documentos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: docId, tipo: 'Contrato', nome: form.cliente.empresa || 'Documento sem nome', cliente: form.cliente.empresa, dados: form }),
+      }).then(() => { setDocumentoId(docId); setSavedMsg('Salvo em Documentos'); setTimeout(() => setSavedMsg(''), 3000); }).catch(console.error);
+    });
   }
 
   function limpar() {
@@ -575,7 +611,7 @@ export default function ContratoPage() {
           )}
 
           {/* ZONA 4 — Hub */}
-          <div style={{ borderTop: '1px solid #0f0f0f', padding: sidebarCollapsed ? '1rem 0' : '1rem 1.75rem 1.5rem', flexShrink: 0, display: 'flex', justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}>
+          <div style={{ borderTop: '1px solid #0f0f0f', padding: sidebarCollapsed ? '1rem 0' : '1rem 1.75rem 1.5rem', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.625rem', alignItems: sidebarCollapsed ? 'center' : 'flex-start' }}>
             <a
               href="/hub"
               title="Voltar ao painel"
@@ -586,6 +622,13 @@ export default function ContratoPage() {
               <span>←</span>
               {!sidebarCollapsed && <span>PAINEL</span>}
             </a>
+            {!sidebarCollapsed && (
+              <a href="/meus-documentos" style={{ color: '#777', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none', transition: 'color 0.2s', fontFamily: FP }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#777'; }}>
+                DOCUMENTOS
+              </a>
+            )}
           </div>
 
         </div>
@@ -606,43 +649,46 @@ export default function ContratoPage() {
         </div>
 
         {/* Form scrollável */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '2.5rem 4rem' }}>
+        <div ref={contentRef} style={{ flex: 1, overflowY: 'auto', padding: '2.5rem 4rem' }}>
           <div style={{ maxWidth: '720px', display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
 
             {/* ── Etapa 0: Dados das Partes ──────────────────────────────── */}
             {etapa === 0 && (<>
               <SecLabel>Prestador (ORIUM)</SecLabel>
               <Grid2>
-                <Field label="Nome do Prestador"><input value={form.prestador.nome} onChange={e => setPrestador('nome', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /></Field>
-                <Field label="Responsável"><input value={form.prestador.responsavel} onChange={e => setPrestador('responsavel', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /></Field>
-                <Field label="E-mail"><input type="email" value={form.prestador.email} onChange={e => setPrestador('email', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /></Field>
-                <Field label="WhatsApp"><input value={form.prestador.whatsapp} onChange={e => setPrestador('whatsapp', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /></Field>
-                <Field label="Cidade"><input value={form.prestador.cidade} onChange={e => setPrestador('cidade', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /></Field>
-                <Field label="UF"><input value={form.prestador.uf} onChange={e => setPrestador('uf', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /></Field>
-                <Field label="CPF/CNPJ (opcional)"><input value={form.prestador.cpfCnpj} onChange={e => setPrestador('cpfCnpj', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /></Field>
-                <Field label="Endereço (opcional)"><input value={form.prestador.endereco} onChange={e => setPrestador('endereco', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /></Field>
+                <Field label="Nome do Prestador"><input maxLength={60} value={form.prestador.nome} onChange={e => setPrestador('nome', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /><CharCounter value={form.prestador.nome} max={60} /></Field>
+                <Field label="Responsável"><input maxLength={60} value={form.prestador.responsavel} onChange={e => setPrestador('responsavel', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /><CharCounter value={form.prestador.responsavel} max={60} /></Field>
+                <Field label="E-mail"><input type="email" maxLength={80} value={form.prestador.email} onChange={e => setPrestador('email', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /><CharCounter value={form.prestador.email} max={80} /></Field>
+                <Field label="WhatsApp"><input maxLength={20} value={form.prestador.whatsapp} onChange={e => setPrestador('whatsapp', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /><CharCounter value={form.prestador.whatsapp} max={20} /></Field>
+                <Field label="Cidade"><input maxLength={40} value={form.prestador.cidade} onChange={e => setPrestador('cidade', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /><CharCounter value={form.prestador.cidade} max={40} /></Field>
+                <Field label="UF"><input maxLength={5} value={form.prestador.uf} onChange={e => setPrestador('uf', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /><CharCounter value={form.prestador.uf} max={5} /></Field>
+                <Field label="CPF/CNPJ (opcional)"><input maxLength={20} value={form.prestador.cpfCnpj} onChange={e => setPrestador('cpfCnpj', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /><CharCounter value={form.prestador.cpfCnpj} max={20} /></Field>
+                <Field label="Endereço (opcional)"><input maxLength={80} value={form.prestador.endereco} onChange={e => setPrestador('endereco', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /><CharCounter value={form.prestador.endereco} max={80} /></Field>
               </Grid2>
               <Sep />
               <SecLabel>Cliente</SecLabel>
               <Grid2>
                 <Field label="Nome da empresa / cliente *">
-                  <input value={form.cliente.empresa} onChange={e => setCliente('empresa', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Empresa ou nome" style={{ ...BI, borderColor: erros.includes('empresa') ? '#ef4444' : '#1e1e1e' }} />
+                  <input maxLength={80} value={form.cliente.empresa} onChange={e => setCliente('empresa', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Empresa ou nome" style={{ ...BI, borderColor: erros.includes('empresa') ? '#ef4444' : '#1e1e1e' }} />
+                  <CharCounter value={form.cliente.empresa} max={80} />
                   {erros.includes('empresa') && <ErrMsg>Campo obrigatório</ErrMsg>}
                 </Field>
                 <Field label="Responsável pelo cliente *">
-                  <input value={form.cliente.responsavel} onChange={e => setCliente('responsavel', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Nome completo" style={{ ...BI, borderColor: erros.includes('resp') ? '#ef4444' : '#1e1e1e' }} />
+                  <input maxLength={60} value={form.cliente.responsavel} onChange={e => setCliente('responsavel', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Nome completo" style={{ ...BI, borderColor: erros.includes('resp') ? '#ef4444' : '#1e1e1e' }} />
+                  <CharCounter value={form.cliente.responsavel} max={60} />
                   {erros.includes('resp') && <ErrMsg>Campo obrigatório</ErrMsg>}
                 </Field>
                 <Field label="CPF/CNPJ *">
-                  <input value={form.cliente.cpfCnpj} onChange={e => setCliente('cpfCnpj', e.target.value)} onFocus={onF} onBlur={onB} placeholder="000.000.000-00" style={{ ...BI, borderColor: erros.includes('cpf') ? '#ef4444' : '#1e1e1e' }} />
+                  <input maxLength={20} value={form.cliente.cpfCnpj} onChange={e => setCliente('cpfCnpj', e.target.value)} onFocus={onF} onBlur={onB} placeholder="000.000.000-00" style={{ ...BI, borderColor: erros.includes('cpf') ? '#ef4444' : '#1e1e1e' }} />
+                  <CharCounter value={form.cliente.cpfCnpj} max={20} />
                   {erros.includes('cpf') && <ErrMsg>Campo obrigatório</ErrMsg>}
                 </Field>
-                <Field label="E-mail"><input type="email" value={form.cliente.email} onChange={e => setCliente('email', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /></Field>
-                <Field label="WhatsApp"><input value={form.cliente.whatsapp} onChange={e => setCliente('whatsapp', e.target.value)} onFocus={onF} onBlur={onB} placeholder="(00) 00000-0000" style={BI} /></Field>
+                <Field label="E-mail"><input type="email" maxLength={80} value={form.cliente.email} onChange={e => setCliente('email', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /><CharCounter value={form.cliente.email} max={80} /></Field>
+                <Field label="WhatsApp"><input maxLength={20} value={form.cliente.whatsapp} onChange={e => setCliente('whatsapp', e.target.value)} onFocus={onF} onBlur={onB} placeholder="(00) 00000-0000" style={BI} /><CharCounter value={form.cliente.whatsapp} max={20} /></Field>
                 <Field label="Segmento"><input value={form.cliente.segmento} onChange={e => setCliente('segmento', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: restaurante, clínica..." style={BI} /></Field>
-                <Field label="Endereço"><input value={form.cliente.endereco} onChange={e => setCliente('endereco', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /></Field>
-                <Field label="Cidade"><input value={form.cliente.cidade} onChange={e => setCliente('cidade', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /></Field>
-                <Field label="UF"><input value={form.cliente.uf} onChange={e => setCliente('uf', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /></Field>
+                <Field label="Endereço"><input maxLength={80} value={form.cliente.endereco} onChange={e => setCliente('endereco', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /><CharCounter value={form.cliente.endereco} max={80} /></Field>
+                <Field label="Cidade"><input maxLength={40} value={form.cliente.cidade} onChange={e => setCliente('cidade', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /><CharCounter value={form.cliente.cidade} max={40} /></Field>
+                <Field label="UF"><input maxLength={5} value={form.cliente.uf} onChange={e => setCliente('uf', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /><CharCounter value={form.cliente.uf} max={5} /></Field>
                 <Field label="Instagram (opcional)"><input value={form.cliente.instagram} onChange={e => setCliente('instagram', e.target.value)} onFocus={onF} onBlur={onB} placeholder="@perfil" style={BI} /></Field>
                 <Field label="Site (opcional)"><input value={form.cliente.site} onChange={e => setCliente('site', e.target.value)} onFocus={onF} onBlur={onB} placeholder="www.exemplo.com.br" style={BI} /></Field>
               </Grid2>
@@ -673,6 +719,7 @@ export default function ContratoPage() {
                           {sel && (
                             <div style={{ marginTop: '0.625rem', marginLeft: '0.5rem' }}>
                               <textarea
+                                maxLength={120}
                                 value={form.servicosDescricoes[s.id] || ''}
                                 onChange={e => setForm(p => ({ ...p, servicosDescricoes: { ...p.servicosDescricoes, [s.id]: e.target.value } }))}
                                 placeholder="Descreva o escopo deste serviço..."
@@ -680,6 +727,7 @@ export default function ContratoPage() {
                                 onFocus={onF} onBlur={onB}
                                 style={{ ...BI, resize: 'vertical' }}
                               />
+                              <CharCounter value={form.servicosDescricoes[s.id] || ''} max={120} />
                             </div>
                           )}
                         </div>
@@ -698,26 +746,31 @@ export default function ContratoPage() {
             {/* ── Etapa 3: Escopo e Entregáveis ─────────────────────────── */}
             {etapa === 3 && (<>
               <Field label="Descrição geral do projeto">
-                <textarea value={form.descricaoGeral} onChange={e => setF('descricaoGeral', e.target.value)} onFocus={onF} onBlur={onB} rows={3} style={{ ...BI, resize: 'vertical' }} />
+                <textarea maxLength={400} value={form.descricaoGeral} onChange={e => setF('descricaoGeral', e.target.value)} onFocus={onF} onBlur={onB} rows={3} style={{ ...BI, resize: 'vertical' }} />
+                <CharCounter value={form.descricaoGeral} max={400} />
               </Field>
               <Field label="Objetivo do projeto">
-                <textarea value={form.objetivo} onChange={e => setF('objetivo', e.target.value)} onFocus={onF} onBlur={onB} rows={2} style={{ ...BI, resize: 'vertical' }} />
+                <textarea maxLength={200} value={form.objetivo} onChange={e => setF('objetivo', e.target.value)} onFocus={onF} onBlur={onB} rows={2} style={{ ...BI, resize: 'vertical' }} />
+                <CharCounter value={form.objetivo} max={200} />
               </Field>
               <Field label="Entregáveis principais">
-                <textarea value={form.entregaveis} onChange={e => setF('entregaveis', e.target.value)} onFocus={onF} onBlur={onB} rows={3} style={{ ...BI, resize: 'vertical' }} />
+                <textarea maxLength={400} value={form.entregaveis} onChange={e => setF('entregaveis', e.target.value)} onFocus={onF} onBlur={onB} rows={3} style={{ ...BI, resize: 'vertical' }} />
+                <CharCounter value={form.entregaveis} max={400} />
               </Field>
               <Grid3>
-                <Field label="Qtd. de peças/designs"><input value={form.qtdPecas} onChange={e => setF('qtdPecas', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 10" style={BI} /></Field>
-                <Field label="Qtd. de reuniões"><input value={form.qtdReunioes} onChange={e => setF('qtdReunioes', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 2" style={BI} /></Field>
-                <Field label="Qtd. de revisões"><input value={form.qtdRevisoes} onChange={e => setF('qtdRevisoes', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 3" style={BI} /></Field>
+                <Field label="Qtd. de peças/designs"><input maxLength={10} value={form.qtdPecas} onChange={e => setF('qtdPecas', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 10" style={BI} /><CharCounter value={form.qtdPecas} max={10} /></Field>
+                <Field label="Qtd. de reuniões"><input maxLength={10} value={form.qtdReunioes} onChange={e => setF('qtdReunioes', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 2" style={BI} /><CharCounter value={form.qtdReunioes} max={10} /></Field>
+                <Field label="Qtd. de revisões"><input maxLength={10} value={form.qtdRevisoes} onChange={e => setF('qtdRevisoes', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 3" style={BI} /><CharCounter value={form.qtdRevisoes} max={10} /></Field>
               </Grid3>
-              <Field label="Plataformas envolvidas"><input value={form.plataformas} onChange={e => setF('plataformas', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: Instagram, WhatsApp, Google" style={BI} /></Field>
-              <Field label="Canais envolvidos"><input value={form.canais} onChange={e => setF('canais', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /></Field>
+              <Field label="Plataformas envolvidas"><input maxLength={80} value={form.plataformas} onChange={e => setF('plataformas', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: Instagram, WhatsApp, Google" style={BI} /><CharCounter value={form.plataformas} max={80} /></Field>
+              <Field label="Canais envolvidos"><input maxLength={80} value={form.canais} onChange={e => setF('canais', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /><CharCounter value={form.canais} max={80} /></Field>
               <Field label="O que NÃO está incluso">
-                <textarea value={form.naoIncluso} onChange={e => setF('naoIncluso', e.target.value)} onFocus={onF} onBlur={onB} rows={2} style={{ ...BI, resize: 'vertical' }} />
+                <textarea maxLength={200} value={form.naoIncluso} onChange={e => setF('naoIncluso', e.target.value)} onFocus={onF} onBlur={onB} rows={2} style={{ ...BI, resize: 'vertical' }} />
+                <CharCounter value={form.naoIncluso} max={200} />
               </Field>
               <Field label="Materiais que o cliente precisa enviar">
-                <textarea value={form.materiaisCliente} onChange={e => setF('materiaisCliente', e.target.value)} onFocus={onF} onBlur={onB} rows={2} style={{ ...BI, resize: 'vertical' }} />
+                <textarea maxLength={200} value={form.materiaisCliente} onChange={e => setF('materiaisCliente', e.target.value)} onFocus={onF} onBlur={onB} rows={2} style={{ ...BI, resize: 'vertical' }} />
+                <CharCounter value={form.materiaisCliente} max={200} />
               </Field>
             </>)}
 
@@ -728,9 +781,9 @@ export default function ContratoPage() {
                 <Field label="Data prevista de entrega"><input type="date" value={form.dataEntrega} onChange={e => setF('dataEntrega', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /></Field>
               </Grid2>
               <Grid3>
-                <Field label="Duração estimada"><input value={form.duracaoEstimada} onChange={e => setF('duracaoEstimada', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 30 dias" style={BI} /></Field>
-                <Field label="Prazo para materiais"><input value={form.prazoMateriais} onChange={e => setF('prazoMateriais', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /></Field>
-                <Field label="Prazo para aprovação"><input value={form.prazoAprovacao} onChange={e => setF('prazoAprovacao', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /></Field>
+                <Field label="Duração estimada"><input maxLength={30} value={form.duracaoEstimada} onChange={e => setF('duracaoEstimada', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 30 dias" style={BI} /><CharCounter value={form.duracaoEstimada} max={30} /></Field>
+                <Field label="Prazo para materiais"><input maxLength={50} value={form.prazoMateriais} onChange={e => setF('prazoMateriais', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /><CharCounter value={form.prazoMateriais} max={50} /></Field>
+                <Field label="Prazo para aprovação"><input maxLength={50} value={form.prazoAprovacao} onChange={e => setF('prazoAprovacao', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /><CharCounter value={form.prazoAprovacao} max={50} /></Field>
               </Grid3>
               <Field label="Tipo de contratação">
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.625rem', marginTop: '0.25rem' }}>
@@ -739,9 +792,9 @@ export default function ContratoPage() {
               </Field>
               {form.tipoContratacao === 'Serviço mensal recorrente' && (
                 <Grid3>
-                  <Field label="Dia de vencimento mensal"><input value={form.diaVencimentoMensal} onChange={e => setF('diaVencimentoMensal', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 5" style={BI} /></Field>
-                  <Field label="Período mínimo"><input value={form.periodoMinimo} onChange={e => setF('periodoMinimo', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 3 meses" style={BI} /></Field>
-                  <Field label="Aviso prévio"><input value={form.avisoPrevio} onChange={e => setF('avisoPrevio', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 30 dias" style={BI} /></Field>
+                  <Field label="Dia de vencimento mensal"><input maxLength={5} value={form.diaVencimentoMensal} onChange={e => setF('diaVencimentoMensal', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 5" style={BI} /><CharCounter value={form.diaVencimentoMensal} max={5} /></Field>
+                  <Field label="Período mínimo"><input maxLength={30} value={form.periodoMinimo} onChange={e => setF('periodoMinimo', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 3 meses" style={BI} /><CharCounter value={form.periodoMinimo} max={30} /></Field>
+                  <Field label="Aviso prévio"><input maxLength={30} value={form.avisoPrevio} onChange={e => setF('avisoPrevio', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 30 dias" style={BI} /><CharCounter value={form.avisoPrevio} max={30} /></Field>
                 </Grid3>
               )}
             </>)}
@@ -759,14 +812,14 @@ export default function ContratoPage() {
                 </Field>
               </Grid3>
               <Grid3>
-                <Field label="Número de parcelas"><input value={form.numeroParcelas} onChange={e => setF('numeroParcelas', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 3" style={BI} /></Field>
+                <Field label="Número de parcelas"><input maxLength={3} value={form.numeroParcelas} onChange={e => setF('numeroParcelas', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 3" style={BI} /><CharCounter value={form.numeroParcelas} max={3} /></Field>
                 <Field label="Valor por parcela (calculado)">
                   <div style={{ position: 'relative' }}>
                     <span style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: '#333', fontSize: '0.88rem', pointerEvents: 'none' }}>R$</span>
                     <input readOnly value={parcela} style={{ ...BI, paddingLeft: '3rem', color: '#555', cursor: 'default' }} />
                   </div>
                 </Field>
-                <Field label="Dia de vencimento"><input value={form.diaVencimentoParcelas} onChange={e => setF('diaVencimentoParcelas', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 10" style={BI} /></Field>
+                <Field label="Dia de vencimento"><input maxLength={5} value={form.diaVencimentoParcelas} onChange={e => setF('diaVencimentoParcelas', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 10" style={BI} /><CharCounter value={form.diaVencimentoParcelas} max={5} /></Field>
               </Grid3>
               <Field label="Condição de pagamento">
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.625rem', marginTop: '0.25rem' }}>
@@ -783,11 +836,12 @@ export default function ContratoPage() {
             {/* ── Etapa 6: Revisões e Condições ─────────────────────────── */}
             {etapa === 6 && (<>
               <Grid2>
-                <Field label="Número de revisões incluídas"><input value={form.numRevisoes} onChange={e => setF('numRevisoes', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 2" style={BI} /></Field>
-                <Field label="Prazo para solicitar revisão"><input value={form.prazoRevisao} onChange={e => setF('prazoRevisao', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /></Field>
+                <Field label="Número de revisões incluídas"><input maxLength={5} value={form.numRevisoes} onChange={e => setF('numRevisoes', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Ex: 2" style={BI} /><CharCounter value={form.numRevisoes} max={5} /></Field>
+                <Field label="Prazo para solicitar revisão"><input maxLength={50} value={form.prazoRevisao} onChange={e => setF('prazoRevisao', e.target.value)} onFocus={onF} onBlur={onB} style={BI} /><CharCounter value={form.prazoRevisao} max={50} /></Field>
               </Grid2>
               <Field label="O que conta como revisão">
-                <textarea value={form.oQueContaRevisao} onChange={e => setF('oQueContaRevisao', e.target.value)} onFocus={onF} onBlur={onB} rows={2} style={{ ...BI, resize: 'vertical' }} />
+                <textarea maxLength={200} value={form.oQueContaRevisao} onChange={e => setF('oQueContaRevisao', e.target.value)} onFocus={onF} onBlur={onB} rows={2} style={{ ...BI, resize: 'vertical' }} />
+                <CharCounter value={form.oQueContaRevisao} max={200} />
               </Field>
               <Field label="Valor por revisão extra">
                 <MoedaInput value={form.valorRevisaoExtra} onChange={v => setF('valorRevisaoExtra', v)} placeholder="0,00" />
@@ -887,6 +941,19 @@ export default function ContratoPage() {
         </div>
 
       </div>
+      {savedMsg && (
+        <div style={{ position: 'fixed', bottom: '5rem', right: '2rem', zIndex: 100, background: 'rgba(8,8,8,0.95)', border: '1px solid #FF6B00', borderRadius: '8px', padding: '0.75rem 1.25rem', color: '#FF6B00', fontSize: '0.8rem', fontFamily: FP, backdropFilter: 'blur(8px)' }}>
+          {savedMsg}
+        </div>
+      )}
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense>
+      <ContratoPage />
+    </Suspense>
   );
 }

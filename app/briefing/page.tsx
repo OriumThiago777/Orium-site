@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 
 type Tipo = 'pessoa' | 'empresa' | null
@@ -8,6 +8,11 @@ type Tipo = 'pessoa' | 'empresa' | null
 export default function BriefingPage() {
   const [tipo, setTipo] = useState<Tipo>(null)
   const [step, setStep] = useState(0)
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (contentRef.current) contentRef.current.scrollTop = 0
+  }, [step])
   const [form, setForm] = useState<Record<string, string>>({})
   const [multi, setMulti] = useState<Record<string, string[]>>({})
   const [enviado, setEnviado] = useState(false)
@@ -335,7 +340,7 @@ export default function BriefingPage() {
           <p style={{ color: '#555', fontSize: '0.95rem' }}>{currentStep.subtitulo}</p>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '3rem 5rem' }}>
+        <div ref={contentRef} style={{ flex: 1, overflowY: 'auto', padding: '3rem 5rem' }}>
           <div style={{ maxWidth: '680px', display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
             {currentStep.campos.map(campo => (
               <div key={campo.name}>

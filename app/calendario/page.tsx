@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { saveAuth, isAuthenticated, clearAuth } from '@/lib/auth';
 
@@ -105,6 +105,11 @@ export default function CalendarioPage() {
 
   const [step, setStep] = useState(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (contentRef.current) contentRef.current.scrollTop = 0;
+  }, [step]);
 
   const [form, setForm] = useState<Record<string, string>>({
     nomeCliente: '',
@@ -732,7 +737,7 @@ export default function CalendarioPage() {
         </div>
 
         {/* Body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '3rem 5rem' }}>
+        <div ref={contentRef} style={{ flex: 1, overflowY: 'auto', padding: '3rem 5rem' }}>
           {renderStep()}
         </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import NextImage from 'next/image';
 
 const DIMENSOES = [
@@ -82,7 +83,16 @@ const STEP_SUBTITLES = [
   'Defina o investimento sugerido e os próximos passos.',
 ];
 
-export default function RaioXPage() {
+function CharCounter({ value, max }: { value: string; max: number }) {
+  const remaining = max - value.length;
+  return (
+    <div style={{ textAlign: 'right', fontSize: '0.7rem', fontFamily: 'Poppins, sans-serif', color: remaining <= 10 ? '#FF6B00' : '#777', marginTop: '0.25rem' }}>
+      {value.length}/{max}
+    </div>
+  );
+}
+
+function RaioXPage() {
   const [autenticado, setAutenticado] = useState(false);
   const [senha, setSenha] = useState('');
   const [erroSenha, setErroSenha] = useState(false);
@@ -91,7 +101,24 @@ export default function RaioXPage() {
   const [promptAberto, setPromptAberto] = useState(false);
   const [copiado, setCopiado] = useState(false);
   const [step, setStep] = useState(0);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (contentRef.current) contentRef.current.scrollTop = 0;
+  }, [step]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [documentoId, setDocumentoId] = useState<string | null>(null);
+  const [savedMsg, setSavedMsg] = useState('');
+  const searchParams = useSearchParams();
+  const docParam = searchParams.get('doc');
+
+  useEffect(() => {
+    if (!autenticado || !docParam) return;
+    fetch(`/api/documentos?id=${docParam}`)
+      .then(r => r.json())
+      .then(data => { if (data.dados) { setForm(data.dados); setDocumentoId(docParam); } })
+      .catch(console.error);
+  }, [autenticado, docParam]);
 
   const [form, setForm] = useState<FormState>({
     nomeCliente: '',
@@ -336,6 +363,13 @@ export default function RaioXPage() {
       const arquivo = `raio-x-${form.nomeCliente.toLowerCase().replace(/\s+/g, '-')}-${form.dataAnalise}.pdf`;
       doc.save(arquivo);
 
+      const docId = documentoId || crypto.randomUUID();
+      fetch('/api/documentos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: docId, tipo: 'Raio-X', nome: form.nomeCliente || 'Documento sem nome', cliente: form.nomeCliente, dados: form }),
+      }).then(() => { setDocumentoId(docId); setSavedMsg('Salvo em Documentos'); setTimeout(() => setSavedMsg(''), 3000); }).catch(console.error);
+
     } catch (err) {
       console.error('Erro ao gerar PDF:', err);
       alert('Erro ao gerar o PDF. Verifique o console e tente novamente.');
@@ -429,11 +463,13 @@ export default function RaioXPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
             <div>
               <label style={LB}>Nome do Cliente</label>
-              <input type="text" placeholder="Ex: Restaurante do João" value={form.nomeCliente} onChange={e => setForm(p => ({ ...p, nomeCliente: e.target.value }))} onFocus={onF} onBlur={onB} style={IS} />
+              <input type="text" maxLength={50} placeholder="Ex: Restaurante do João" value={form.nomeCliente} onChange={e => setForm(p => ({ ...p, nomeCliente: e.target.value }))} onFocus={onF} onBlur={onB} style={IS} />
+              <CharCounter value={form.nomeCliente} max={50} />
             </div>
             <div>
               <label style={LB}>Segmento</label>
-              <input type="text" placeholder="Ex: Alimentação" value={form.segmentoCliente} onChange={e => setForm(p => ({ ...p, segmentoCliente: e.target.value }))} onFocus={onF} onBlur={onB} style={IS} />
+              <input type="text" maxLength={40} placeholder="Ex: Alimentação" value={form.segmentoCliente} onChange={e => setForm(p => ({ ...p, segmentoCliente: e.target.value }))} onFocus={onF} onBlur={onB} style={IS} />
+              <CharCounter value={form.segmentoCliente} max={40} />
             </div>
             <div>
               <label style={LB}>Data da Análise</label>
@@ -469,12 +505,14 @@ export default function RaioXPage() {
             <label style={LB}>Observações</label>
             <textarea
               rows={10}
+              maxLength={500}
               placeholder="Descreva os pontos observados nesta dimensão..."
               value={dim.observacao}
               onChange={e => setDimensao(di, 'observacao', e.target.value)}
               onFocus={onF} onBlur={onB}
               style={{ ...IS, resize: 'none', lineHeight: 1.65 }}
             />
+            <CharCounter value={dim.observacao} max={500} />
           </div>
         </div>
       );
@@ -485,11 +523,13 @@ export default function RaioXPage() {
       <div style={{ maxWidth: '680px', display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
         <div>
           <label style={LB}>Investimento Sugerido</label>
-          <input type="text" placeholder="Ex: 2500 ou R$ 2.500" value={form.investimento} onChange={e => setForm(p => ({ ...p, investimento: e.target.value }))} onFocus={onF} onBlur={onB} style={IS} />
+          <input type="text" maxLength={30} placeholder="Ex: 2500 ou R$ 2.500" value={form.investimento} onChange={e => setForm(p => ({ ...p, investimento: e.target.value }))} onFocus={onF} onBlur={onB} style={IS} />
+          <CharCounter value={form.investimento} max={30} />
         </div>
         <div>
           <label style={LB}>Próximos Passos</label>
-          <textarea rows={8} placeholder="Descreva as ações recomendadas para o cliente..." value={form.proximosPassos} onChange={e => setForm(p => ({ ...p, proximosPassos: e.target.value }))} onFocus={onF} onBlur={onB} style={{ ...IS, resize: 'none', lineHeight: 1.65 }} />
+          <textarea rows={8} maxLength={400} placeholder="Descreva as ações recomendadas para o cliente..." value={form.proximosPassos} onChange={e => setForm(p => ({ ...p, proximosPassos: e.target.value }))} onFocus={onF} onBlur={onB} style={{ ...IS, resize: 'none', lineHeight: 1.65 }} />
+          <CharCounter value={form.proximosPassos} max={400} />
         </div>
       </div>
     );
@@ -562,7 +602,7 @@ export default function RaioXPage() {
           )}
 
           {/* ZONA 4 */}
-          <div style={{ borderTop: '1px solid #0f0f0f', padding: sidebarCollapsed ? '1rem 0' : '1rem 1.75rem 1.5rem', flexShrink: 0, display: 'flex', justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}>
+          <div style={{ borderTop: '1px solid #0f0f0f', padding: sidebarCollapsed ? '1rem 0' : '1rem 1.75rem 1.5rem', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.625rem', alignItems: sidebarCollapsed ? 'center' : 'flex-start' }}>
             <a
               href="/hub"
               title="Voltar ao painel"
@@ -573,6 +613,13 @@ export default function RaioXPage() {
               <span>←</span>
               {!sidebarCollapsed && <span>PAINEL</span>}
             </a>
+            {!sidebarCollapsed && (
+              <a href="/meus-documentos" style={{ color: '#777', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none', transition: 'color 0.2s', fontFamily: 'Poppins, sans-serif' }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#777'; }}>
+                DOCUMENTOS
+              </a>
+            )}
           </div>
 
         </div>
@@ -601,7 +648,7 @@ export default function RaioXPage() {
         </div>
 
         {/* Body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '3rem 5rem' }}>
+        <div ref={contentRef} style={{ flex: 1, overflowY: 'auto', padding: '3rem 5rem' }}>
           {renderContent()}
         </div>
 
@@ -633,6 +680,19 @@ export default function RaioXPage() {
           )}
         </div>
       </div>
+      {savedMsg && (
+        <div style={{ position: 'fixed', bottom: '5rem', right: '2rem', zIndex: 100, background: 'rgba(8,8,8,0.95)', border: '1px solid #FF6B00', borderRadius: '8px', padding: '0.75rem 1.25rem', color: '#FF6B00', fontSize: '0.8rem', fontFamily: 'Poppins, sans-serif', backdropFilter: 'blur(8px)' }}>
+          {savedMsg}
+        </div>
+      )}
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense>
+      <RaioXPage />
+    </Suspense>
   );
 }
