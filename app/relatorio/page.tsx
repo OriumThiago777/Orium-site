@@ -589,15 +589,15 @@ export default function RelatorioPage() {
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {STEPS.map((s, i) => (
                 <button key={i} onClick={() => { if (contentRef.current) contentRef.current.scrollTop = 0; setStep(i) }}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: sidebarCollapsed ? 'center' : 'flex-start', gap: '0.75rem', padding: sidebarCollapsed ? '0.875rem 0' : '0.7rem 1.75rem', background: i === step && !isPreview ? 'rgba(255,107,0,0.06)' : 'transparent', border: 'none', borderLeft: sidebarCollapsed ? 'none' : `2px solid ${i === step && !isPreview ? '#FF6B00' : 'transparent'}`, outline: 'none', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.2s', boxSizing: 'border-box' }}
-                  onMouseEnter={e => { if (i !== step) e.currentTarget.style.background = 'rgba(255,255,255,0.02)' }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: sidebarCollapsed ? 'center' : 'flex-start', gap: '0.75rem', padding: sidebarCollapsed ? '0.875rem 0' : '0.7rem 1.75rem', background: i === step && !isPreview ? 'rgba(255,107,0,0.15)' : 'transparent', border: 'none', borderLeft: sidebarCollapsed ? 'none' : `2px solid ${i === step && !isPreview ? '#FF6B00' : 'transparent'}`, outline: 'none', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.2s', boxSizing: 'border-box' }}
+                  onMouseEnter={e => { if (i !== step) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
                   onMouseLeave={e => { if (i !== step) e.currentTarget.style.background = 'transparent' }}
                 >
-                  <span style={{ fontFamily: 'Anton, sans-serif', fontSize: '0.65rem', letterSpacing: '0.05em', minWidth: '20px', flexShrink: 0, color: isPreview ? '#3a3a3a' : i === step ? '#FF6B00' : i < step ? '#3a3a3a' : '#333', transition: 'color 0.2s' }}>
+                  <span style={{ fontFamily: 'Anton, sans-serif', fontSize: '0.65rem', letterSpacing: '0.05em', minWidth: '20px', flexShrink: 0, color: isPreview ? '#3a3a3a' : i === step ? '#FF6B00' : '#555555', transition: 'color 0.2s' }}>
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   {!sidebarCollapsed && (
-                    <span style={{ fontSize: '0.78rem', color: isPreview ? '#2a2a2a' : i === step ? '#fff' : i < step ? '#3a3a3a' : '#444', fontFamily: 'Poppins, sans-serif', fontWeight: i === step && !isPreview ? 500 : 400, lineHeight: 1.3, transition: 'color 0.2s' }}>
+                    <span style={{ fontSize: '0.78rem', color: isPreview ? '#2a2a2a' : i === step ? '#fff' : '#888888', fontFamily: 'Poppins, sans-serif', fontWeight: i === step && !isPreview ? 600 : 400, lineHeight: 1.3, transition: 'color 0.2s' }}>
                       {s.bloco}
                     </span>
                   )}
@@ -620,9 +620,9 @@ export default function RelatorioPage() {
           {/* Link hub */}
           <div style={{ borderTop: '1px solid #0f0f0f', padding: sidebarCollapsed ? '1rem 0' : '1rem 1.75rem 1.5rem', flexShrink: 0, display: 'flex', justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}>
             <a href="/hub" title="Voltar ao painel"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#222', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none', transition: 'color 0.2s' }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00' }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#222' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#888888', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none', transition: 'all 0.15s', border: '1px solid #1e1e1e', padding: '8px 12px', borderRadius: '8px' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; e.currentTarget.style.borderColor = '#FF6B00' }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#888888'; e.currentTarget.style.borderColor = '#1e1e1e' }}
             >
               <span>←</span>
               {!sidebarCollapsed && <span>PAINEL</span>}
