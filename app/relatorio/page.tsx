@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import React, { useState, useRef } from 'react'
 import Image from 'next/image'
 import { isAuthenticated, saveAuth } from '@/lib/auth'
 
@@ -121,6 +121,153 @@ export default function RelatorioPage() {
     )
   }
 
-  // placeholder para próximas tasks
-  return <div style={{ color: '#fff', padding: '2rem', fontFamily: 'Poppins' }}>Em construção…</div>
+  // ── Placeholder functions (serão implementadas nas tasks seguintes) ─────────
+  function renderStep(): React.ReactNode { return null }
+  function renderPreview(): React.ReactNode { return null }
+  async function handleCopiar() {}
+  async function handleExportarPDF() {}
+
+  const isPreview = step === 7
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', fontFamily: 'Poppins, sans-serif', display: 'flex' }}>
+      {bgImage}
+
+      {/* ── Sidebar ── */}
+      <div style={{ position: 'relative', width: sidebarCollapsed ? '60px' : '260px', flexShrink: 0, height: '100%', zIndex: 10, transition: 'width 0.3s ease' }}>
+        <button
+          onClick={() => setSidebarCollapsed(c => !c)}
+          title={sidebarCollapsed ? 'Expandir' : 'Recolher'}
+          style={{ position: 'absolute', right: '-12px', top: '50%', transform: 'translateY(-50%)', zIndex: 20, width: '24px', height: '24px', background: '#0a0a0a', border: '1px solid #1e1e1e', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#333', fontSize: '0.65rem', transition: 'all 0.2s' }}
+          onMouseEnter={e => { const b = e.currentTarget; b.style.borderColor = '#FF6B00'; b.style.color = '#FF6B00' }}
+          onMouseLeave={e => { const b = e.currentTarget; b.style.borderColor = '#1e1e1e'; b.style.color = '#333' }}
+        >
+          {sidebarCollapsed ? '›' : '‹'}
+        </button>
+
+        <div style={{ width: '100%', height: '100%', borderRight: '1px solid #0f0f0f', display: 'flex', flexDirection: 'column', background: 'rgba(8,8,8,0.97)', backdropFilter: 'blur(16px)', overflow: 'hidden' }}>
+
+          {/* Logo */}
+          {!sidebarCollapsed ? (
+            <div style={{ padding: '1.5rem 1.75rem', borderBottom: '1px solid #0f0f0f', flexShrink: 0 }}>
+              <Image src="/lglaranja.png" alt="ORIUM" width={90} height={28} style={{ objectFit: 'contain' }} />
+              <p style={{ color: '#2a2a2a', fontSize: '0.62rem', letterSpacing: '0.2em', textTransform: 'uppercase', marginTop: '0.5rem', marginBottom: 0 }}>RELATÓRIO</p>
+            </div>
+          ) : (
+            <div style={{ flexShrink: 0, height: '60px', borderBottom: '1px solid #0f0f0f' }} />
+          )}
+
+          {/* Etapas */}
+          <div style={{ flex: 1, overflowY: 'hidden' }}>
+            {!sidebarCollapsed && (
+              <p style={{ color: '#1a1a1a', fontSize: '0.58rem', letterSpacing: '0.25em', textTransform: 'uppercase', padding: '1.25rem 1.75rem 0.75rem', margin: 0 }}>ETAPAS</p>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {STEPS.map((s, i) => (
+                <button key={i} onClick={() => { if (i < step || isPreview) { setStep(i) } }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: sidebarCollapsed ? 'center' : 'flex-start', gap: '0.75rem', padding: sidebarCollapsed ? '0.875rem 0' : '0.7rem 1.75rem', background: i === step && !isPreview ? 'rgba(255,107,0,0.06)' : 'transparent', border: 'none', borderLeft: sidebarCollapsed ? 'none' : `2px solid ${i === step && !isPreview ? '#FF6B00' : 'transparent'}`, outline: 'none', cursor: i <= step || isPreview ? 'pointer' : 'default', textAlign: 'left', width: '100%', transition: 'all 0.2s', boxSizing: 'border-box' }}
+                  onMouseEnter={e => { if (i !== step) e.currentTarget.style.background = 'rgba(255,255,255,0.02)' }}
+                  onMouseLeave={e => { if (i !== step) e.currentTarget.style.background = 'transparent' }}
+                >
+                  <span style={{ fontFamily: 'Anton, sans-serif', fontSize: '0.65rem', letterSpacing: '0.05em', minWidth: '20px', flexShrink: 0, color: isPreview ? '#3a3a3a' : i === step ? '#FF6B00' : i < step ? '#3a3a3a' : '#1e1e1e', transition: 'color 0.2s' }}>
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  {!sidebarCollapsed && (
+                    <span style={{ fontSize: '0.78rem', color: isPreview ? '#2a2a2a' : i === step ? '#fff' : i < step ? '#3a3a3a' : '#2e2e2e', fontFamily: 'Poppins, sans-serif', fontWeight: i === step && !isPreview ? 500 : 400, lineHeight: 1.3, transition: 'color 0.2s' }}>
+                      {s.bloco}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Progresso */}
+          {!sidebarCollapsed && !isPreview && (
+            <div style={{ borderTop: '1px solid #0f0f0f', padding: '1.25rem 1.75rem', flexShrink: 0 }}>
+              <p style={{ color: '#1a1a1a', fontSize: '0.58rem', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '0.625rem' }}>PROGRESSO</p>
+              <div style={{ height: '2px', background: '#111', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${((step + 1) / 7) * 100}%`, background: '#FF6B00', borderRadius: '2px', transition: 'width 0.5s ease' }} />
+              </div>
+              <p style={{ color: '#2a2a2a', fontSize: '0.7rem', marginTop: '0.5rem' }}>{Math.round(((step + 1) / 7) * 100)}% concluído</p>
+            </div>
+          )}
+
+          {/* Link hub */}
+          <div style={{ borderTop: '1px solid #0f0f0f', padding: sidebarCollapsed ? '1rem 0' : '1rem 1.75rem 1.5rem', flexShrink: 0, display: 'flex', justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}>
+            <a href="/hub" title="Voltar ao painel"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#222', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none', transition: 'color 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00' }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#222' }}
+            >
+              <span>←</span>
+              {!sidebarCollapsed && <span>PAINEL</span>}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Área de conteúdo ── */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
+        {/* cabeçalho */}
+        {!isPreview && (
+          <div style={{ padding: '3rem 5rem 2.5rem', borderBottom: '1px solid #141414', flexShrink: 0 }}>
+            <p style={{ color: '#FF6B00', fontSize: '0.68rem', letterSpacing: '0.3em', marginBottom: '0.75rem', textTransform: 'uppercase' }}>Etapa {step + 1} de 7</p>
+            <h2 style={{ fontFamily: 'Anton, sans-serif', fontSize: 'clamp(1.8rem, 3vw, 2.8rem)', color: '#fff', letterSpacing: '0.04em', lineHeight: 1, marginBottom: '0.5rem' }}>{STEPS[step].bloco}</h2>
+            <p style={{ color: '#555', fontSize: '0.95rem' }}>{STEPS[step].subtitulo}</p>
+          </div>
+        )}
+
+        {/* corpo */}
+        <div ref={contentRef} style={{ flex: 1, overflowY: 'auto', padding: isPreview ? '2rem 3rem' : '3rem 5rem' }}>
+          {!isPreview && renderStep()}
+          {isPreview && renderPreview()}
+        </div>
+
+        {/* footer formulário */}
+        {!isPreview && (
+          <div style={{ padding: '1.75rem 5rem', borderTop: '1px solid #141414', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, background: 'rgba(8,8,8,0.9)', backdropFilter: 'blur(8px)' }}>
+            {step > 0 ? (
+              <button onClick={() => setStep(s => s - 1)}
+                style={{ background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '8px', padding: '0.875rem 2rem', color: '#666', fontSize: '0.9rem', fontFamily: 'Poppins, sans-serif', cursor: 'pointer', transition: 'all 0.2s' }}
+                onMouseEnter={e => { const b = e.currentTarget; b.style.borderColor = '#444'; b.style.color = '#ccc' }}
+                onMouseLeave={e => { const b = e.currentTarget; b.style.borderColor = '#1e1e1e'; b.style.color = '#666' }}
+              >← Voltar</button>
+            ) : <div />}
+            <button
+              onClick={() => { if (contentRef.current) contentRef.current.scrollTop = 0; setStep(s => s + 1) }}
+              style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.875rem 2.75rem', color: '#fff', fontFamily: 'Anton, sans-serif', fontSize: '0.9rem', letterSpacing: '0.15em', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 20px rgba(255,107,0,0.2)' }}
+              onMouseEnter={e => { const b = e.currentTarget; b.style.background = '#e55f00'; b.style.boxShadow = '0 6px 28px rgba(255,107,0,0.35)' }}
+              onMouseLeave={e => { const b = e.currentTarget; b.style.background = '#FF6B00'; b.style.boxShadow = '0 4px 20px rgba(255,107,0,0.2)' }}
+            >
+              {step === 6 ? 'VER RELATÓRIO' : 'CONTINUAR →'}
+            </button>
+          </div>
+        )}
+
+        {/* footer preview — implementado na Task 6 */}
+        {isPreview && (
+          <div style={{ padding: '1.75rem 3rem', borderTop: '1px solid #141414', display: 'flex', justifyContent: 'flex-end', gap: '1rem', alignItems: 'center', flexShrink: 0, background: 'rgba(8,8,8,0.9)', backdropFilter: 'blur(8px)' }}>
+            <button
+              onClick={handleCopiar}
+              style={{ background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '8px', padding: '0.875rem 2rem', color: '#ccc', fontSize: '0.88rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.1em', cursor: 'pointer', transition: 'all 0.2s' }}
+              onMouseEnter={e => { const b = e.currentTarget; b.style.borderColor = '#444'; b.style.color = '#fff' }}
+              onMouseLeave={e => { const b = e.currentTarget; b.style.borderColor = '#1e1e1e'; b.style.color = '#ccc' }}
+            >
+              {copiado ? '✓ COPIADO' : 'COPIAR RELATÓRIO'}
+            </button>
+            <button
+              onClick={handleExportarPDF}
+              disabled={exportando}
+              style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.875rem 2.75rem', color: '#fff', fontFamily: 'Anton, sans-serif', fontSize: '0.88rem', letterSpacing: '0.15em', cursor: exportando ? 'not-allowed' : 'pointer', opacity: exportando ? 0.7 : 1, transition: 'all 0.2s', boxShadow: '0 4px 20px rgba(255,107,0,0.2)' }}
+              onMouseEnter={e => { if (!exportando) { const b = e.currentTarget; b.style.background = '#e55f00'; b.style.boxShadow = '0 6px 28px rgba(255,107,0,0.35)' }}}
+              onMouseLeave={e => { const b = e.currentTarget; b.style.background = '#FF6B00'; b.style.boxShadow = '0 4px 20px rgba(255,107,0,0.2)' }}
+            >
+              {exportando ? 'GERANDO...' : 'EXPORTAR PDF'}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
