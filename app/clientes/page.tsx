@@ -960,6 +960,7 @@ export default function ClientesPage() {
   const [ordenarDir, setOrdenarDir] = useState<'asc' | 'desc'>('desc')
   const [filtroUrgente, setFiltroUrgente] = useState(false)
   const [filtroStatus, setFiltroStatus] = useState('todos')
+  const [exportando, setExportando] = useState(false)
 
   const justDraggedRef = useRef(false)
   const sensors = useSensors(
@@ -996,6 +997,26 @@ export default function ClientesPage() {
   function handleOrdenar(col: OrdenarPor) {
     if (ordenarPor === col) setOrdenarDir(d => d === 'asc' ? 'desc' : 'asc')
     else { setOrdenarPor(col); setOrdenarDir('desc') }
+  }
+
+  async function handleExportarCSV() {
+    setExportando(true)
+    try {
+      const res = await fetch('/api/clientes/export')
+      if (!res.ok) throw new Error('Falha na exportação')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(new Blob([blob], { type: 'text/csv' }))
+      const a = document.createElement('a')
+      const today = new Date().toISOString().split('T')[0]
+      a.href = url
+      a.download = `clientes-orium-${today}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Erro ao exportar CSV:', err)
+    } finally {
+      setExportando(false)
+    }
   }
 
   function handleFiltrarEntregas() {
@@ -1054,12 +1075,20 @@ export default function ClientesPage() {
               )
             })()}
           </div>
-          <button onClick={() => setModalNovo(true)}
-            style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.75rem 1.5rem', color: '#fff', fontFamily: 'Anton, sans-serif', fontSize: '0.9rem', letterSpacing: '0.12em', cursor: 'pointer', boxShadow: '0 4px 20px rgba(255,107,0,0.25)', transition: 'all 0.2s', alignSelf: 'flex-end' }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#e55f00'; e.currentTarget.style.boxShadow = '0 6px 28px rgba(255,107,0,0.35)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = '#FF6B00'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(255,107,0,0.25)' }}>
-            + NOVO CLIENTE
-          </button>
+          <div style={{ display: 'flex', gap: '0.625rem', alignSelf: 'flex-end', flexWrap: 'wrap' }}>
+            <button onClick={handleExportarCSV} disabled={exportando}
+              style={{ background: 'transparent', border: '1px solid #333', borderRadius: '8px', padding: '0.75rem 1.25rem', color: '#aaa', fontFamily: 'Anton, sans-serif', fontSize: '0.9rem', letterSpacing: '0.12em', cursor: exportando ? 'not-allowed' : 'pointer', opacity: exportando ? 0.6 : 1, transition: 'all 0.15s' }}
+              onMouseEnter={e => { if (!exportando) { e.currentTarget.style.borderColor = '#FF6B00'; e.currentTarget.style.color = '#fff' } }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#aaa' }}>
+              {exportando ? 'Exportando...' : 'Exportar CSV'}
+            </button>
+            <button onClick={() => setModalNovo(true)}
+              style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.75rem 1.5rem', color: '#fff', fontFamily: 'Anton, sans-serif', fontSize: '0.9rem', letterSpacing: '0.12em', cursor: 'pointer', boxShadow: '0 4px 20px rgba(255,107,0,0.25)', transition: 'all 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#e55f00'; e.currentTarget.style.boxShadow = '0 6px 28px rgba(255,107,0,0.35)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#FF6B00'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(255,107,0,0.25)' }}>
+              + NOVO CLIENTE
+            </button>
+          </div>
         </div>
 
         {/* Dashboard */}
