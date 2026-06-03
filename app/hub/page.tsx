@@ -34,14 +34,15 @@ const FERRAMENTAS = [
     descricao: 'Planejamento de conteúdo mensal gerado com IA por cliente.',
     href: '/calendario',
   },
+  {
+    tag: 'RESULTADOS',
+    titulo: 'RELATÓRIO',
+    descricao: 'Relatório mensal de resultados por cliente.',
+    href: '/relatorio',
+  },
 ];
 
 const EM_BREVE = [
-  {
-    tag: 'EM BREVE',
-    titulo: 'RELATÓRIO',
-    descricao: 'Relatório mensal de resultados por cliente.',
-  },
   {
     tag: 'EM BREVE',
     titulo: 'CHECKLIST',
