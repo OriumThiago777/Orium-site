@@ -132,6 +132,7 @@ function PropostaPage() {
   const [savedMsg, setSavedMsg] = useState('');
   const searchParams = useSearchParams();
   const docParam = searchParams.get('doc');
+  const clienteParam = searchParams.get('cliente');
 
   useEffect(() => {
     if (!autenticado || !docParam) return;
@@ -144,7 +145,7 @@ function PropostaPage() {
   const [categoriasColapsadas, setCategoriasColapsadas] = useState<Set<string>>(new Set());
 
   const [form, setForm] = useState<FormState>({
-    nomeCliente: '',
+    nomeCliente: clienteParam || '',
     segmento: '',
     dataProposta: new Date().toISOString().split('T')[0],
     validadeProposta: '',

@@ -558,6 +558,79 @@ function VistaTable({ clientes, onSelect }: { clientes: Cliente[]; onSelect: (c:
   )
 }
 
+// ─── Dashboard ───────────────────────────────────────────────────────────────
+function Dashboard({ clientes }: { clientes: Cliente[] }) {
+  const [totalDocs, setTotalDocs] = useState<number | null>(null)
+
+  useEffect(() => {
+    fetch('/api/documentos')
+      .then(r => r.json())
+      .then(d => setTotalDocs(Array.isArray(d) ? d.length : 0))
+      .catch(() => setTotalDocs(0))
+  }, [])
+
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+
+  function diffDays(dateStr: string) {
+    return Math.floor((new Date(dateStr + 'T00:00:00').getTime() - today.getTime()) / 86400000)
+  }
+
+  const ativos = clientes.filter(c => c.status === 'Ativo').length
+  const receita = clientes.filter(c => c.status === 'Ativo').reduce((acc, c) => acc + (c.valorMensal ?? 0), 0)
+  const proximasCount = clientes.filter(c => {
+    if (!c.proximoDeliverable) return false
+    const d = diffDays(c.proximoDeliverable)
+    return d >= 0 && d <= 7
+  }).length
+  const proximasList = clientes
+    .filter(c => c.proximoDeliverable && diffDays(c.proximoDeliverable) <= 7)
+    .sort((a, b) => a.proximoDeliverable.localeCompare(b.proximoDeliverable))
+
+  const cards = [
+    { label: 'CLIENTES ATIVOS',     value: String(ativos),                                   cor: '#22C55E' },
+    { label: 'RECEITA MENSAL',       value: formatBRL(receita),                               cor: '#FF6B00' },
+    { label: 'PRÓXIMAS ENTREGAS',    value: String(proximasCount),                            cor: '#3B82F6' },
+    { label: 'DOCUMENTOS GERADOS',   value: totalDocs === null ? '...' : String(totalDocs),   cor: '#8B5CF6' },
+  ]
+
+  return (
+    <div style={{ marginBottom: '2rem' }}>
+      {/* 4 metric cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.875rem', marginBottom: '1rem' }}>
+        {cards.map(card => (
+          <div key={card.label} style={{ background: '#111111', border: '1px solid #222222', borderTop: `4px solid ${card.cor}`, borderRadius: '8px', padding: '1.125rem 1.25rem' }}>
+            <p style={{ color: '#777', fontSize: '0.65rem', letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 0.5rem' }}>{card.label}</p>
+            <p style={{ fontFamily: 'Anton, sans-serif', fontSize: '1.75rem', color: '#fff', margin: 0, letterSpacing: '0.02em', lineHeight: 1 }}>{card.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Próximas entregas — lista */}
+      <div style={{ background: '#111111', border: '1px solid #222222', borderRadius: '8px', padding: '1.125rem 1.25rem' }}>
+        <h3 style={{ fontFamily: 'Anton, sans-serif', fontSize: '0.9rem', color: '#fff', letterSpacing: '0.12em', margin: '0 0 0.875rem' }}>PRÓXIMAS ENTREGAS</h3>
+        {proximasList.length === 0 ? (
+          <p style={{ color: '#555', fontSize: '0.85rem', margin: 0 }}>Nenhuma entrega nos próximos 7 dias</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+            {proximasList.map(c => {
+              const urgency = deliverableUrgency(c.proximoDeliverable)
+              const rowBg = urgency === 'vencido' ? 'rgba(239,68,68,0.1)' : urgency === 'urgente' ? 'rgba(255,107,0,0.1)' : 'transparent'
+              const dateCor = urgency === 'vencido' ? '#ef4444' : urgency === 'urgente' ? '#FF6B00' : '#777'
+              return (
+                <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.45rem 0.625rem', borderRadius: '6px', background: rowBg }}>
+                  <span style={{ color: '#e0e0e0', fontSize: '0.875rem', fontWeight: 500, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.nome}</span>
+                  <FaseBadge fase={c.faseAtual} />
+                  <span style={{ color: dateCor, fontSize: '0.82rem', whiteSpace: 'nowrap', flexShrink: 0 }}>{formatDate(c.proximoDeliverable)}</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Tela de Senha ────────────────────────────────────────────────────────────
 function TelaSenha({ onAuth }: { onAuth: () => void }) {
   const [senha, setSenha] = useState('')
@@ -672,6 +745,9 @@ export default function ClientesPage() {
             + NOVO CLIENTE
           </button>
         </div>
+
+        {/* Dashboard */}
+        <Dashboard clientes={clientes} />
 
         {/* Abas de vista */}
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.75rem' }}>

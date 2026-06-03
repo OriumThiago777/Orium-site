@@ -111,6 +111,7 @@ function RaioXPage() {
   const [savedMsg, setSavedMsg] = useState('');
   const searchParams = useSearchParams();
   const docParam = searchParams.get('doc');
+  const clienteParam = searchParams.get('cliente');
 
   useEffect(() => {
     if (!autenticado || !docParam) return;
@@ -121,7 +122,7 @@ function RaioXPage() {
   }, [autenticado, docParam]);
 
   const [form, setForm] = useState<FormState>({
-    nomeCliente: '',
+    nomeCliente: clienteParam || '',
     segmentoCliente: '',
     dataAnalise: new Date().toISOString().split('T')[0],
     dimensoes: Array.from({ length: 8 }, () => ({ classificacao: '' as Classificacao, observacao: '' })),

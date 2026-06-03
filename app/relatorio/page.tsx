@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, Suspense } from 'react'
 import Image from 'next/image'
+import { useSearchParams } from 'next/navigation'
 import { isAuthenticated, saveAuth } from '@/lib/auth'
 
 type FormData = {
@@ -40,7 +41,10 @@ const STEPS = [
 
 const BG_GRADIENT = 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%), linear-gradient(to bottom, #080808 0%, transparent 30%, transparent 70%, #080808 100%)'
 
-export default function RelatorioPage() {
+function RelatorioPage() {
+  const searchParams = useSearchParams()
+  const clienteParam = searchParams.get('cliente')
+
   const [autenticado, setAutenticado] = useState(() => isAuthenticated())
   const [senha, setSenha] = useState('')
   const [erroSenha, setErroSenha] = useState(false)
@@ -51,7 +55,7 @@ export default function RelatorioPage() {
   const contentRef = useRef<HTMLDivElement>(null)
 
   const [form, setForm] = useState<FormData>({
-    cliente: '', periodoMes: '', periodoAno: '', responsavel: 'Thiago',
+    cliente: clienteParam || '', periodoMes: '', periodoAno: '', responsavel: 'Thiago',
     segInicio: '', segFim: '', alcance: '', impressoes: '',
     engajamento: '', cliques: '', destaques: '', atencao: '', observacoes: '',
   })
@@ -554,6 +558,7 @@ export default function RelatorioPage() {
   const isPreview = step === 7
 
   return (
+
     <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', fontFamily: 'Poppins, sans-serif', display: 'flex' }}>
       {bgImage}
 
@@ -693,5 +698,13 @@ export default function RelatorioPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function Page() {
+  return (
+    <Suspense>
+      <RelatorioPage />
+    </Suspense>
   )
 }
