@@ -312,7 +312,136 @@ export default function RelatorioPage() {
 
     return null
   }
-  function renderPreview(): React.ReactNode { return null }
+  function renderPreview(): React.ReactNode {
+    const segDiff = form.segFim && form.segInicio
+      ? Number(form.segFim) - Number(form.segInicio)
+      : null
+
+    const secTitle = (text: string) => (
+      <div style={{ marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+          <div style={{ width: '3px', height: '1.4rem', background: '#FF6B00', borderRadius: '2px', flexShrink: 0 }} />
+          <h3 style={{ fontFamily: 'Anton, sans-serif', color: '#FF6B00', fontSize: '0.75rem', letterSpacing: '0.25em', textTransform: 'uppercase', margin: 0 }}>{text}</h3>
+        </div>
+        <div style={{ height: '1px', background: '#1a1a1a' }} />
+      </div>
+    )
+
+    return (
+      <div>
+        {/* Header do preview */}
+        <div style={{ marginBottom: '2rem', paddingBottom: '2rem', borderBottom: '1px solid #1a1a1a', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <p style={{ color: '#FF6B00', fontSize: '0.68rem', letterSpacing: '0.3em', textTransform: 'uppercase', marginBottom: '0.5rem' }}>RELATÓRIO MENSAL</p>
+            <h1 style={{ fontFamily: 'Anton, sans-serif', fontSize: 'clamp(1.8rem, 3vw, 2.5rem)', color: '#fff', letterSpacing: '0.04em', lineHeight: 1, marginBottom: '0.5rem' }}>
+              {form.cliente || 'CLIENTE'}
+            </h1>
+            <p style={{ color: '#555', fontSize: '0.9rem' }}>
+              {form.periodoMes && form.periodoAno ? `${form.periodoMes} de ${form.periodoAno}` : 'Período não definido'}
+              {form.responsavel && ` · ${form.responsavel}`}
+            </p>
+          </div>
+          <Image src="/lglaranja.png" alt="ORIUM" width={90} height={28} style={{ objectFit: 'contain', opacity: 0.7 }} />
+        </div>
+
+        {/* Div capturável pelo html2canvas */}
+        <div ref={previewRef} style={{ background: '#0d0d0d', borderRadius: '12px', padding: '2.5rem', border: '1px solid #1a1a1a' }}>
+
+          {/* Métricas */}
+          {secTitle('MÉTRICAS')}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem', marginBottom: '2.5rem' }}>
+            {[
+              {
+                label: 'SEGUIDORES',
+                value: form.segFim || '—',
+                sub: segDiff !== null ? (segDiff >= 0 ? `+${segDiff}` : `${segDiff}`) : undefined,
+                subColor: segDiff !== null ? (segDiff >= 0 ? '#22c55e' : '#ef4444') : '#555',
+              },
+              { label: 'ALCANCE', value: form.alcance || '—', sub: undefined, subColor: '#555' },
+              { label: 'IMPRESSÕES', value: form.impressoes || '—', sub: undefined, subColor: '#555' },
+              { label: 'ENGAJAMENTO', value: form.engajamento ? `${form.engajamento}%` : '—', sub: undefined, subColor: '#555' },
+              { label: 'CLIQUES', value: form.cliques || '—', sub: undefined, subColor: '#555' },
+            ].map(card => (
+              <div key={card.label} style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '8px', padding: '1.25rem', textAlign: 'center' }}>
+                <p style={{ color: '#444', fontSize: '0.6rem', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '0.5rem' }}>{card.label}</p>
+                <p style={{ fontFamily: 'Anton, sans-serif', color: '#FF6B00', fontSize: '1.5rem', letterSpacing: '0.05em', lineHeight: 1, marginBottom: '0.25rem' }}>{card.value}</p>
+                {card.sub && <p style={{ color: card.subColor, fontSize: '0.78rem', fontWeight: 500 }}>{card.sub}</p>}
+              </div>
+            ))}
+          </div>
+
+          {/* Entregas */}
+          {listas.entregas.length > 0 && (
+            <div style={{ marginBottom: '2.5rem' }}>
+              {secTitle('ENTREGAS DO MÊS')}
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {listas.entregas.map((e, i) => (
+                  <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', color: '#bbb', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                    <span style={{ color: '#FF6B00', flexShrink: 0, marginTop: '0.15rem' }}>▸</span>{e}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Destaques */}
+          {form.destaques && (
+            <div style={{ marginBottom: '2.5rem' }}>
+              {secTitle('DESTAQUES')}
+              <p style={{ color: '#bbb', fontSize: '0.9rem', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{form.destaques}</p>
+            </div>
+          )}
+
+          {/* Pontos de atenção */}
+          {form.atencao && (
+            <div style={{ marginBottom: '2.5rem' }}>
+              {secTitle('PONTOS DE ATENÇÃO')}
+              <p style={{ color: '#bbb', fontSize: '0.9rem', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{form.atencao}</p>
+            </div>
+          )}
+
+          {/* Próximos passos */}
+          {listas.proximos.length > 0 && (
+            <div style={{ marginBottom: '2.5rem' }}>
+              {secTitle('PRÓXIMOS PASSOS')}
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {listas.proximos.map((p, i) => (
+                  <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', color: '#bbb', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                    <span style={{ color: '#FF6B00', flexShrink: 0, marginTop: '0.15rem' }}>▸</span>{p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Observações */}
+          {form.observacoes && (
+            <div>
+              {secTitle('OBSERVAÇÕES')}
+              <p style={{ color: '#bbb', fontSize: '0.9rem', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{form.observacoes}</p>
+            </div>
+          )}
+
+          {/* Rodapé interno */}
+          <div style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid #1a1a1a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <p style={{ color: '#2a2a2a', fontSize: '0.65rem', letterSpacing: '0.15em', textTransform: 'uppercase' }}>ORIUM™ — Relatório Mensal</p>
+            <p style={{ color: '#2a2a2a', fontSize: '0.65rem' }}>
+              {form.periodoMes} {form.periodoAno}
+            </p>
+          </div>
+        </div>
+
+        {/* Botão para editar */}
+        <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-start' }}>
+          <button onClick={() => setStep(0)}
+            style={{ background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '8px', padding: '0.625rem 1.25rem', color: '#555', fontSize: '0.8rem', fontFamily: 'Poppins, sans-serif', cursor: 'pointer', transition: 'all 0.2s' }}
+            onMouseEnter={e => { const b = e.currentTarget; b.style.borderColor = '#444'; b.style.color = '#ccc' }}
+            onMouseLeave={e => { const b = e.currentTarget; b.style.borderColor = '#1e1e1e'; b.style.color = '#555' }}
+          >← Editar dados</button>
+        </div>
+      </div>
+    )
+  }
   async function handleCopiar() {}
   async function handleExportarPDF() {}
 
