@@ -34,13 +34,12 @@ export default function Home() {
               </p>
 
               <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold leading-tight mb-5 md:mb-6">
-                Estruturamos negócios locais para terem presença digital
-                profissional e pronta para vender.
+                Seu negócio vale mais do que parece.
               </h1>
 
               <p className="text-zinc-400 text-base sm:text-lg md:text-xl mb-8 md:mb-10 leading-relaxed">
-                Não é só sobre postar. É sobre posicionar, organizar e sustentar
-                a presença digital com branding, conteúdo, site e automação.
+                A ORIUM estrutura como você se apresenta — posicionamento,
+                presença e percepção de valor, do Instagram ao site.
               </p>
 
               <div className="flex flex-col md:flex-row gap-4">
@@ -149,21 +148,21 @@ export default function Home() {
               <div className="rounded-2xl border border-zinc-800 bg-black/70 p-6 backdrop-blur-sm">
                 <h3 className="text-xl font-bold mb-2">Posicionamento</h3>
                 <p className="text-zinc-400">
-                  Clareza sobre como a marca deve ser percebida pelo público.
+                  Como sua marca é percebida define quem ela atrai — e quanto cobra.
                 </p>
               </div>
 
               <div className="rounded-2xl border border-zinc-800 bg-black/70 p-6 backdrop-blur-sm">
                 <h3 className="text-xl font-bold mb-2">Percepção premium</h3>
                 <p className="text-zinc-400">
-                  Design, linguagem e presença visual alinhados a valor.
+                  Design, linguagem e presença alinhados ao valor real do que você entrega.
                 </p>
               </div>
 
               <div className="rounded-2xl border border-zinc-800 bg-black/70 p-6 backdrop-blur-sm">
                 <h3 className="text-xl font-bold mb-2">Operação digital</h3>
                 <p className="text-zinc-400">
-                  Estruturas, páginas e automações para operar com método.
+                  Estruturas e automações para você operar com método, não no improviso.
                 </p>
               </div>
 
@@ -173,8 +172,7 @@ export default function Home() {
                 </h3>
 
                 <p className="text-zinc-400">
-                  Presença digital pensada para gerar continuidade, não só picos
-                  pontuais.
+                  Presença construída para gerar continuidade — não picos que somem em duas semanas.
                 </p>
               </div>
             </div>
@@ -214,26 +212,26 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <ProcessStep
                 number="1"
-                title="Diagnóstico"
-                description="Entendemos o momento da marca, seus objetivos, posicionamento atual e principais gargalos digitais."
+                title="Diagnóstico antes de qualquer post."
+                description="Entendemos onde sua marca está e o que está travando sua presença antes de propor qualquer solução."
               />
 
               <ProcessStep
                 number="2"
-                title="Estratégia"
-                description="Definimos a direção visual, narrativa, comunicação e prioridades para fortalecer a percepção da marca."
+                title="Percepção é estratégia."
+                description="A forma como você aparece define o quanto as pessoas confiam — e quanto estão dispostas a pagar."
               />
 
               <ProcessStep
                 number="3"
-                title="Estrutura"
-                description="Organizamos perfil, conteúdo, páginas, automações e materiais para criar uma presença mais profissional."
+                title="Estrutura que sustenta crescimento."
+                description="Branding, conteúdo e presença digital organizados para funcionar de forma consistente, não pontual."
               />
 
               <ProcessStep
                 number="4"
-                title="Execução"
-                description="Colocamos a estrutura em prática com entregas consistentes, ajustes e melhoria contínua."
+                title="Tecnologia a serviço do negócio."
+                description="Automações, sites e sistemas que reduzem fricção operacional e aumentam capacidade de atendimento."
               />
             </div>
           </div>
@@ -290,9 +288,7 @@ export default function Home() {
                   </h3>
 
                   <p className="text-zinc-400 leading-relaxed mb-8">
-                    Estruturação de Instagram, destaques, criativos, vídeos e
-                    comunicação visual para fortalecer percepção e facilitar o
-                    contato com clientes.
+                    Reestruturação completa da presença digital: identidade visual, perfil do Instagram, destaques, comunicação e planejamento mensal de conteúdo. Resultado: presença mais profissional, comunicação clara e consistência na publicação.
                   </p>
 
                   <div className="flex flex-wrap gap-3">
@@ -354,9 +350,7 @@ export default function Home() {
                   </h3>
 
                   <p className="text-zinc-400 leading-relaxed mb-8">
-                    Posicionamento digital para autoridade profissional, com
-                    organização de perfil, destaques, identidade visual e
-                    comunicação para cursos, palestras e treinamentos.
+                    Posicionamento digital para autoridade profissional na área de saúde e educação. Organização de perfil, identidade visual, linguagem e comunicação para cursos, palestras e treinamentos.
                   </p>
 
                   <div className="flex flex-wrap gap-3">
@@ -479,9 +473,9 @@ export default function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
               <div className="rounded-2xl border border-zinc-800 bg-black/40 p-5 md:p-6">
                 <p className="text-orange-500 text-sm font-semibold mb-3">01</p>
-                <h3 className="text-lg md:text-xl font-bold mb-2">Você chama no WhatsApp</h3>
+                <h3 className="text-lg md:text-xl font-bold mb-2">Primeiro contato</h3>
                 <p className="text-zinc-400 leading-relaxed">
-                  Entendemos seu negócio, momento atual e principais objetivos.
+                  Entendemos seu negócio, momento atual e principais objetivos antes de qualquer análise.
                 </p>
               </div>
 
@@ -628,8 +622,7 @@ export default function Home() {
             <div>
               <h3 className="text-orange-500 text-xl md:text-2xl font-bold mb-4">ORIUM</h3>
               <p className="text-zinc-400 leading-relaxed max-w-sm mx-auto md:mx-0">
-                Estrutura digital para negócios locais que querem presença
-                profissional e organizada.
+                Negócios bons merecem parecer tão bons quanto são.
               </p>
             </div>
 
