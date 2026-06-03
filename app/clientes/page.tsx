@@ -106,6 +106,26 @@ function getHealthScore(cliente: Cliente): 'verde' | 'amarelo' | 'vermelho' {
   return 'verde'
 }
 
+function formatarDataHora(): string {
+  const n = new Date()
+  const pad = (x: number) => String(x).padStart(2, '0')
+  return `${pad(n.getDate())}/${pad(n.getMonth() + 1)}/${n.getFullYear()} ${pad(n.getHours())}:${pad(n.getMinutes())}`
+}
+
+const TIPO_DOC_COR: Record<string, string> = {
+  'Raio-X': '#FF6B00',
+  'Proposta': '#3B82F6',
+  'Relatório': '#22C55E',
+  'Contrato': '#8B5CF6',
+}
+
+const TIPO_DOC_ROTA: Record<string, string> = {
+  'Raio-X': '/raio-x',
+  'Proposta': '/proposta',
+  'Relatório': '/relatorio',
+  'Contrato': '/contrato',
+}
+
 function DeliverableLabel({ dateStr }: { dateStr: string }) {
   const urgency = deliverableUrgency(dateStr)
   if (urgency === 'sem') return <span style={{ color: '#555' }}>Sem prazo</span>
@@ -247,11 +267,32 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted }: {
   onUpdated: (c: Cliente) => void
   onDeleted: (id: string) => void
 }) {
+  type DocItem = { id: string; pageId?: string; nome: string; tipo: string; cliente: string; dataGeracao: string }
+
   const [form, setForm] = useState<Cliente>({ ...cliente })
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [tab, setTab] = useState<'info' | 'acoes'>('info')
+  const [docCliente, setDocCliente] = useState<DocItem[]>([])
+  const [loadingDocs, setLoadingDocs] = useState(false)
+  const [novaNota, setNovaNota] = useState('')
+  const [expandirNotas, setExpandirNotas] = useState(false)
+
+  useEffect(() => {
+    setLoadingDocs(true)
+    fetch('/api/documentos')
+      .then(r => r.json())
+      .then(d => {
+        if (Array.isArray(d)) {
+          setDocCliente(d.filter((doc: DocItem) =>
+            doc.cliente?.toLowerCase().includes(cliente.nome.toLowerCase())
+          ))
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingDocs(false))
+  }, [cliente.nome])
 
   const set = (k: keyof Cliente, v: unknown) => setForm(p => ({ ...p, [k]: v }))
 
@@ -280,6 +321,28 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted }: {
     }
   }
 
+  async function addNota() {
+    const texto = novaNota.trim()
+    if (!texto) return
+    const novaLinha = `[${formatarDataHora()}] ${texto}`
+    const novasNotas = form.notas ? `${form.notas}\n${novaLinha}` : novaLinha
+    setForm(p => ({ ...p, notas: novasNotas }))
+    setNovaNota('')
+    fetch(`/api/clientes?id=${cliente.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notas: novasNotas }),
+    }).catch(console.error)
+  }
+
+  function parseNota(linha: string): { timestamp: string; texto: string } {
+    const m = linha.match(/^\[(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2})\]\s*(.*)$/)
+    return m ? { timestamp: m[1], texto: m[2] } : { timestamp: '', texto: linha }
+  }
+
+  const linhasNotas = (form.notas || '').split('\n').filter(l => l.trim()).reverse()
+  const notasVisiveis = expandirNotas ? linhasNotas : linhasNotas.slice(0, 5)
+
   const inputStyle: React.CSSProperties = { width: '100%', background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px', padding: '0.65rem 0.875rem', color: '#fff', fontSize: '0.88rem', fontFamily: 'Poppins, sans-serif', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }
   const labelStyle: React.CSSProperties = { display: 'block', color: '#777', fontSize: '0.72rem', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '0.3rem' }
   const actionBtnStyle: React.CSSProperties = { display: 'block', width: '100%', background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px', padding: '0.75rem 1rem', color: '#aaa', fontSize: '0.875rem', fontFamily: 'Poppins, sans-serif', textAlign: 'left', cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s', marginBottom: '0.5rem' }
@@ -307,6 +370,7 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted }: {
         <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 2rem' }}>
           {tab === 'info' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+              {/* Campos básicos */}
               <div>
                 <label style={labelStyle}>Nome</label>
                 <input value={form.nome} onChange={e => set('nome', e.target.value)} style={inputStyle}
@@ -371,17 +435,94 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted }: {
                   placeholder="0,00" style={inputStyle}
                   onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#333'} />
               </div>
+
+              {/* Notas com timestamp */}
               <div>
                 <label style={labelStyle}>Notas</label>
-                <textarea rows={3} value={form.notas} onChange={e => set('notas', e.target.value)} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }}
-                  onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#333'} />
+                {linhasNotas.length > 0 && (
+                  <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '8px', padding: '0.75rem', marginBottom: '0.625rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {notasVisiveis.map((linha, i) => {
+                      const { timestamp, texto } = parseNota(linha)
+                      return (
+                        <div key={i} style={{ borderBottom: i < notasVisiveis.length - 1 ? '1px solid #1a1a1a' : 'none', paddingBottom: i < notasVisiveis.length - 1 ? '0.5rem' : 0 }}>
+                          {timestamp && <p style={{ color: '#555', fontSize: '0.72rem', margin: '0 0 0.2rem' }}>{timestamp}</p>}
+                          <p style={{ color: '#ccc', fontSize: '0.85rem', margin: 0, lineHeight: 1.5 }}>{texto}</p>
+                        </div>
+                      )
+                    })}
+                    {linhasNotas.length > 5 && (
+                      <button onClick={() => setExpandirNotas(e => !e)}
+                        style={{ background: 'none', border: 'none', color: '#FF6B00', fontSize: '0.75rem', cursor: 'pointer', padding: 0, textAlign: 'left', fontFamily: 'Poppins, sans-serif', transition: 'opacity 0.15s' }}>
+                        {expandirNotas ? 'Ver menos' : `Ver todas (${linhasNotas.length})`}
+                      </button>
+                    )}
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    value={novaNota}
+                    onChange={e => setNovaNota(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addNota() } }}
+                    placeholder="Nova nota..."
+                    style={{ ...inputStyle, flex: 1 }}
+                    onFocus={e => e.target.style.borderColor = '#FF6B00'}
+                    onBlur={e => e.target.style.borderColor = '#333'}
+                  />
+                  <button onClick={addNota} disabled={!novaNota.trim()}
+                    style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.65rem 0.875rem', color: '#fff', fontFamily: 'Anton, sans-serif', fontSize: '0.75rem', letterSpacing: '0.1em', cursor: novaNota.trim() ? 'pointer' : 'not-allowed', opacity: novaNota.trim() ? 1 : 0.5, flexShrink: 0, transition: 'opacity 0.15s' }}>
+                    ADICIONAR
+                  </button>
+                </div>
               </div>
+
+              {/* Checkbox */}
               <div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', cursor: 'pointer' }}>
                   <input type="checkbox" checked={form.precisaRelatorio} onChange={e => set('precisaRelatorio', e.target.checked)}
                     style={{ width: '16px', height: '16px', accentColor: '#FF6B00', cursor: 'pointer' }} />
                   <span style={{ color: '#aaa', fontSize: '0.875rem' }}>Precisa de relatório</span>
                 </label>
+              </div>
+
+              {/* Documentos gerados */}
+              <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '8px', padding: '0.875rem' }}>
+                <p style={{ fontFamily: 'Anton, sans-serif', color: '#fff', fontSize: '0.75rem', letterSpacing: '0.12em', margin: '0 0 0.75rem', textTransform: 'uppercase' }}>DOCUMENTOS GERADOS</p>
+                {loadingDocs ? (
+                  <p style={{ color: '#555', fontSize: '0.82rem', margin: 0 }}>Carregando...</p>
+                ) : docCliente.length === 0 ? (
+                  <p style={{ color: '#555', fontSize: '0.82rem', margin: 0 }}>Nenhum documento gerado ainda</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {docCliente.slice(0, 5).map(doc => {
+                      const cor = TIPO_DOC_COR[doc.tipo] ?? '#555'
+                      const href = TIPO_DOC_ROTA[doc.tipo] ? `${TIPO_DOC_ROTA[doc.tipo]}?doc=${doc.id}` : '/meus-documentos'
+                      return (
+                        <div key={doc.id || doc.pageId} style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                          <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: '20px', fontSize: '0.68rem', fontWeight: 600, background: `${cor}22`, color: cor, border: `1px solid ${cor}44`, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                            {doc.tipo || '—'}
+                          </span>
+                          <span style={{ color: '#777', fontSize: '0.78rem', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {doc.dataGeracao ? formatDate(doc.dataGeracao) : '—'}
+                          </span>
+                          <a href={href} target="_blank" rel="noopener noreferrer"
+                            style={{ color: '#FF6B00', fontSize: '0.72rem', textDecoration: 'none', flexShrink: 0, border: '1px solid rgba(255,107,0,0.3)', borderRadius: '4px', padding: '2px 8px', transition: 'background 0.15s' }}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,107,0,0.15)' }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
+                            Abrir
+                          </a>
+                        </div>
+                      )
+                    })}
+                    {docCliente.length > 5 && (
+                      <a href="/meus-documentos" target="_blank" rel="noopener noreferrer"
+                        style={{ color: '#555', fontSize: '0.75rem', textDecoration: 'none', marginTop: '0.125rem', transition: 'color 0.15s' }}
+                        onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00' }}
+                        onMouseLeave={e => { e.currentTarget.style.color = '#555' }}>
+                        Ver todos →
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -545,7 +686,7 @@ function KanbanColuna({ fase, cor, clientes, onSelect }: {
 
 // ─── Vista Table ──────────────────────────────────────────────────────────────
 function VistaTable({
-  clientes, onSelect, ordenarPor, ordenarDir, onOrdenar, filtroUrgente, onLimparUrgente,
+  clientes, onSelect, ordenarPor, ordenarDir, onOrdenar, filtroUrgente, onLimparUrgente, filtroStatus, onFiltroStatus,
 }: {
   clientes: Cliente[]
   onSelect: (c: Cliente) => void
@@ -554,8 +695,9 @@ function VistaTable({
   onOrdenar: (col: OrdenarPor) => void
   filtroUrgente: boolean
   onLimparUrgente: () => void
+  filtroStatus: string
+  onFiltroStatus: (f: string) => void
 }) {
-  const [filtro, setFiltro] = useState<string>('todos')
   const filtros = ['todos', 'Ativo', 'Inativo', 'Proposta']
   const counts: Record<string, number> = { todos: clientes.length, Ativo: 0, Inativo: 0, Proposta: 0 }
   clientes.forEach(c => { if (counts[c.status] !== undefined) counts[c.status]++ })
@@ -569,7 +711,7 @@ function VistaTable({
     return diff <= 7
   }
 
-  let filtered = filtro === 'todos' ? clientes : clientes.filter(c => c.status === filtro)
+  let filtered = filtroStatus === 'todos' ? clientes : clientes.filter(c => c.status === filtroStatus)
   if (filtroUrgente) filtered = filtered.filter(isUrgenteCliente)
 
   const sorted = [...filtered].sort((a, b) => {
@@ -604,8 +746,8 @@ function VistaTable({
       {/* Filtros de status */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap', alignItems: 'center' }}>
         {filtros.map(f => (
-          <button key={f} onClick={() => setFiltro(f)}
-            style={{ padding: '0.375rem 1rem', borderRadius: '20px', border: `1px solid ${filtro === f ? '#FF6B00' : '#333'}`, background: filtro === f ? 'rgba(255,107,0,0.15)' : 'transparent', color: filtro === f ? '#FF6B00' : '#777', fontSize: '0.82rem', fontFamily: 'Poppins, sans-serif', cursor: 'pointer', transition: 'all 0.15s', letterSpacing: '0.05em' }}>
+          <button key={f} onClick={() => onFiltroStatus(f)}
+            style={{ padding: '0.375rem 1rem', borderRadius: '20px', border: `1px solid ${filtroStatus === f ? '#FF6B00' : '#333'}`, background: filtroStatus === f ? 'rgba(255,107,0,0.15)' : 'transparent', color: filtroStatus === f ? '#FF6B00' : '#777', fontSize: '0.82rem', fontFamily: 'Poppins, sans-serif', cursor: 'pointer', transition: 'all 0.15s', letterSpacing: '0.05em' }}>
             {f === 'todos' ? 'Todos' : f} ({counts[f] ?? 0})
           </button>
         ))}
@@ -817,6 +959,7 @@ export default function ClientesPage() {
   const [ordenarPor, setOrdenarPor] = useState<OrdenarPor>('dataInicio')
   const [ordenarDir, setOrdenarDir] = useState<'asc' | 'desc'>('desc')
   const [filtroUrgente, setFiltroUrgente] = useState(false)
+  const [filtroStatus, setFiltroStatus] = useState('todos')
 
   const justDraggedRef = useRef(false)
   const sensors = useSensors(
@@ -881,6 +1024,35 @@ export default function ClientesPage() {
             <p style={{ color: '#FF6B00', fontSize: '0.68rem', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: '0.375rem' }}>GESTÃO</p>
             <h1 style={{ fontFamily: 'Anton, sans-serif', fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#fff', letterSpacing: '0.03em', lineHeight: 0.95, marginBottom: '0.375rem' }}>CLIENTES</h1>
             <p style={{ color: '#777', fontSize: '0.875rem' }}>Gestão de clientes ativos e fases</p>
+            {(() => {
+              const hoje = new Date(); hoje.setHours(0, 0, 0, 0)
+              const vencidas = clientes.filter(c => c.status === 'Ativo' && c.proximoDeliverable && new Date(c.proximoDeliverable + 'T00:00:00') < hoje).length
+              const relatorio = clientes.filter(c => c.status === 'Ativo' && c.precisaRelatorio).length
+              const semContato = clientes.filter(c => c.status === 'Ativo' && diasDesdeInteracao(c) > 14).length
+              if (!vencidas && !relatorio && !semContato) return null
+              return (
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
+                  {vencidas > 0 && (
+                    <button onClick={() => { setVistaAtiva('table'); setFiltroUrgente(true) }}
+                      style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontSize: '0.75rem', fontFamily: 'Poppins, sans-serif', cursor: 'pointer', transition: 'opacity 0.15s' }}>
+                      ⚠ {vencidas} entrega{vencidas !== 1 ? 's' : ''} vencida{vencidas !== 1 ? 's' : ''}
+                    </button>
+                  )}
+                  {relatorio > 0 && (
+                    <button onClick={() => { setVistaAtiva('table'); setFiltroStatus('Ativo') }}
+                      style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(255,107,0,0.3)', background: 'rgba(255,107,0,0.15)', color: '#FF6B00', fontSize: '0.75rem', fontFamily: 'Poppins, sans-serif', cursor: 'pointer', transition: 'opacity 0.15s' }}>
+                      📄 {relatorio} cliente{relatorio !== 1 ? 's' : ''} {relatorio !== 1 ? 'precisam' : 'precisa'} de relatório
+                    </button>
+                  )}
+                  {semContato > 0 && (
+                    <button onClick={() => { setVistaAtiva('table'); setFiltroStatus('Ativo') }}
+                      style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(234,179,8,0.3)', background: 'rgba(234,179,8,0.15)', color: '#EAB308', fontSize: '0.75rem', fontFamily: 'Poppins, sans-serif', cursor: 'pointer', transition: 'opacity 0.15s' }}>
+                      💬 {semContato} cliente{semContato !== 1 ? 's' : ''} sem contato há 14+ dias
+                    </button>
+                  )}
+                </div>
+              )
+            })()}
           </div>
           <button onClick={() => setModalNovo(true)}
             style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.75rem 1.5rem', color: '#fff', fontFamily: 'Anton, sans-serif', fontSize: '0.9rem', letterSpacing: '0.12em', cursor: 'pointer', boxShadow: '0 4px 20px rgba(255,107,0,0.25)', transition: 'all 0.2s', alignSelf: 'flex-end' }}
@@ -947,6 +1119,8 @@ export default function ClientesPage() {
             onOrdenar={handleOrdenar}
             filtroUrgente={filtroUrgente}
             onLimparUrgente={() => setFiltroUrgente(false)}
+            filtroStatus={filtroStatus}
+            onFiltroStatus={setFiltroStatus}
           />
         )}
 
