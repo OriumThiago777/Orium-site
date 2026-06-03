@@ -14,6 +14,8 @@ import {
 } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 
+type OrdenarPor = 'nome' | 'dataInicio' | 'proximoDeliverable' | 'valorMensal'
+
 type Cliente = {
   id: string
   nome: string
@@ -47,6 +49,12 @@ const STATUS_COR: Record<string, string> = {
   'Proposta': '#3B82F6',
 }
 
+const HEALTH_COR: Record<string, string> = {
+  verde: '#22C55E',
+  amarelo: '#EAB308',
+  vermelho: '#ef4444',
+}
+
 const BG_STYLE = 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%), linear-gradient(to bottom, #080808 0%, transparent 30%, transparent 70%, #080808 100%)'
 
 function BgImage() {
@@ -77,6 +85,25 @@ function deliverableUrgency(dateStr: string): 'vencido' | 'urgente' | 'normal' |
   if (diff < 0) return 'vencido'
   if (diff <= 1) return 'urgente'
   return 'normal'
+}
+
+function diasDesdeInteracao(cliente: Cliente): number {
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const refStr = cliente.ultimaInteracao || cliente.dataInicio
+  if (!refStr) return 9999
+  const ref = new Date(refStr + 'T00:00:00')
+  return Math.floor((today.getTime() - ref.getTime()) / 86400000)
+}
+
+function getHealthScore(cliente: Cliente): 'verde' | 'amarelo' | 'vermelho' {
+  if (cliente.precisaRelatorio) return 'vermelho'
+  if (cliente.proximoDeliverable) {
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const dt = new Date(cliente.proximoDeliverable + 'T00:00:00')
+    if (dt < today) return 'vermelho'
+  }
+  if (diasDesdeInteracao(cliente) > 14) return 'amarelo'
+  return 'verde'
 }
 
 function DeliverableLabel({ dateStr }: { dateStr: string }) {
@@ -263,7 +290,6 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted }: {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
       <div style={{ background: '#111', border: '1px solid #222', borderRadius: '12px', width: '100%', maxWidth: '580px', position: 'relative', maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}>
-        {/* Header do modal */}
         <div style={{ padding: '1.5rem 2rem 1rem', borderBottom: '1px solid #1a1a1a', flexShrink: 0 }}>
           <h2 style={{ fontFamily: 'Anton, sans-serif', fontSize: '1.5rem', color: '#fff', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>{cliente.nome.toUpperCase()}</h2>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -271,8 +297,6 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted }: {
             <FaseBadge fase={form.faseAtual} />
           </div>
         </div>
-
-        {/* Abas */}
         <div style={{ display: 'flex', borderBottom: '1px solid #1a1a1a', flexShrink: 0 }}>
           {(['info', 'acoes'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{ flex: 1, padding: '0.75rem', background: 'transparent', border: 'none', borderBottom: `2px solid ${tab === t ? '#FF6B00' : 'transparent'}`, color: tab === t ? '#fff' : '#555', fontFamily: 'Anton, sans-serif', fontSize: '0.85rem', letterSpacing: '0.1em', cursor: 'pointer', textTransform: 'uppercase', transition: 'all 0.15s' }}>
@@ -280,8 +304,6 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted }: {
             </button>
           ))}
         </div>
-
-        {/* Conteúdo scrollável */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 2rem' }}>
           {tab === 'info' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
@@ -363,7 +385,6 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted }: {
               </div>
             </div>
           )}
-
           {tab === 'acoes' && (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <p style={{ color: '#555', fontSize: '0.8rem', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '1rem' }}>Ferramentas vinculadas</p>
@@ -383,8 +404,6 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted }: {
             </div>
           )}
         </div>
-
-        {/* Footer do modal */}
         <div style={{ padding: '1rem 2rem', borderTop: '1px solid #1a1a1a', display: 'flex', gap: '0.625rem', flexShrink: 0 }}>
           <button onClick={handleSave} disabled={saving} style={{ flex: 2, background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.75rem', color: '#fff', fontFamily: 'Anton, sans-serif', fontSize: '0.9rem', letterSpacing: '0.12em', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1, transition: 'opacity 0.15s' }}>
             {saving ? 'SALVANDO...' : 'SALVAR'}
@@ -418,6 +437,14 @@ function KanbanCard({ cliente, faseCor, onSelect }: {
   onSelect: () => void
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: cliente.id })
+  const health = getHealthScore(cliente)
+  const semContato = diasDesdeInteracao(cliente) > 14
+
+  const healthTooltip = {
+    vermelho: cliente.precisaRelatorio ? 'Relatório pendente' : 'Entrega vencida',
+    amarelo: 'Sem contato há mais de 14 dias',
+    verde: 'Cliente em dia',
+  }[health]
 
   return (
     <div
@@ -443,13 +470,17 @@ function KanbanCard({ cliente, faseCor, onSelect }: {
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-        <span style={{ color: '#fff', fontWeight: 600, fontSize: '0.9rem', lineHeight: 1.3 }}>{cliente.nome}</span>
-        <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center', flexShrink: 0, marginLeft: '0.5rem' }}>
+        <span style={{ color: '#fff', fontWeight: 600, fontSize: '0.9rem', lineHeight: 1.3, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cliente.nome}</span>
+        <div style={{ display: 'flex', gap: '0.375rem', alignItems: 'center', flexShrink: 0, marginLeft: '0.5rem' }}>
           {cliente.precisaRelatorio && <span title="Precisa relatório" style={{ fontSize: '0.8rem' }}>📊</span>}
+          <div title={healthTooltip} style={{ width: '10px', height: '10px', borderRadius: '50%', background: HEALTH_COR[health], flexShrink: 0 }} />
         </div>
       </div>
-      <div style={{ marginBottom: '0.375rem' }}>
+      <div style={{ marginBottom: '0.375rem', display: 'flex', flexWrap: 'wrap', gap: '0.3rem', alignItems: 'center' }}>
         <StatusBadge status={cliente.status} />
+        {semContato && (
+          <span style={{ fontSize: '0.7rem', background: 'rgba(234,179,8,0.15)', color: '#EAB308', borderRadius: '4px', padding: '2px 6px' }}>⚠ Sem contato</span>
+        )}
       </div>
       {cliente.proximoDeliverable && (
         <div style={{ fontSize: '0.78rem', marginTop: '0.375rem' }}>
@@ -469,6 +500,10 @@ function KanbanColuna({ fase, cor, clientes, onSelect }: {
 }) {
   const { isOver, setNodeRef } = useDroppable({ id: fase })
 
+  const receitaFase = clientes
+    .filter(c => c.status === 'Ativo' && c.valorMensal !== null)
+    .reduce((acc, c) => acc + (c.valorMensal ?? 0), 0)
+
   return (
     <div
       ref={setNodeRef}
@@ -481,40 +516,105 @@ function KanbanColuna({ fase, cor, clientes, onSelect }: {
         minWidth: '220px',
         flex: '1 1 220px',
         transition: 'border-color 0.15s, background 0.15s',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       <div style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ color: cor, fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{fase}</span>
         <span style={{ background: `${cor}22`, color: cor, borderRadius: '20px', padding: '1px 8px', fontSize: '0.72rem', fontWeight: 700 }}>{clientes.length}</span>
       </div>
-      {clientes.map(c => (
-        <KanbanCard key={c.id} cliente={c} faseCor={cor} onSelect={() => onSelect(c)} />
-      ))}
-      {clientes.length === 0 && (
-        <p style={{ color: '#555', fontSize: '0.8rem', textAlign: 'center', padding: '1.5rem 0', borderRadius: '6px', border: '1px dashed #1a1a1a' }}>Nenhum cliente</p>
+      <div style={{ flex: 1 }}>
+        {clientes.map(c => (
+          <KanbanCard key={c.id} cliente={c} faseCor={cor} onSelect={() => onSelect(c)} />
+        ))}
+        {clientes.length === 0 && (
+          <p style={{ color: '#555', fontSize: '0.8rem', textAlign: 'center', padding: '1.5rem 0', borderRadius: '6px', border: '1px dashed #1a1a1a' }}>Nenhum cliente</p>
+        )}
+      </div>
+      {receitaFase > 0 && (
+        <div style={{ marginTop: '0.625rem', paddingTop: '0.5rem', borderTop: '1px solid #1a1a1a', textAlign: 'right' }}>
+          <span style={{ color: '#555', fontSize: '0.72rem' }}>
+            R$ {receitaFase.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+          </span>
+        </div>
       )}
     </div>
   )
 }
 
 // ─── Vista Table ──────────────────────────────────────────────────────────────
-function VistaTable({ clientes, onSelect }: { clientes: Cliente[]; onSelect: (c: Cliente) => void }) {
+function VistaTable({
+  clientes, onSelect, ordenarPor, ordenarDir, onOrdenar, filtroUrgente, onLimparUrgente,
+}: {
+  clientes: Cliente[]
+  onSelect: (c: Cliente) => void
+  ordenarPor: OrdenarPor
+  ordenarDir: 'asc' | 'desc'
+  onOrdenar: (col: OrdenarPor) => void
+  filtroUrgente: boolean
+  onLimparUrgente: () => void
+}) {
   const [filtro, setFiltro] = useState<string>('todos')
   const filtros = ['todos', 'Ativo', 'Inativo', 'Proposta']
-  const filtered = filtro === 'todos' ? clientes : clientes.filter(c => c.status === filtro)
   const counts: Record<string, number> = { todos: clientes.length, Ativo: 0, Inativo: 0, Proposta: 0 }
   clientes.forEach(c => { if (counts[c.status] !== undefined) counts[c.status]++ })
 
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+
+  function isUrgenteCliente(c: Cliente): boolean {
+    if (!c.proximoDeliverable) return false
+    const dt = new Date(c.proximoDeliverable + 'T00:00:00')
+    const diff = Math.floor((dt.getTime() - today.getTime()) / 86400000)
+    return diff <= 7
+  }
+
+  let filtered = filtro === 'todos' ? clientes : clientes.filter(c => c.status === filtro)
+  if (filtroUrgente) filtered = filtered.filter(isUrgenteCliente)
+
+  const sorted = [...filtered].sort((a, b) => {
+    let va: string | number | null = null
+    let vb: string | number | null = null
+    if (ordenarPor === 'nome') { va = a.nome.toLowerCase(); vb = b.nome.toLowerCase() }
+    else if (ordenarPor === 'dataInicio') { va = a.dataInicio || null; vb = b.dataInicio || null }
+    else if (ordenarPor === 'proximoDeliverable') { va = a.proximoDeliverable || null; vb = b.proximoDeliverable || null }
+    else if (ordenarPor === 'valorMensal') { va = a.valorMensal; vb = b.valorMensal }
+    if (va === null && vb === null) return 0
+    if (va === null) return 1
+    if (vb === null) return -1
+    const cmp = typeof va === 'number' && typeof vb === 'number'
+      ? va - vb
+      : String(va).localeCompare(String(vb))
+    return ordenarDir === 'asc' ? cmp : -cmp
+  })
+
+  type ColDef = { label: string; col: OrdenarPor | null }
+  const COLS: ColDef[] = [
+    { label: 'Nome', col: 'nome' },
+    { label: 'Status', col: null },
+    { label: 'Fase Atual', col: null },
+    { label: 'Saúde', col: null },
+    { label: 'Próximo Deliverable', col: 'proximoDeliverable' },
+    { label: 'Valor Mensal', col: 'valorMensal' },
+    { label: 'Ações', col: null },
+  ]
+
   return (
     <div>
-      {/* Filtros */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+      {/* Filtros de status */}
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap', alignItems: 'center' }}>
         {filtros.map(f => (
           <button key={f} onClick={() => setFiltro(f)}
             style={{ padding: '0.375rem 1rem', borderRadius: '20px', border: `1px solid ${filtro === f ? '#FF6B00' : '#333'}`, background: filtro === f ? 'rgba(255,107,0,0.15)' : 'transparent', color: filtro === f ? '#FF6B00' : '#777', fontSize: '0.82rem', fontFamily: 'Poppins, sans-serif', cursor: 'pointer', transition: 'all 0.15s', letterSpacing: '0.05em' }}>
             {f === 'todos' ? 'Todos' : f} ({counts[f] ?? 0})
           </button>
         ))}
+        {filtroUrgente && (
+          <button onClick={onLimparUrgente}
+            style={{ padding: '0.375rem 1rem', borderRadius: '20px', border: '1px solid #FF6B00', background: 'rgba(255,107,0,0.15)', color: '#FF6B00', fontSize: '0.82rem', fontFamily: 'Poppins, sans-serif', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.375rem', transition: 'all 0.15s' }}>
+            Entregas urgentes <span style={{ fontWeight: 700 }}>×</span>
+          </button>
+        )}
       </div>
 
       {/* Tabela */}
@@ -522,34 +622,54 @@ function VistaTable({ clientes, onSelect }: { clientes: Cliente[]; onSelect: (c:
         <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Poppins, sans-serif' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid #1a1a1a' }}>
-              {['Nome', 'Status', 'Fase Atual', 'Próximo Deliverable', 'Valor Mensal', 'Ações'].map(h => (
-                <th key={h} style={{ padding: '0.75rem 1rem', textAlign: 'left', color: '#555', fontSize: '0.72rem', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600, background: '#0d0d0d', whiteSpace: 'nowrap' }}>{h}</th>
+              {COLS.map(h => (
+                <th key={h.label}
+                  onClick={h.col ? () => onOrdenar(h.col!) : undefined}
+                  style={{ padding: '0.75rem 1rem', textAlign: 'left', color: h.col && ordenarPor === h.col ? '#FF6B00' : '#555', fontSize: '0.72rem', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600, background: '#0d0d0d', whiteSpace: 'nowrap', cursor: h.col ? 'pointer' : 'default', userSelect: 'none', transition: 'color 0.15s' }}>
+                  {h.label}
+                  {h.col && (
+                    <span style={{ marginLeft: '0.25rem', fontSize: '0.68rem', opacity: 0.8 }}>
+                      {ordenarPor === h.col ? (ordenarDir === 'asc' ? '↑' : '↓') : '·'}
+                    </span>
+                  )}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 ? (
-              <tr><td colSpan={6} style={{ padding: '3rem', textAlign: 'center', color: '#555', fontSize: '0.9rem' }}>Nenhum cliente encontrado</td></tr>
+            {sorted.length === 0 ? (
+              <tr><td colSpan={7} style={{ padding: '3rem', textAlign: 'center', color: '#555', fontSize: '0.9rem' }}>Nenhum cliente encontrado</td></tr>
             ) : (
-              filtered.map(c => (
-                <tr key={c.id} onClick={() => onSelect(c)}
-                  style={{ borderBottom: '1px solid #141414', cursor: 'pointer', transition: 'background 0.1s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#151515'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                  <td style={{ padding: '0.875rem 1rem', color: '#e0e0e0', fontWeight: 500, fontSize: '0.9rem' }}>{c.nome}</td>
-                  <td style={{ padding: '0.875rem 1rem' }}><StatusBadge status={c.status} /></td>
-                  <td style={{ padding: '0.875rem 1rem' }}><FaseBadge fase={c.faseAtual} /></td>
-                  <td style={{ padding: '0.875rem 1rem' }}><DeliverableLabel dateStr={c.proximoDeliverable} /></td>
-                  <td style={{ padding: '0.875rem 1rem', color: '#aaa', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>{formatBRL(c.valorMensal)}</td>
-                  <td style={{ padding: '0.875rem 1rem' }}>
-                    <button style={{ background: 'transparent', border: '1px solid #333', borderRadius: '6px', padding: '0.3rem 0.75rem', color: '#777', fontSize: '0.78rem', fontFamily: 'Poppins, sans-serif', cursor: 'pointer', transition: 'all 0.15s' }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = '#FF6B00'; e.currentTarget.style.color = '#FF6B00' }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#777' }}>
-                      Ver
-                    </button>
-                  </td>
-                </tr>
-              ))
+              sorted.map(c => {
+                const health = getHealthScore(c)
+                const healthTooltip = {
+                  vermelho: c.precisaRelatorio ? 'Relatório pendente' : 'Entrega vencida',
+                  amarelo: 'Sem contato há mais de 14 dias',
+                  verde: 'Cliente em dia',
+                }[health]
+                return (
+                  <tr key={c.id} onClick={() => onSelect(c)}
+                    style={{ borderBottom: '1px solid #141414', cursor: 'pointer', transition: 'background 0.1s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#151515'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    <td style={{ padding: '0.875rem 1rem', color: '#e0e0e0', fontWeight: 500, fontSize: '0.9rem' }}>{c.nome}</td>
+                    <td style={{ padding: '0.875rem 1rem' }}><StatusBadge status={c.status} /></td>
+                    <td style={{ padding: '0.875rem 1rem' }}><FaseBadge fase={c.faseAtual} /></td>
+                    <td style={{ padding: '0.875rem 1rem' }}>
+                      <div title={healthTooltip} style={{ width: '10px', height: '10px', borderRadius: '50%', background: HEALTH_COR[health], cursor: 'help' }} />
+                    </td>
+                    <td style={{ padding: '0.875rem 1rem' }}><DeliverableLabel dateStr={c.proximoDeliverable} /></td>
+                    <td style={{ padding: '0.875rem 1rem', color: '#aaa', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>{formatBRL(c.valorMensal)}</td>
+                    <td style={{ padding: '0.875rem 1rem' }}>
+                      <button style={{ background: 'transparent', border: '1px solid #333', borderRadius: '6px', padding: '0.3rem 0.75rem', color: '#777', fontSize: '0.78rem', fontFamily: 'Poppins, sans-serif', cursor: 'pointer', transition: 'all 0.15s' }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#FF6B00'; e.currentTarget.style.color = '#FF6B00' }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#777' }}>
+                        Ver
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })
             )}
           </tbody>
         </table>
@@ -559,7 +679,7 @@ function VistaTable({ clientes, onSelect }: { clientes: Cliente[]; onSelect: (c:
 }
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────
-function Dashboard({ clientes }: { clientes: Cliente[] }) {
+function Dashboard({ clientes, onFiltrarEntregas }: { clientes: Cliente[]; onFiltrarEntregas: () => void }) {
   const [totalDocs, setTotalDocs] = useState<number | null>(null)
 
   useEffect(() => {
@@ -586,11 +706,12 @@ function Dashboard({ clientes }: { clientes: Cliente[] }) {
     .filter(c => c.proximoDeliverable && diffDays(c.proximoDeliverable) <= 7)
     .sort((a, b) => a.proximoDeliverable.localeCompare(b.proximoDeliverable))
 
-  const cards = [
-    { label: 'CLIENTES ATIVOS',     value: String(ativos),                                   cor: '#22C55E' },
-    { label: 'RECEITA MENSAL',       value: formatBRL(receita),                               cor: '#FF6B00' },
-    { label: 'PRÓXIMAS ENTREGAS',    value: String(proximasCount),                            cor: '#3B82F6' },
-    { label: 'DOCUMENTOS GERADOS',   value: totalDocs === null ? '...' : String(totalDocs),   cor: '#8B5CF6' },
+  type CardDef = { label: string; value: string; cor: string; onClick?: () => void }
+  const cards: CardDef[] = [
+    { label: 'CLIENTES ATIVOS',   value: String(ativos),                                 cor: '#22C55E' },
+    { label: 'RECEITA MENSAL',    value: formatBRL(receita),                             cor: '#FF6B00' },
+    { label: 'PRÓXIMAS ENTREGAS', value: String(proximasCount),                          cor: '#3B82F6', onClick: onFiltrarEntregas },
+    { label: 'DOCUMENTOS GERADOS', value: totalDocs === null ? '...' : String(totalDocs), cor: '#8B5CF6' },
   ]
 
   return (
@@ -598,7 +719,12 @@ function Dashboard({ clientes }: { clientes: Cliente[] }) {
       {/* 4 metric cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.875rem', marginBottom: '1rem' }}>
         {cards.map(card => (
-          <div key={card.label} style={{ background: '#111111', border: '1px solid #222222', borderTop: `4px solid ${card.cor}`, borderRadius: '8px', padding: '1.125rem 1.25rem' }}>
+          <div key={card.label}
+            onClick={card.onClick}
+            style={{ background: '#111111', border: '1px solid #222222', borderTop: `4px solid ${card.cor}`, borderRadius: '8px', padding: '1.125rem 1.25rem', cursor: card.onClick ? 'pointer' : 'default', transition: 'border-color 0.15s' }}
+            onMouseEnter={card.onClick ? e => { (e.currentTarget as HTMLDivElement).style.borderColor = card.cor } : undefined}
+            onMouseLeave={card.onClick ? e => { (e.currentTarget as HTMLDivElement).style.borderColor = '#222222' } : undefined}
+          >
             <p style={{ color: '#777', fontSize: '0.65rem', letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 0.5rem' }}>{card.label}</p>
             <p style={{ fontFamily: 'Anton, sans-serif', fontSize: '1.75rem', color: '#fff', margin: 0, letterSpacing: '0.02em', lineHeight: 1 }}>{card.value}</p>
           </div>
@@ -687,6 +813,10 @@ export default function ClientesPage() {
   const [vistaAtiva, setVistaAtiva] = useState<'kanban' | 'table'>('kanban')
   const [modalNovo, setModalNovo] = useState(false)
   const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(null)
+  const [busca, setBusca] = useState('')
+  const [ordenarPor, setOrdenarPor] = useState<OrdenarPor>('dataInicio')
+  const [ordenarDir, setOrdenarDir] = useState<'asc' | 'desc'>('desc')
+  const [filtroUrgente, setFiltroUrgente] = useState(false)
 
   const justDraggedRef = useRef(false)
   const sensors = useSensors(
@@ -720,10 +850,24 @@ export default function ClientesPage() {
     }).then(r => { if (!r.ok) setClientes(prev) })
   }
 
+  function handleOrdenar(col: OrdenarPor) {
+    if (ordenarPor === col) setOrdenarDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setOrdenarPor(col); setOrdenarDir('desc') }
+  }
+
+  function handleFiltrarEntregas() {
+    setVistaAtiva('table')
+    setFiltroUrgente(true)
+  }
+
   if (!autenticado) return <TelaSenha onAuth={() => setAutenticado(true)} />
 
   const receitaMensal = clientes.filter(c => c.status === 'Ativo').reduce((acc, c) => acc + (c.valorMensal ?? 0), 0)
   const totalAtivos = clientes.filter(c => c.status === 'Ativo').length
+
+  const clientesFiltrados = busca.trim()
+    ? clientes.filter(c => c.nome.toLowerCase().includes(busca.toLowerCase()))
+    : clientes
 
   return (
     <div style={{ position: 'fixed', inset: 0, overflowY: 'auto', background: '#080808', fontFamily: 'Poppins, sans-serif' }}>
@@ -747,16 +891,29 @@ export default function ClientesPage() {
         </div>
 
         {/* Dashboard */}
-        <Dashboard clientes={clientes} />
+        <Dashboard clientes={clientes} onFiltrarEntregas={handleFiltrarEntregas} />
 
         {/* Abas de vista */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.75rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
           {(['kanban', 'table'] as const).map(v => (
             <button key={v} onClick={() => setVistaAtiva(v)}
               style={{ padding: '0.5rem 1.25rem', borderRadius: '6px', border: `1px solid ${vistaAtiva === v ? '#FF6B00' : '#333'}`, background: vistaAtiva === v ? '#FF6B00' : 'transparent', color: vistaAtiva === v ? '#fff' : '#777', fontFamily: 'Anton, sans-serif', fontSize: '0.82rem', letterSpacing: '0.12em', cursor: 'pointer', transition: 'all 0.15s' }}>
               {v === 'kanban' ? 'KANBAN' : 'TABLE'}
             </button>
           ))}
+        </div>
+
+        {/* Busca */}
+        <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
+          <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.875rem', pointerEvents: 'none', lineHeight: 1 }}>🔍</span>
+          <input
+            value={busca}
+            onChange={e => setBusca(e.target.value)}
+            placeholder="Buscar cliente..."
+            style={{ width: '100%', background: '#111', border: '1px solid #333', borderRadius: '8px', padding: '0.625rem 1rem 0.625rem 2.25rem', color: '#fff', fontSize: '0.9rem', fontFamily: 'Poppins, sans-serif', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
+            onFocus={e => e.target.style.borderColor = '#FF6B00'}
+            onBlur={e => e.target.style.borderColor = '#333'}
+          />
         </div>
 
         {/* Conteúdo */}
@@ -773,7 +930,7 @@ export default function ClientesPage() {
             <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '1rem', alignItems: 'flex-start' }}>
               {FASES.map(fase => (
                 <KanbanColuna key={fase.nome} fase={fase.nome} cor={fase.cor}
-                  clientes={clientes.filter(c => c.faseAtual === fase.nome)}
+                  clientes={clientesFiltrados.filter(c => c.faseAtual === fase.nome)}
                   onSelect={(c) => {
                     if (justDraggedRef.current) return
                     setClienteSelecionado(c)
@@ -782,7 +939,15 @@ export default function ClientesPage() {
             </div>
           </DndContext>
         ) : (
-          <VistaTable clientes={clientes} onSelect={setClienteSelecionado} />
+          <VistaTable
+            clientes={clientesFiltrados}
+            onSelect={setClienteSelecionado}
+            ordenarPor={ordenarPor}
+            ordenarDir={ordenarDir}
+            onOrdenar={handleOrdenar}
+            filtroUrgente={filtroUrgente}
+            onLimparUrgente={() => setFiltroUrgente(false)}
+          />
         )}
 
         {/* Rodapé com métricas */}
