@@ -649,7 +649,7 @@ export default function CalendarioPage() {
           {!sidebarCollapsed ? (
             <div style={{ padding: '1.5rem 1.75rem', borderBottom: '1px solid #0f0f0f', flexShrink: 0 }}>
               <Image src="/lglaranja.png" alt="ORIUM" width={90} height={28} style={{ objectFit: 'contain' }} />
-              <p style={{ color: '#2a2a2a', fontSize: '0.62rem', letterSpacing: '0.2em', textTransform: 'uppercase', fontFamily: 'Poppins, sans-serif', marginTop: '0.5rem', marginBottom: 0 }}>CALENDÁRIO DE CONTEÚDO</p>
+              <p style={{ color: '#444444', fontSize: '0.62rem', letterSpacing: '0.2em', textTransform: 'uppercase', fontFamily: 'Poppins, sans-serif', marginTop: '0.5rem', marginBottom: 0 }}>CALENDÁRIO DE CONTEÚDO</p>
             </div>
           ) : (
             <div style={{ flexShrink: 0, height: '60px', borderBottom: '1px solid #0f0f0f' }} />
@@ -658,7 +658,7 @@ export default function CalendarioPage() {
           {/* ZONA 2 — Etapas */}
           <div style={{ flex: 1, overflowY: 'hidden' }}>
             {!sidebarCollapsed && (
-              <p style={{ color: '#1a1a1a', fontSize: '0.58rem', letterSpacing: '0.25em', textTransform: 'uppercase', padding: '1.25rem 1.75rem 0.75rem', margin: 0 }}>ETAPAS</p>
+              <p style={{ color: '#444444', fontSize: '0.58rem', letterSpacing: '0.25em', textTransform: 'uppercase', padding: '1.25rem 1.75rem 0.75rem', margin: 0 }}>ETAPAS</p>
             )}
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {STEPS.map((s, i) => (
@@ -685,7 +685,7 @@ export default function CalendarioPage() {
           {/* ZONA 3 — Progresso */}
           {!sidebarCollapsed && (
             <div style={{ borderTop: '1px solid #0f0f0f', padding: '1.25rem 1.75rem', flexShrink: 0 }}>
-              <p style={{ color: '#1a1a1a', fontSize: '0.58rem', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '0.625rem' }}>PROGRESSO</p>
+              <p style={{ color: '#444444', fontSize: '0.58rem', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '0.625rem' }}>PROGRESSO</p>
               <div style={{ height: '2px', background: '#111', borderRadius: '2px', overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${progress}%`, background: '#FF6B00', borderRadius: '2px', transition: 'width 0.5s ease' }} />
               </div>
