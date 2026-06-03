@@ -442,8 +442,114 @@ export default function RelatorioPage() {
       </div>
     )
   }
-  async function handleCopiar() {}
-  async function handleExportarPDF() {}
+  async function handleCopiar() {
+    const periodoStr = form.periodoMes && form.periodoAno
+      ? `${form.periodoMes} de ${form.periodoAno}`
+      : 'Período não informado'
+
+    const segDiff = form.segFim && form.segInicio
+      ? Number(form.segFim) - Number(form.segInicio)
+      : null
+    const segDiffStr = segDiff !== null ? ` (${segDiff >= 0 ? '+' : ''}${segDiff})` : ''
+
+    const linhas = [
+      `RELATÓRIO MENSAL — ${(form.cliente || 'Cliente').toUpperCase()}`,
+      `Período: ${periodoStr}`,
+      `Responsável: ${form.responsavel || 'Thiago'}`,
+      '',
+      '─── MÉTRICAS ───',
+      `Seguidores: ${form.segFim || '—'}${segDiffStr} (início: ${form.segInicio || '—'})`,
+      `Alcance total: ${form.alcance || '—'}`,
+      `Impressões: ${form.impressoes || '—'}`,
+      `Engajamento: ${form.engajamento ? form.engajamento + '%' : '—'}`,
+      `Cliques no link: ${form.cliques || '—'}`,
+    ]
+
+    if (listas.entregas.length > 0) {
+      linhas.push('', '─── ENTREGAS DO MÊS ───')
+      listas.entregas.forEach(e => linhas.push(`• ${e}`))
+    }
+    if (form.destaques) {
+      linhas.push('', '─── DESTAQUES ───', form.destaques)
+    }
+    if (form.atencao) {
+      linhas.push('', '─── PONTOS DE ATENÇÃO ───', form.atencao)
+    }
+    if (listas.proximos.length > 0) {
+      linhas.push('', '─── PRÓXIMOS PASSOS ───')
+      listas.proximos.forEach(p => linhas.push(`• ${p}`))
+    }
+    if (form.observacoes) {
+      linhas.push('', '─── OBSERVAÇÕES ───', form.observacoes)
+    }
+    linhas.push('', '─'.repeat(40), 'ORIUM™ — Relatório Mensal')
+
+    await navigator.clipboard.writeText(linhas.join('\n'))
+    setCopiado(true)
+    setTimeout(() => setCopiado(false), 2000)
+  }
+
+  async function handleExportarPDF() {
+    if (!previewRef.current) return
+    setExportando(true)
+    try {
+      const { default: jsPDF } = await import('jspdf')
+      const { default: html2canvas } = await import('html2canvas')
+
+      const el = previewRef.current
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#0d0d0d',
+        logging: false,
+      })
+
+      const imgData = canvas.toDataURL('image/png')
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      const pageW = doc.internal.pageSize.getWidth()
+      const pageH = doc.internal.pageSize.getHeight()
+      const margin = 10
+      const contentW = pageW - margin * 2
+      const contentH = (canvas.height * contentW) / canvas.width
+
+      if (contentH <= pageH - margin * 2) {
+        doc.addImage(imgData, 'PNG', margin, margin, contentW, contentH)
+      } else {
+        let remainingH = contentH
+        let srcY = 0
+        const sliceH = pageH - margin * 2
+        const sliceHPx = (sliceH * canvas.width) / contentW
+
+        while (remainingH > 0) {
+          if (srcY > 0) doc.addPage()
+          const thisSliceH = Math.min(sliceH, remainingH)
+          const thisSliceHPx = (thisSliceH * canvas.width) / contentW
+
+          const sliceCanvas = document.createElement('canvas')
+          sliceCanvas.width = canvas.width
+          sliceCanvas.height = thisSliceHPx
+          const ctx = sliceCanvas.getContext('2d')
+          if (ctx) {
+            ctx.drawImage(canvas, 0, srcY, canvas.width, thisSliceHPx, 0, 0, canvas.width, thisSliceHPx)
+          }
+          doc.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', margin, margin, contentW, thisSliceH)
+
+          srcY += sliceHPx
+          remainingH -= sliceH
+        }
+      }
+
+      const clienteSlug = (form.cliente || 'relatorio').toLowerCase().replace(/\s+/g, '-')
+      const mesSlug = (form.periodoMes || 'mes').toLowerCase()
+      const anoSlug = form.periodoAno || 'ano'
+      doc.save(`relatorio-${clienteSlug}-${mesSlug}-${anoSlug}.pdf`)
+    } catch (err) {
+      console.error('Erro ao gerar PDF:', err)
+      alert('Erro ao gerar PDF. Tente novamente.')
+    } finally {
+      setExportando(false)
+    }
+  }
 
   const isPreview = step === 7
 
