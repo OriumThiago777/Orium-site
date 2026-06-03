@@ -122,7 +122,196 @@ export default function RelatorioPage() {
   }
 
   // ── Placeholder functions (serão implementadas nas tasks seguintes) ─────────
-  function renderStep(): React.ReactNode { return null }
+  const inputStyle: React.CSSProperties = {
+    width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid #1e1e1e',
+    borderRadius: '10px', padding: '1rem 1.25rem', color: '#fff', fontSize: '0.95rem',
+    fontFamily: 'Poppins, sans-serif', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s',
+  }
+  const labelStyle: React.CSSProperties = {
+    display: 'block', color: '#e0e0e0', fontSize: '1rem', lineHeight: 1.5, marginBottom: '0.75rem', fontWeight: 500,
+  }
+  const fieldWrap: React.CSSProperties = { display: 'flex', flexDirection: 'column' }
+  const textareaStyle: React.CSSProperties = {
+    width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid #1e1e1e',
+    borderRadius: '10px', padding: '1rem 1.25rem', color: '#fff', fontSize: '0.95rem',
+    fontFamily: 'Poppins, sans-serif', resize: 'none', outline: 'none', boxSizing: 'border-box',
+    lineHeight: 1.65, transition: 'border-color 0.2s',
+  }
+
+  function renderStep(): React.ReactNode {
+    const wrap = { maxWidth: '680px', display: 'flex', flexDirection: 'column' as const, gap: '2.5rem' }
+
+    if (step === 0) return (
+      <div style={wrap}>
+        <div style={fieldWrap}>
+          <label style={labelStyle}>Nome do cliente</label>
+          <input style={inputStyle} value={form.cliente} onChange={e => setF('cliente', e.target.value)} placeholder="Ex: Altemans Barbearia"
+            onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+        </div>
+        <div style={fieldWrap}>
+          <label style={labelStyle}>Período</label>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <select value={form.periodoMes} onChange={e => setF('periodoMes', e.target.value)}
+              style={{ ...inputStyle, flex: 1, cursor: 'pointer' }}>
+              <option value="">Mês</option>
+              {MESES.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+            <select value={form.periodoAno} onChange={e => setF('periodoAno', e.target.value)}
+              style={{ ...inputStyle, flex: 1, cursor: 'pointer' }}>
+              <option value="">Ano</option>
+              {ANOS.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </div>
+        </div>
+        <div style={fieldWrap}>
+          <label style={labelStyle}>Responsável ORIUM</label>
+          <input style={inputStyle} value={form.responsavel} onChange={e => setF('responsavel', e.target.value)} placeholder="Thiago"
+            onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+        </div>
+      </div>
+    )
+
+    if (step === 1) return (
+      <div style={wrap}>
+        <div style={fieldWrap}>
+          <label style={labelStyle}>Entregas do mês</label>
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
+            <input style={{ ...inputStyle, flex: 1 }} value={inputTemp.entregas}
+              onChange={e => setInputTemp(p => ({ ...p, entregas: e.target.value }))}
+              placeholder="Descreva uma entrega…"
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addLista('entregas') } }}
+              onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+            <button onClick={() => addLista('entregas')}
+              style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0 1.5rem', color: '#000', fontFamily: 'Anton, sans-serif', fontSize: '1.1rem', cursor: 'pointer', flexShrink: 0, transition: 'background 0.2s' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#e55f00'}
+              onMouseLeave={e => e.currentTarget.style.background = '#FF6B00'}>+</button>
+          </div>
+          {listas.entregas.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {listas.entregas.map((item, i) => (
+                <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,107,0,0.1)', border: '1px solid rgba(255,107,0,0.25)', borderRadius: '6px', padding: '0.4rem 0.75rem', color: '#ddd', fontSize: '0.85rem' }}>
+                  {item}
+                  <button onClick={() => removeLista('entregas', i)}
+                    style={{ background: 'none', border: 'none', color: '#FF6B00', cursor: 'pointer', padding: 0, lineHeight: 1, fontSize: '0.9rem' }}>×</button>
+                </span>
+              ))}
+            </div>
+          )}
+          {listas.entregas.length === 0 && (
+            <p style={{ color: '#333', fontSize: '0.85rem' }}>Nenhuma entrega adicionada ainda.</p>
+          )}
+        </div>
+      </div>
+    )
+
+    if (step === 2) return (
+      <div style={wrap}>
+        <div style={fieldWrap}>
+          <label style={labelStyle}>Seguidores</label>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <div style={{ flex: 1 }}>
+              <p style={{ color: '#555', fontSize: '0.78rem', marginBottom: '0.5rem' }}>Início do mês</p>
+              <input type="number" style={inputStyle} value={form.segInicio} onChange={e => setF('segInicio', e.target.value)} placeholder="0"
+                onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ color: '#555', fontSize: '0.78rem', marginBottom: '0.5rem' }}>Fim do mês</p>
+              <input type="number" style={inputStyle} value={form.segFim} onChange={e => setF('segFim', e.target.value)} placeholder="0"
+                onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+            </div>
+          </div>
+        </div>
+        <div style={fieldWrap}>
+          <label style={labelStyle}>Alcance total</label>
+          <input type="number" style={inputStyle} value={form.alcance} onChange={e => setF('alcance', e.target.value)} placeholder="0"
+            onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+        </div>
+        <div style={fieldWrap}>
+          <label style={labelStyle}>Impressões</label>
+          <input type="number" style={inputStyle} value={form.impressoes} onChange={e => setF('impressoes', e.target.value)} placeholder="0"
+            onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+        </div>
+        <div style={fieldWrap}>
+          <label style={labelStyle}>Engajamento %</label>
+          <input type="number" step="0.1" style={inputStyle} value={form.engajamento} onChange={e => setF('engajamento', e.target.value)} placeholder="0"
+            onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+        </div>
+        <div style={fieldWrap}>
+          <label style={labelStyle}>Cliques no link</label>
+          <input type="number" style={inputStyle} value={form.cliques} onChange={e => setF('cliques', e.target.value)} placeholder="0"
+            onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+        </div>
+      </div>
+    )
+
+    if (step === 3) return (
+      <div style={wrap}>
+        <div style={fieldWrap}>
+          <label style={labelStyle}>Conquistas e pontos positivos do período</label>
+          <textarea rows={6} style={textareaStyle} value={form.destaques} onChange={e => setF('destaques', e.target.value)}
+            placeholder="Descreva as principais conquistas, resultados positivos, marcos importantes…"
+            onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+        </div>
+      </div>
+    )
+
+    if (step === 4) return (
+      <div style={wrap}>
+        <div style={fieldWrap}>
+          <label style={labelStyle}>O que precisa melhorar ou está travando</label>
+          <textarea rows={6} style={textareaStyle} value={form.atencao} onChange={e => setF('atencao', e.target.value)}
+            placeholder="Descreva os pontos de atenção, obstáculos, o que não performou como esperado…"
+            onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+        </div>
+      </div>
+    )
+
+    if (step === 5) return (
+      <div style={wrap}>
+        <div style={fieldWrap}>
+          <label style={labelStyle}>Próximos passos</label>
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
+            <input style={{ ...inputStyle, flex: 1 }} value={inputTemp.proximos}
+              onChange={e => setInputTemp(p => ({ ...p, proximos: e.target.value }))}
+              placeholder="Descreva uma ação…"
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addLista('proximos') } }}
+              onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+            <button onClick={() => addLista('proximos')}
+              style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0 1.5rem', color: '#000', fontFamily: 'Anton, sans-serif', fontSize: '1.1rem', cursor: 'pointer', flexShrink: 0, transition: 'background 0.2s' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#e55f00'}
+              onMouseLeave={e => e.currentTarget.style.background = '#FF6B00'}>+</button>
+          </div>
+          {listas.proximos.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {listas.proximos.map((item, i) => (
+                <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,107,0,0.1)', border: '1px solid rgba(255,107,0,0.25)', borderRadius: '6px', padding: '0.4rem 0.75rem', color: '#ddd', fontSize: '0.85rem' }}>
+                  {item}
+                  <button onClick={() => removeLista('proximos', i)}
+                    style={{ background: 'none', border: 'none', color: '#FF6B00', cursor: 'pointer', padding: 0, lineHeight: 1, fontSize: '0.9rem' }}>×</button>
+                </span>
+              ))}
+            </div>
+          )}
+          {listas.proximos.length === 0 && (
+            <p style={{ color: '#333', fontSize: '0.85rem' }}>Nenhum passo adicionado ainda.</p>
+          )}
+        </div>
+      </div>
+    )
+
+    if (step === 6) return (
+      <div style={wrap}>
+        <div style={fieldWrap}>
+          <label style={labelStyle}>Observações gerais</label>
+          <textarea rows={8} style={textareaStyle} value={form.observacoes} onChange={e => setF('observacoes', e.target.value)}
+            placeholder="Notas livres, contexto adicional, informações relevantes para o próximo período…"
+            onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+        </div>
+      </div>
+    )
+
+    return null
+  }
   function renderPreview(): React.ReactNode { return null }
   async function handleCopiar() {}
   async function handleExportarPDF() {}
