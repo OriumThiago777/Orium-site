@@ -19,7 +19,11 @@ export async function POST(req: NextRequest) {
     const notionToken = process.env.NOTION_TOKEN
     const notionDb = process.env.NOTION_DB_DOCUMENTOS
 
-    await fetch('https://api.notion.com/v1/pages', {
+    if (!notionToken || !notionDb) {
+      throw new Error('Missing NOTION_TOKEN or NOTION_DB_DOCUMENTOS')
+    }
+
+    const notionRes = await fetch('https://api.notion.com/v1/pages', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${notionToken}`,
@@ -47,6 +51,11 @@ export async function POST(req: NextRequest) {
         },
       }),
     })
+
+    if (!notionRes.ok) {
+      const body = await notionRes.json()
+      throw new Error(`Notion error ${notionRes.status}: ${JSON.stringify(body)}`)
+    }
 
     return NextResponse.json({ success: true, fileId, fileUrl })
   } catch (error) {
