@@ -41,6 +41,13 @@ type Atividade = {
   data: string
 }
 
+type ProgressoData = {
+  etapas: Array<{ nome: string; concluida: boolean; linkDrive: string | null }>
+  total: number
+  concluidas: number
+  percentual: number
+}
+
 const FASES: { nome: string; cor: string }[] = [
   { nome: 'Diagnóstico', cor: '#FF6B00' },
   { nome: 'Estruturação Inicial', cor: '#3B82F6' },
@@ -304,7 +311,7 @@ function ModalNovoCliente({ onClose, onCreated }: { onClose: () => void; onCreat
 }
 
 // ─── Modal Detalhes ──────────────────────────────────────────────────────────
-function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loadingAtividades, atividadesExpandidas, setAtividadesExpandidas }: {
+function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loadingAtividades, atividadesExpandidas, setAtividadesExpandidas, progresso }: {
   cliente: Cliente
   onClose: () => void
   onUpdated: (c: Cliente) => void
@@ -313,6 +320,7 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loa
   loadingAtividades: boolean
   atividadesExpandidas: boolean
   setAtividadesExpandidas: (f: boolean | ((prev: boolean) => boolean)) => void
+  progresso: ProgressoData | null
 }) {
   type DocItem = { id: string; pageId?: string; nome: string; tipo: string; cliente: string; dataGeracao: string }
 
@@ -325,6 +333,20 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loa
   const [loadingDocs, setLoadingDocs] = useState(false)
   const [novaNota, setNovaNota] = useState('')
   const [expandirNotas, setExpandirNotas] = useState(false)
+  const [progressoLocal, setProgressoLocal] = useState<ProgressoData | null>(null)
+  const [loadingProgressoLocal, setLoadingProgressoLocal] = useState(false)
+
+  useEffect(() => {
+    if (progresso !== null) return
+    setLoadingProgressoLocal(true)
+    fetch(`/api/clientes/${encodeURIComponent(cliente.id)}/progresso?nome=${encodeURIComponent(cliente.nome)}`)
+      .then(r => r.json())
+      .then((data: ProgressoData) => setProgressoLocal(data))
+      .catch(() => {})
+      .finally(() => setLoadingProgressoLocal(false))
+  }, [progresso, cliente.id, cliente.nome])
+
+  const progressoEfetivo = progresso ?? progressoLocal
 
   useEffect(() => {
     setLoadingDocs(true)
@@ -433,6 +455,52 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loa
         <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 2rem' }}>
           {tab === 'info' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+
+              {/* Progresso ORIUM™ */}
+              {(progressoEfetivo || loadingProgressoLocal) && (
+                <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '8px', padding: '0.875rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.625rem' }}>
+                    <p style={{ fontFamily: 'Anton, sans-serif', color: '#fff', fontSize: '0.75rem', letterSpacing: '0.12em', margin: 0, textTransform: 'uppercase' }}>
+                      PROGRESSO ORIUM™
+                    </p>
+                    {progressoEfetivo && (
+                      <span style={{ color: '#E8640C', fontSize: '0.78rem', fontWeight: 700 }}>
+                        {progressoEfetivo.concluidas}/{progressoEfetivo.total} — {progressoEfetivo.percentual}%
+                      </span>
+                    )}
+                  </div>
+                  {loadingProgressoLocal && !progressoEfetivo ? (
+                    <div style={{ height: '4px', borderRadius: '2px', background: '#2a2a2a', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: '45%', background: '#383838', borderRadius: '2px', animation: 'orium-pulse 1.5s ease-in-out infinite' }} />
+                    </div>
+                  ) : progressoEfetivo ? (
+                    <>
+                      <div style={{ height: '4px', borderRadius: '2px', background: '#2a2a2a', marginBottom: '0.75rem' }}>
+                        <div style={{ height: '100%', width: `${progressoEfetivo.percentual}%`, background: '#E8640C', borderRadius: '2px', transition: 'width 0.4s ease' }} />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                        {progressoEfetivo.etapas.map(etapa => (
+                          <div key={etapa.nome} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span style={{ fontSize: '0.8rem' }}>{etapa.concluida ? '✅' : '⬜'}</span>
+                              <span style={{ color: etapa.concluida ? '#ccc' : '#555', fontSize: '0.82rem' }}>{etapa.nome}</span>
+                            </div>
+                            {etapa.concluida && etapa.linkDrive && (
+                              <a href={etapa.linkDrive} target="_blank" rel="noopener noreferrer"
+                                style={{ color: '#E8640C', fontSize: '0.68rem', textDecoration: 'none', border: '1px solid rgba(232,100,12,0.3)', borderRadius: '4px', padding: '2px 8px', transition: 'background 0.15s' }}
+                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(232,100,12,0.15)' }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
+                                → Drive
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : null}
+                </div>
+              )}
+
               {/* Campos básicos */}
               <div>
                 <label style={labelStyle}>Nome</label>
@@ -671,15 +739,30 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loa
 }
 
 // ─── Kanban Card ─────────────────────────────────────────────────────────────
-function KanbanCard({ cliente, faseCor, onSelect }: {
+function KanbanCard({ cliente, faseCor, progresso, onProgressoLoaded, onSelect }: {
   cliente: Cliente
   faseCor: string
+  progresso: ProgressoData | null
+  onProgressoLoaded: (id: string, data: ProgressoData) => void
   onSelect: () => void
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: cliente.id })
   const health = getHealthScore(cliente)
   const semContato = diasDesdeInteracao(cliente) > 14
   const healthTooltip = health.motivos[0]
+  const [loadingProgresso, setLoadingProgresso] = useState(progresso === null)
+
+  useEffect(() => {
+    if (progresso !== null) { setLoadingProgresso(false); return }
+    setLoadingProgresso(true)
+    fetch(`/api/clientes/${encodeURIComponent(cliente.id)}/progresso?nome=${encodeURIComponent(cliente.nome)}`)
+      .then(r => r.json())
+      .then((data: ProgressoData) => {
+        onProgressoLoaded(cliente.id, data)
+        setLoadingProgresso(false)
+      })
+      .catch(() => setLoadingProgresso(false))
+  }, [cliente.id, cliente.nome]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div
@@ -704,13 +787,28 @@ function KanbanCard({ cliente, faseCor, onSelect }: {
         transition: isDragging ? undefined : 'border-color 0.15s, opacity 0.15s',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.375rem' }}>
         <span style={{ color: '#fff', fontWeight: 600, fontSize: '0.9rem', lineHeight: 1.3, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cliente.nome}</span>
         <div style={{ display: 'flex', gap: '0.375rem', alignItems: 'center', flexShrink: 0, marginLeft: '0.5rem' }}>
           {cliente.precisaRelatorio && <span title="Precisa relatório" style={{ fontSize: '0.8rem' }}>📊</span>}
           <div title={healthTooltip} style={{ width: '10px', height: '10px', borderRadius: '50%', background: HEALTH_COR[health.cor], flexShrink: 0 }} />
         </div>
       </div>
+
+      {/* Barra de progresso */}
+      {loadingProgresso ? (
+        <div style={{ height: '4px', borderRadius: '2px', background: '#2a2a2a', marginBottom: '0.375rem', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: '45%', background: '#383838', borderRadius: '2px', animation: 'orium-pulse 1.5s ease-in-out infinite' }} />
+        </div>
+      ) : progresso !== null ? (
+        <div style={{ marginBottom: '0.375rem' }}>
+          <div style={{ height: '4px', borderRadius: '2px', background: '#2a2a2a', position: 'relative', marginBottom: '0.2rem' }}>
+            <div style={{ height: '100%', width: `${progresso.percentual}%`, background: '#E8640C', borderRadius: '2px', transition: 'width 0.4s ease' }} />
+          </div>
+          <span style={{ color: '#666', fontSize: '0.66rem' }}>{progresso.concluidas}/{progresso.total}</span>
+        </div>
+      ) : null}
+
       <div style={{ marginBottom: '0.375rem', display: 'flex', flexWrap: 'wrap', gap: '0.3rem', alignItems: 'center' }}>
         <StatusBadge status={cliente.status} />
         {semContato && (
@@ -727,10 +825,12 @@ function KanbanCard({ cliente, faseCor, onSelect }: {
 }
 
 // ─── Coluna Kanban ────────────────────────────────────────────────────────────
-function KanbanColuna({ fase, cor, clientes, onSelect }: {
+function KanbanColuna({ fase, cor, clientes, progressos, onProgressoLoaded, onSelect }: {
   fase: string
   cor: string
   clientes: Cliente[]
+  progressos: Record<string, ProgressoData>
+  onProgressoLoaded: (id: string, data: ProgressoData) => void
   onSelect: (c: Cliente) => void
 }) {
   const { isOver, setNodeRef } = useDroppable({ id: fase })
@@ -761,7 +861,14 @@ function KanbanColuna({ fase, cor, clientes, onSelect }: {
       </div>
       <div style={{ flex: 1 }}>
         {clientes.map(c => (
-          <KanbanCard key={c.id} cliente={c} faseCor={cor} onSelect={() => onSelect(c)} />
+          <KanbanCard
+            key={c.id}
+            cliente={c}
+            faseCor={cor}
+            progresso={progressos[c.id] ?? null}
+            onProgressoLoaded={onProgressoLoaded}
+            onSelect={() => onSelect(c)}
+          />
         ))}
         {clientes.length === 0 && (
           <p style={{ color: '#555', fontSize: '0.8rem', textAlign: 'center', padding: '1.5rem 0', borderRadius: '6px', border: '1px dashed #1a1a1a' }}>Nenhum cliente</p>
@@ -1097,6 +1204,7 @@ export default function ClientesPage() {
   const [atividades, setAtividades] = useState<Atividade[]>([])
   const [loadingAtividades, setLoadingAtividades] = useState(false)
   const [atividadesExpandidas, setAtividadesExpandidas] = useState(false)
+  const [progressos, setProgressos] = useState<Record<string, ProgressoData>>({})
 
   const justDraggedRef = useRef(false)
   const sensors = useSensors(
@@ -1279,6 +1387,8 @@ export default function ClientesPage() {
               {FASES.map(fase => (
                 <KanbanColuna key={fase.nome} fase={fase.nome} cor={fase.cor}
                   clientes={clientesFiltrados.filter(c => c.faseAtual === fase.nome)}
+                  progressos={progressos}
+                  onProgressoLoaded={(id, data) => setProgressos(p => ({ ...p, [id]: data }))}
                   onSelect={(c) => {
                     if (justDraggedRef.current) return
                     setClienteSelecionado(c)
@@ -1338,7 +1448,8 @@ export default function ClientesPage() {
           atividades={atividades}
           loadingAtividades={loadingAtividades}
           atividadesExpandidas={atividadesExpandidas}
-          setAtividadesExpandidas={setAtividadesExpandidas} />
+          setAtividadesExpandidas={setAtividadesExpandidas}
+          progresso={progressos[clienteSelecionado.id] ?? null} />
       )}
     </div>
   )
