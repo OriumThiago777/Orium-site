@@ -941,7 +941,7 @@ function Dashboard({ clientes, onFiltrarEntregas }: { clientes: Cliente[]; onFil
   type CardDef = { label: string; value: string; cor: string; onClick?: () => void }
   const cards: CardDef[] = [
     { label: 'CLIENTES ATIVOS',   value: String(ativos),                                 cor: '#22C55E' },
-    { label: 'RECEITA MENSAL',    value: formatBRL(receita),                             cor: '#FF6B00' },
+    { label: 'RECEITA MENSAL',    value: receita % 1 === 0 ? `R$ ${receita.toLocaleString('pt-BR')}` : receita.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), cor: '#FF6B00' },
     { label: 'PRÓXIMAS ENTREGAS', value: String(proximasCount),                          cor: '#3B82F6', onClick: onFiltrarEntregas },
     { label: 'DOCUMENTOS GERADOS', value: totalDocs === null ? '...' : String(totalDocs), cor: '#8B5CF6' },
   ]
@@ -975,21 +975,21 @@ function Dashboard({ clientes, onFiltrarEntregas }: { clientes: Cliente[]; onFil
 
         const mrrTotal = mrrPorFase.reduce((acc, f) => acc + f.valor, 0)
         const maxVal = Math.max(...mrrPorFase.map(f => f.valor))
-        const viewH = mrrPorFase.length * 36 + 24
+        const viewH = mrrPorFase.length * 28 + 16
 
         return (
-          <div style={{ background: '#111111', border: '1px solid #222222', borderRadius: '8px', padding: '1.125rem 1.25rem', marginBottom: '1rem' }}>
+          <div style={{ background: '#111111', border: '1px solid #222222', borderRadius: '8px', padding: '0.875rem 1rem', marginBottom: '1rem', maxWidth: '480px' }}>
             <svg viewBox={`0 0 400 ${viewH}`} style={{ width: '100%', display: 'block' }}>
               {mrrPorFase.map((f, i) => {
-                const y = i * 36 + 12
-                const barW = Math.max(4, (f.valor / maxVal) * 220)
+                const y = i * 28 + 8
+                const barW = Math.max(4, (f.valor / maxVal) * 160)
                 return (
                   <g key={f.nome}>
-                    <text x={0} y={y + 14} fill="#777" fontSize={11} fontFamily="Poppins, sans-serif">
+                    <text x={0} y={y + 14} fill="#777" fontSize={10} fontFamily="Poppins, sans-serif">
                       {f.nome.length > 18 ? f.nome.slice(0, 17) + '…' : f.nome}
                     </text>
                     <rect x={140} y={y} width={barW} height={20} rx={4} ry={4} fill={f.cor} />
-                    <text x={140 + barW + 6} y={y + 14} fill="#ccc" fontSize={11} fontFamily="Poppins, sans-serif">
+                    <text x={140 + barW + 6} y={y + 14} fill="#ccc" fontSize={10} fontFamily="Poppins, sans-serif">
                       {`R$ ${f.valor.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`}
                     </text>
                   </g>
