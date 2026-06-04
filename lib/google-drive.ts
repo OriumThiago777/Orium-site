@@ -9,11 +9,18 @@ const auth = new google.auth.JWT({
 
 const drive = google.drive({ version: 'v3', auth })
 
+function requireEnv(name: string): string {
+  const value = process.env[name]
+  if (!value) throw new Error(`Missing required environment variable: ${name}`)
+  return value
+}
+
 export async function getOrCreateClientFolder(clientName: string): Promise<string> {
-  const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID!
+  const rootFolderId = requireEnv('GOOGLE_DRIVE_ROOT_FOLDER_ID')
+  const safeName = clientName.replace(/'/g, "\\'")
 
   const search = await drive.files.list({
-    q: `name='${clientName}' and '${rootFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+    q: `name='${safeName}' and '${rootFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
     fields: 'files(id, name)',
   })
 
