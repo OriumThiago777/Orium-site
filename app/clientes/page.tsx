@@ -1423,7 +1423,7 @@ export default function ClientesPage() {
                 </button>
               </div>
             )}
-            <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '1rem', alignItems: 'flex-start' }}>
+            <div className="orium-scrollbar" style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '1rem', alignItems: 'flex-start' }}>
               {FASES.map(fase => (
                 <KanbanColuna key={fase.nome} fase={fase.nome} cor={fase.cor}
                   clientes={clientesFiltrados.filter(c => c.faseAtual === fase.nome)}

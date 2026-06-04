@@ -36,3 +36,27 @@ a {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
+
+.orium-scrollbar {
+  scrollbar-color: #ff6b00 #0b0b0b;
+  scrollbar-width: thin;
+}
+
+.orium-scrollbar::-webkit-scrollbar {
+  height: 9px;
+}
+
+.orium-scrollbar::-webkit-scrollbar-track {
+  background: #0b0b0b;
+  border-radius: 999px;
+}
+
+.orium-scrollbar::-webkit-scrollbar-thumb {
+  background: #ff6b00;
+  border: 2px solid #0b0b0b;
+  border-radius: 999px;
+}
+
+.orium-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #ff8a2a;
+}
