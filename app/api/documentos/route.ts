@@ -145,6 +145,28 @@ export async function POST(request: Request) {
       console.error('Notion POST error:', await res.json());
       return NextResponse.json({ error: 'Erro ao criar' }, { status: 500 });
     }
+    if (cliente) {
+      const tipoMap: Record<string, string> = {
+        'Proposta': 'proposta_gerada',
+        'Relatório': 'relatorio_gerado',
+        'Checklist': 'checklist_gerado',
+        'Raio-X': 'raio_x_gerado',
+        'Contrato': 'contrato_gerado',
+      }
+      const tipoAtividade = tipoMap[tipo]
+      if (tipoAtividade) {
+        fetch(`${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/api/atividades`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clienteId: '',
+            clienteNome: cliente,
+            tipo: tipoAtividade,
+            descricao: `${tipo} gerado(a)`,
+          }),
+        }).catch(() => {})
+      }
+    }
     return NextResponse.json({ success: true, id });
   } catch (err) {
     console.error('POST /api/documentos:', err);

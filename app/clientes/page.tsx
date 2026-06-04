@@ -32,6 +32,17 @@ type Cliente = {
   valorMensal: number | null
 }
 
+type Atividade = {
+  id: string
+  clienteId: string
+  clienteNome: string
+  tipo: 'fase_alterada' | 'proposta_gerada' | 'relatorio_gerado' |
+        'checklist_gerado' | 'raio_x_gerado' | 'nota_adicionada' |
+        'cliente_criado' | 'contrato_gerado'
+  descricao: string
+  data: string
+}
+
 const FASES: { nome: string; cor: string }[] = [
   { nome: 'Diagnóstico', cor: '#FF6B00' },
   { nome: 'Estruturação Inicial', cor: '#3B82F6' },
@@ -95,15 +106,38 @@ function diasDesdeInteracao(cliente: Cliente): number {
   return Math.floor((today.getTime() - ref.getTime()) / 86400000)
 }
 
-function getHealthScore(cliente: Cliente): 'verde' | 'amarelo' | 'vermelho' {
-  if (cliente.precisaRelatorio) return 'vermelho'
+type HealthScore = {
+  cor: 'verde' | 'amarelo' | 'vermelho'
+  motivos: string[]
+}
+
+function getHealthScore(cliente: Cliente): HealthScore {
+  const motivos: string[] = []
+  const hoje = new Date()
+  hoje.setHours(0,0,0,0)
+
   if (cliente.proximoDeliverable) {
-    const today = new Date(); today.setHours(0, 0, 0, 0)
-    const dt = new Date(cliente.proximoDeliverable + 'T00:00:00')
-    if (dt < today) return 'vermelho'
+    const d = new Date(cliente.proximoDeliverable)
+    d.setHours(0,0,0,0)
+    if (d < hoje) motivos.push('Entrega vencida')
   }
-  if (diasDesdeInteracao(cliente) > 14) return 'amarelo'
-  return 'verde'
+  if (cliente.precisaRelatorio) motivos.push('Relatório pendente')
+
+  if (motivos.length > 0) return { cor: 'vermelho', motivos }
+
+  const refDate = cliente.ultimaInteracao || cliente.dataInicio
+  if (!refDate) {
+    motivos.push('Nenhuma interação registrada')
+    return { cor: 'amarelo', motivos }
+  }
+  const ref = new Date(refDate)
+  const diffDias = Math.floor((hoje.getTime() - ref.getTime()) / 86400000)
+  if (diffDias > 14) {
+    motivos.push(`Sem contato há ${diffDias} dias`)
+    return { cor: 'amarelo', motivos }
+  }
+
+  return { cor: 'verde', motivos: ['Cliente em dia'] }
 }
 
 function formatarDataHora(): string {
@@ -124,6 +158,17 @@ const TIPO_DOC_ROTA: Record<string, string> = {
   'Proposta': '/proposta',
   'Relatório': '/relatorio',
   'Contrato': '/contrato',
+}
+
+const iconeAtividade: Record<string, string> = {
+  cliente_criado: '🟢',
+  fase_alterada: '🔄',
+  proposta_gerada: '📋',
+  relatorio_gerado: '📄',
+  checklist_gerado: '✅',
+  raio_x_gerado: '🔍',
+  nota_adicionada: '💬',
+  contrato_gerado: '📝',
 }
 
 function DeliverableLabel({ dateStr }: { dateStr: string }) {
@@ -278,6 +323,9 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted }: {
   const [loadingDocs, setLoadingDocs] = useState(false)
   const [novaNota, setNovaNota] = useState('')
   const [expandirNotas, setExpandirNotas] = useState(false)
+  const [atividades, setAtividades] = useState<Atividade[]>([])
+  const [loadingAtividades, setLoadingAtividades] = useState(false)
+  const [atividadesExpandidas, setAtividadesExpandidas] = useState(false)
 
   useEffect(() => {
     setLoadingDocs(true)
@@ -293,6 +341,15 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted }: {
       .catch(() => {})
       .finally(() => setLoadingDocs(false))
   }, [cliente.nome])
+
+  useEffect(() => {
+    setLoadingAtividades(true)
+    fetch(`/api/atividades?clienteId=${cliente.id}`)
+      .then(r => r.json())
+      .then(d => setAtividades(d.atividades ?? []))
+      .catch(() => {})
+      .finally(() => setLoadingAtividades(false))
+  }, [cliente.id])
 
   const set = (k: keyof Cliente, v: unknown) => setForm(p => ({ ...p, [k]: v }))
 
@@ -355,10 +412,26 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted }: {
       <div style={{ background: '#111', border: '1px solid #222', borderRadius: '12px', width: '100%', maxWidth: '580px', position: 'relative', maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '1.5rem 2rem 1rem', borderBottom: '1px solid #1a1a1a', flexShrink: 0 }}>
           <h2 style={{ fontFamily: 'Anton, sans-serif', fontSize: '1.5rem', color: '#fff', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>{cliente.nome.toUpperCase()}</h2>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.75rem' }}>
             <StatusBadge status={form.status} />
             <FaseBadge fase={form.faseAtual} />
           </div>
+          {(() => {
+            const health = getHealthScore(cliente)
+            const textoMap: Record<'verde' | 'amarelo' | 'vermelho', string> = { verde: 'Saudável', amarelo: 'Atenção', vermelho: 'Crítico' }
+            const cor = HEALTH_COR[health.cor]
+            return (
+              <div style={{ background: `${cor}1a`, border: `1px solid ${cor}4d`, borderRadius: '8px', padding: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                  <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: cor, flexShrink: 0 }} />
+                  <span style={{ color: cor, fontWeight: 700, fontSize: '0.85rem' }}>{textoMap[health.cor]}</span>
+                </div>
+                {health.motivos.map((m, i) => (
+                  <p key={i} style={{ color: '#777', fontSize: '0.78rem', margin: '0.125rem 0 0', paddingLeft: '1.5rem' }}>· {m}</p>
+                ))}
+              </div>
+            )
+          })()}
         </div>
         <div style={{ display: 'flex', borderBottom: '1px solid #1a1a1a', flexShrink: 0 }}>
           {(['info', 'acoes'] as const).map(t => (
@@ -524,6 +597,42 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted }: {
                   </div>
                 )}
               </div>
+
+              {/* Atividades */}
+              <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '8px', padding: '0.875rem' }}>
+                <p style={{ fontFamily: 'Anton', fontSize: '0.75rem', letterSpacing: '0.12em', color: '#fff', margin: '0 0 0.75rem' }}>
+                  ATIVIDADES
+                </p>
+                {loadingAtividades && <p style={{ color: '#555', fontSize: '0.85rem' }}>Carregando...</p>}
+                {!loadingAtividades && atividades.length === 0 && (
+                  <p style={{ color: '#555', fontSize: '0.85rem' }}>Nenhuma atividade registrada</p>
+                )}
+                {!loadingAtividades && atividades.length > 0 && (
+                  <div style={{ borderLeft: '2px solid #1a1a1a', paddingLeft: '0.875rem' }}>
+                    {(atividadesExpandidas ? atividades : atividades.slice(0, 5)).map(a => (
+                      <div key={a.id} style={{ marginBottom: '0.625rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ fontSize: '0.875rem' }}>{iconeAtividade[a.tipo] || '•'}</span>
+                          <span style={{ color: '#ccc', fontSize: '0.85rem', flex: 1 }}>{a.descricao}</span>
+                        </div>
+                        <p style={{ color: '#555', fontSize: '0.72rem', margin: '0.125rem 0 0 1.375rem' }}>
+                          {a.data ? new Date(a.data).toLocaleString('pt-BR', {
+                            day: '2-digit', month: '2-digit', year: 'numeric',
+                            hour: '2-digit', minute: '2-digit'
+                          }) : '—'}
+                        </p>
+                      </div>
+                    ))}
+                    {atividades.length > 5 && (
+                      <button
+                        onClick={() => setAtividadesExpandidas(e => !e)}
+                        style={{ color: '#FF6B00', fontSize: '0.8rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginTop: '0.25rem' }}>
+                        {atividadesExpandidas ? 'Recolher' : `Ver todas (${atividades.length} atividades)`}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
           {tab === 'acoes' && (
@@ -580,12 +689,7 @@ function KanbanCard({ cliente, faseCor, onSelect }: {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: cliente.id })
   const health = getHealthScore(cliente)
   const semContato = diasDesdeInteracao(cliente) > 14
-
-  const healthTooltip = {
-    vermelho: cliente.precisaRelatorio ? 'Relatório pendente' : 'Entrega vencida',
-    amarelo: 'Sem contato há mais de 14 dias',
-    verde: 'Cliente em dia',
-  }[health]
+  const healthTooltip = health.motivos[0]
 
   return (
     <div
@@ -614,7 +718,7 @@ function KanbanCard({ cliente, faseCor, onSelect }: {
         <span style={{ color: '#fff', fontWeight: 600, fontSize: '0.9rem', lineHeight: 1.3, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cliente.nome}</span>
         <div style={{ display: 'flex', gap: '0.375rem', alignItems: 'center', flexShrink: 0, marginLeft: '0.5rem' }}>
           {cliente.precisaRelatorio && <span title="Precisa relatório" style={{ fontSize: '0.8rem' }}>📊</span>}
-          <div title={healthTooltip} style={{ width: '10px', height: '10px', borderRadius: '50%', background: HEALTH_COR[health], flexShrink: 0 }} />
+          <div title={healthTooltip} style={{ width: '10px', height: '10px', borderRadius: '50%', background: HEALTH_COR[health.cor], flexShrink: 0 }} />
         </div>
       </div>
       <div style={{ marginBottom: '0.375rem', display: 'flex', flexWrap: 'wrap', gap: '0.3rem', alignItems: 'center' }}>
@@ -784,11 +888,7 @@ function VistaTable({
             ) : (
               sorted.map(c => {
                 const health = getHealthScore(c)
-                const healthTooltip = {
-                  vermelho: c.precisaRelatorio ? 'Relatório pendente' : 'Entrega vencida',
-                  amarelo: 'Sem contato há mais de 14 dias',
-                  verde: 'Cliente em dia',
-                }[health]
+                const healthTooltip = health.motivos[0]
                 return (
                   <tr key={c.id} onClick={() => onSelect(c)}
                     style={{ borderBottom: '1px solid #141414', cursor: 'pointer', transition: 'background 0.1s' }}
@@ -798,7 +898,7 @@ function VistaTable({
                     <td style={{ padding: '0.875rem 1rem' }}><StatusBadge status={c.status} /></td>
                     <td style={{ padding: '0.875rem 1rem' }}><FaseBadge fase={c.faseAtual} /></td>
                     <td style={{ padding: '0.875rem 1rem' }}>
-                      <div title={healthTooltip} style={{ width: '10px', height: '10px', borderRadius: '50%', background: HEALTH_COR[health], cursor: 'help' }} />
+                      <div title={healthTooltip} style={{ width: '10px', height: '10px', borderRadius: '50%', background: HEALTH_COR[health.cor], cursor: 'help' }} />
                     </td>
                     <td style={{ padding: '0.875rem 1rem' }}><DeliverableLabel dateStr={c.proximoDeliverable} /></td>
                     <td style={{ padding: '0.875rem 1rem', color: '#aaa', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>{formatBRL(c.valorMensal)}</td>
@@ -872,6 +972,49 @@ function Dashboard({ clientes, onFiltrarEntregas }: { clientes: Cliente[]; onFil
           </div>
         ))}
       </div>
+
+      {(() => {
+        const mrrPorFase = FASES.map(f => ({
+          ...f,
+          valor: clientes
+            .filter(c => c.faseAtual === f.nome && c.status === 'Ativo')
+            .reduce((acc, c) => acc + (c.valorMensal || 0), 0),
+        })).filter(f => f.valor > 0)
+
+        if (mrrPorFase.length === 0) return null
+
+        const mrrTotal = mrrPorFase.reduce((acc, f) => acc + f.valor, 0)
+        const maxVal = Math.max(...mrrPorFase.map(f => f.valor))
+        const viewH = mrrPorFase.length * 36 + 24
+
+        return (
+          <div style={{ background: '#111111', border: '1px solid #222222', borderRadius: '8px', padding: '1.125rem 1.25rem', marginBottom: '1rem' }}>
+            <svg viewBox={`0 0 400 ${viewH}`} style={{ width: '100%', display: 'block' }}>
+              {mrrPorFase.map((f, i) => {
+                const y = i * 36 + 12
+                const barW = Math.max(4, (f.valor / maxVal) * 220)
+                return (
+                  <g key={f.nome}>
+                    <text x={0} y={y + 14} fill="#777" fontSize={11} fontFamily="Poppins, sans-serif">
+                      {f.nome.length > 18 ? f.nome.slice(0, 17) + '…' : f.nome}
+                    </text>
+                    <rect x={140} y={y} width={barW} height={20} rx={4} ry={4} fill={f.cor} />
+                    <text x={140 + barW + 6} y={y + 14} fill="#ccc" fontSize={11} fontFamily="Poppins, sans-serif">
+                      {`R$ ${f.valor.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`}
+                    </text>
+                  </g>
+                )
+              })}
+            </svg>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem', gap: '0.5rem', alignItems: 'baseline' }}>
+              <span style={{ color: '#777', fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>MRR TOTAL</span>
+              <span style={{ fontFamily: 'Anton, sans-serif', fontSize: '1rem', color: '#FF6B00' }}>
+                {`R$ ${mrrTotal.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`}
+              </span>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Próximas entregas — lista */}
       <div style={{ background: '#111111', border: '1px solid #222222', borderRadius: '8px', padding: '1.125rem 1.25rem' }}>

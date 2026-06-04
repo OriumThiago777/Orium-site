@@ -9,6 +9,14 @@ const NH = {
   'Notion-Version': '2022-06-28',
 };
 
+const registrarAtividade = (body: object) => {
+  fetch(`${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/api/atividades`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }).catch(() => {})
+}
+
 type NotionPage = {
   id: string;
   properties: Record<string, {
@@ -116,7 +124,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Erro ao criar cliente' }, { status: 500 });
     }
     const page = await res.json() as NotionPage;
-    return NextResponse.json(extractCliente(page));
+    const clienteCriado = extractCliente(page);
+    registrarAtividade({
+      clienteId: clienteCriado.id,
+      clienteNome: clienteCriado.nome,
+      tipo: 'cliente_criado',
+      descricao: 'Cliente cadastrado na ORIUM',
+    });
+    return NextResponse.json(clienteCriado);
   } catch (err) {
     console.error('POST /api/clientes:', err);
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
@@ -143,6 +158,14 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Erro ao atualizar cliente' }, { status: 500 });
     }
     const page = await res.json() as NotionPage;
+    if (body.faseAtual !== undefined) {
+      registrarAtividade({
+        clienteId: id,
+        clienteNome: body.nome || body.clienteNome || '',
+        tipo: 'fase_alterada',
+        descricao: `Fase alterada para: ${body.faseAtual}`,
+      });
+    }
     return NextResponse.json(extractCliente(page));
   } catch (err) {
     console.error('PATCH /api/clientes:', err);
