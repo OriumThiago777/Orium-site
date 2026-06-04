@@ -59,7 +59,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, fileId, fileUrl })
   } catch (error) {
-    console.error('Erro no upload:', error)
+    const err = error as Error
+    console.error('=== ERRO NO UPLOAD ===')
+    console.error('message:', err?.message)
+    console.error('stack:', err?.stack)
+    console.error('raw:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }
