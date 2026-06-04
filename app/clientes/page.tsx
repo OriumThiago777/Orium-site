@@ -36,9 +36,7 @@ type Atividade = {
   id: string
   clienteId: string
   clienteNome: string
-  tipo: 'fase_alterada' | 'proposta_gerada' | 'relatorio_gerado' |
-        'checklist_gerado' | 'raio_x_gerado' | 'nota_adicionada' |
-        'cliente_criado' | 'contrato_gerado'
+  tipo: string
   descricao: string
   data: string
 }
@@ -306,11 +304,15 @@ function ModalNovoCliente({ onClose, onCreated }: { onClose: () => void; onCreat
 }
 
 // ─── Modal Detalhes ──────────────────────────────────────────────────────────
-function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted }: {
+function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loadingAtividades, atividadesExpandidas, setAtividadesExpandidas }: {
   cliente: Cliente
   onClose: () => void
   onUpdated: (c: Cliente) => void
   onDeleted: (id: string) => void
+  atividades: Atividade[]
+  loadingAtividades: boolean
+  atividadesExpandidas: boolean
+  setAtividadesExpandidas: (f: boolean | ((prev: boolean) => boolean)) => void
 }) {
   type DocItem = { id: string; pageId?: string; nome: string; tipo: string; cliente: string; dataGeracao: string }
 
@@ -323,9 +325,6 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted }: {
   const [loadingDocs, setLoadingDocs] = useState(false)
   const [novaNota, setNovaNota] = useState('')
   const [expandirNotas, setExpandirNotas] = useState(false)
-  const [atividades, setAtividades] = useState<Atividade[]>([])
-  const [loadingAtividades, setLoadingAtividades] = useState(false)
-  const [atividadesExpandidas, setAtividadesExpandidas] = useState(false)
 
   useEffect(() => {
     setLoadingDocs(true)
@@ -341,15 +340,6 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted }: {
       .catch(() => {})
       .finally(() => setLoadingDocs(false))
   }, [cliente.nome])
-
-  useEffect(() => {
-    setLoadingAtividades(true)
-    fetch(`/api/atividades?clienteId=${cliente.id}`)
-      .then(r => r.json())
-      .then(d => setAtividades(d.atividades ?? []))
-      .catch(() => {})
-      .finally(() => setLoadingAtividades(false))
-  }, [cliente.id])
 
   const set = (k: keyof Cliente, v: unknown) => setForm(p => ({ ...p, [k]: v }))
 
@@ -599,13 +589,13 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted }: {
               </div>
 
               {/* Atividades */}
-              <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '8px', padding: '0.875rem' }}>
-                <p style={{ fontFamily: 'Anton', fontSize: '0.75rem', letterSpacing: '0.12em', color: '#fff', margin: '0 0 0.75rem' }}>
+              <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '8px', padding: '0.875rem', marginBottom: '1rem' }}>
+                <p style={{ fontFamily: 'Anton, sans-serif', fontSize: '0.75rem', letterSpacing: '0.12em', color: '#fff', margin: '0 0 0.75rem' }}>
                   ATIVIDADES
                 </p>
-                {loadingAtividades && <p style={{ color: '#555', fontSize: '0.85rem' }}>Carregando...</p>}
+                {loadingAtividades && <p style={{ color: '#555', fontSize: '0.85rem', margin: 0 }}>Carregando...</p>}
                 {!loadingAtividades && atividades.length === 0 && (
-                  <p style={{ color: '#555', fontSize: '0.85rem' }}>Nenhuma atividade registrada</p>
+                  <p style={{ color: '#555', fontSize: '0.85rem', margin: 0 }}>Nenhuma atividade registrada</p>
                 )}
                 {!loadingAtividades && atividades.length > 0 && (
                   <div style={{ borderLeft: '2px solid #1a1a1a', paddingLeft: '0.875rem' }}>
@@ -1104,6 +1094,9 @@ export default function ClientesPage() {
   const [filtroUrgente, setFiltroUrgente] = useState(false)
   const [filtroStatus, setFiltroStatus] = useState('todos')
   const [exportando, setExportando] = useState(false)
+  const [atividades, setAtividades] = useState<Atividade[]>([])
+  const [loadingAtividades, setLoadingAtividades] = useState(false)
+  const [atividadesExpandidas, setAtividadesExpandidas] = useState(false)
 
   const justDraggedRef = useRef(false)
   const sensors = useSensors(
@@ -1118,6 +1111,17 @@ export default function ClientesPage() {
       .then(d => setClientes(d.clientes ?? []))
       .finally(() => setLoading(false))
   }, [autenticado])
+
+  useEffect(() => {
+    if (!clienteSelecionado) return
+    setAtividadesExpandidas(false)
+    setLoadingAtividades(true)
+    fetch(`/api/atividades?clienteId=${clienteSelecionado.id}`)
+      .then(r => r.json())
+      .then(d => setAtividades(d.atividades || []))
+      .catch(() => setAtividades([]))
+      .finally(() => setLoadingAtividades(false))
+  }, [clienteSelecionado])
 
   function handleDragEnd(event: DragEndEvent) {
     justDraggedRef.current = true
@@ -1330,7 +1334,11 @@ export default function ClientesPage() {
           cliente={clienteSelecionado}
           onClose={() => setClienteSelecionado(null)}
           onUpdated={updated => setClientes(cs => cs.map(c => c.id === updated.id ? updated : c))}
-          onDeleted={id => setClientes(cs => cs.filter(c => c.id !== id))} />
+          onDeleted={id => setClientes(cs => cs.filter(c => c.id !== id))}
+          atividades={atividades}
+          loadingAtividades={loadingAtividades}
+          atividadesExpandidas={atividadesExpandidas}
+          setAtividadesExpandidas={setAtividadesExpandidas} />
       )}
     </div>
   )
