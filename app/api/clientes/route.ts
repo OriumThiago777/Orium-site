@@ -17,6 +17,16 @@ const registrarAtividade = (body: object) => {
   }).catch(() => {})
 }
 
+const STATUS_VALIDOS = new Set(['Ativo', 'Inativo', 'Proposta']);
+const FASES_VALIDAS = new Set([
+  'Diagnóstico',
+  'Estruturação Inicial',
+  'Conteúdo e Comunicação',
+  'Expansão Digital',
+  'Pausado',
+  'Finalizado',
+]);
+
 type NotionPage = {
   id: string;
   properties: Record<string, {
@@ -30,6 +40,47 @@ type NotionPage = {
     number?: number | null;
   }>;
 };
+
+function sanitizeErrorMessage(message: string) {
+  return message
+    .replace(/[0-9a-f]{32}/gi, '[id]')
+    .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '[id]');
+}
+
+async function getNotionError(res: Response) {
+  try {
+    const err = await res.json();
+    const message = typeof err?.message === 'string'
+      ? sanitizeErrorMessage(err.message)
+      : 'Erro retornado pelo Notion';
+    return { status: res.status, code: err?.code, message };
+  } catch {
+    return { status: res.status, code: 'unknown_error', message: 'Erro retornado pelo Notion' };
+  }
+}
+
+function validarClientePayload(body: Record<string, unknown>) {
+  if (body.nome !== undefined && !String(body.nome).trim()) {
+    return 'Nome do cliente é obrigatório';
+  }
+
+  if (body.status !== undefined && !STATUS_VALIDOS.has(String(body.status))) {
+    return 'Status inválido para o banco Clientes ORIUM';
+  }
+
+  if (body.faseAtual !== undefined && !FASES_VALIDAS.has(String(body.faseAtual))) {
+    return 'Fase Atual inválida para o banco Clientes ORIUM';
+  }
+
+  if (body.email !== undefined && body.email !== '' && body.email !== null) {
+    const email = String(body.email);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return 'E-mail inválido';
+    }
+  }
+
+  return null;
+}
 
 function extractCliente(page: NotionPage) {
   const p = page.properties;
@@ -92,9 +143,9 @@ export async function GET() {
       }),
     });
     if (!res.ok) {
-      const err = await res.json();
+      const err = await getNotionError(res);
       console.error('Notion GET clientes error:', err);
-      return NextResponse.json({ error: 'Erro ao listar clientes' }, { status: 500 });
+      return NextResponse.json({ error: 'Erro ao listar clientes', detail: err.message }, { status: 500 });
     }
     const data = await res.json();
     const clientes = (data.results ?? []).map((page: NotionPage) => extractCliente(page));
@@ -107,7 +158,12 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown>;
+    const erroValidacao = validarClientePayload(body);
+    if (erroValidacao) {
+      return NextResponse.json({ error: erroValidacao }, { status: 400 });
+    }
+
     const props = buildProperties(body);
 
     const res = await fetch('https://api.notion.com/v1/pages', {
@@ -119,9 +175,9 @@ export async function POST(request: Request) {
       }),
     });
     if (!res.ok) {
-      const err = await res.json();
+      const err = await getNotionError(res);
       console.error('Notion POST clientes error:', err);
-      return NextResponse.json({ error: 'Erro ao criar cliente' }, { status: 500 });
+      return NextResponse.json({ error: 'Erro ao criar cliente no Notion', detail: err.message }, { status: 500 });
     }
     const page = await res.json() as NotionPage;
     const clienteCriado = extractCliente(page);
@@ -144,7 +200,12 @@ export async function PATCH(request: Request) {
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ error: 'ID obrigatório' }, { status: 400 });
 
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown>;
+    const erroValidacao = validarClientePayload(body);
+    if (erroValidacao) {
+      return NextResponse.json({ error: erroValidacao }, { status: 400 });
+    }
+
     const props = buildProperties(body);
 
     const res = await fetch(`https://api.notion.com/v1/pages/${id}`, {
@@ -153,9 +214,9 @@ export async function PATCH(request: Request) {
       body: JSON.stringify({ properties: props }),
     });
     if (!res.ok) {
-      const err = await res.json();
+      const err = await getNotionError(res);
       console.error('Notion PATCH clientes error:', err);
-      return NextResponse.json({ error: 'Erro ao atualizar cliente' }, { status: 500 });
+      return NextResponse.json({ error: 'Erro ao atualizar cliente no Notion', detail: err.message }, { status: 500 });
     }
     const page = await res.json() as NotionPage;
     if (body.faseAtual !== undefined) {
@@ -185,9 +246,9 @@ export async function DELETE(request: Request) {
       body: JSON.stringify({ archived: true }),
     });
     if (!res.ok) {
-      const err = await res.json();
+      const err = await getNotionError(res);
       console.error('Notion DELETE clientes error:', err);
-      return NextResponse.json({ error: 'Erro ao arquivar cliente' }, { status: 500 });
+      return NextResponse.json({ error: 'Erro ao arquivar cliente no Notion', detail: err.message }, { status: 500 });
     }
     return NextResponse.json({ success: true });
   } catch (err) {

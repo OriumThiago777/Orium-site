@@ -226,6 +226,7 @@ function FaseBadge({ fase }: { fase: string }) {
 function ModalNovoCliente({ onClose, onCreated }: { onClose: () => void; onCreated: (c: Cliente) => void }) {
   const [form, setForm] = useState({ nome: '', status: 'Proposta', faseAtual: 'Diagnóstico', instagram: '', email: '', contato: '' })
   const [loading, setLoading] = useState(false)
+  const [erro, setErro] = useState('')
 
   const set = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }))
 
@@ -233,6 +234,7 @@ function ModalNovoCliente({ onClose, onCreated }: { onClose: () => void; onCreat
     e.preventDefault()
     if (!form.nome.trim()) return
     setLoading(true)
+    setErro('')
     try {
       const res = await fetch('/api/clientes', {
         method: 'POST',
@@ -240,7 +242,15 @@ function ModalNovoCliente({ onClose, onCreated }: { onClose: () => void; onCreat
         body: JSON.stringify(form),
       })
       const data = await res.json()
-      if (res.ok) { onCreated(data); onClose() }
+      if (res.ok) {
+        onCreated(data)
+        onClose()
+      } else {
+        setErro(data?.detail || data?.error || 'Não foi possível criar o cliente.')
+      }
+    } catch (err) {
+      console.error('Erro ao criar cliente:', err)
+      setErro('Não foi possível conectar ao servidor. Tente novamente.')
     } finally {
       setLoading(false)
     }
@@ -294,6 +304,11 @@ function ModalNovoCliente({ onClose, onCreated }: { onClose: () => void; onCreat
                 onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#333'} />
             </div>
           </div>
+          {erro && (
+            <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: '8px', padding: '0.75rem 0.875rem', color: '#fca5a5', fontSize: '0.82rem', lineHeight: 1.5 }}>
+              {erro}
+            </div>
+          )}
           <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
             <button type="submit" disabled={loading || !form.nome.trim()} style={{ flex: 1, background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.875rem', color: '#fff', fontFamily: 'Anton, sans-serif', fontSize: '0.95rem', letterSpacing: '0.12em', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1, transition: 'opacity 0.15s' }}>
               {loading ? 'CRIANDO...' : 'CRIAR'}
