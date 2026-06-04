@@ -7,6 +7,7 @@ import {
   DndContext,
   DragEndEvent,
   PointerSensor,
+  pointerWithin,
   useSensor,
   useSensors,
   useDraggable,
@@ -1220,6 +1221,7 @@ export default function ClientesPage() {
   const [loadingAtividades, setLoadingAtividades] = useState(false)
   const [atividadesExpandidas, setAtividadesExpandidas] = useState(false)
   const [progressos, setProgressos] = useState<Record<string, ProgressoData>>({})
+  const [kanbanErro, setKanbanErro] = useState('')
 
   const justDraggedRef = useRef(false)
   const sensors = useSensors(
@@ -1246,22 +1248,36 @@ export default function ClientesPage() {
       .finally(() => setLoadingAtividades(false))
   }, [clienteSelecionado])
 
-  function handleDragEnd(event: DragEndEvent) {
+  async function handleDragEnd(event: DragEndEvent) {
     justDraggedRef.current = true
     requestAnimationFrame(() => { justDraggedRef.current = false })
     const { active, over } = event
     if (!over) return
     const clienteId = String(active.id)
     const novaFase = String(over.id)
+    if (!FASES.some(f => f.nome === novaFase)) return
     const cliente = clientes.find(c => c.id === clienteId)
     if (!cliente || cliente.faseAtual === novaFase) return
     const prev = clientes
+    setKanbanErro('')
     setClientes(cs => cs.map(c => c.id === clienteId ? { ...c, faseAtual: novaFase } : c))
-    fetch(`/api/clientes?id=${clienteId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ faseAtual: novaFase }),
-    }).then(r => { if (!r.ok) setClientes(prev) })
+    try {
+      const res = await fetch(`/api/clientes?id=${encodeURIComponent(clienteId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ faseAtual: novaFase, clienteNome: cliente.nome }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        throw new Error(data?.detail || data?.error || 'Falha ao atualizar fase')
+      }
+      const atualizado = await res.json()
+      setClientes(cs => cs.map(c => c.id === clienteId ? { ...c, ...atualizado } : c))
+    } catch (err) {
+      console.error('Erro ao mover cliente no Kanban:', err)
+      setClientes(prev)
+      setKanbanErro('Não foi possível mover o cliente. A fase foi restaurada.')
+    }
   }
 
   function handleOrdenar(col: OrdenarPor) {
@@ -1395,9 +1411,18 @@ export default function ClientesPage() {
         ) : vistaAtiva === 'kanban' ? (
           <DndContext
             sensors={sensors}
+            collisionDetection={pointerWithin}
             onDragStart={() => { justDraggedRef.current = false }}
             onDragEnd={handleDragEnd}
           >
+            {kanbanErro && (
+              <div style={{ marginBottom: '0.875rem', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: '8px', padding: '0.625rem 0.875rem', color: '#fca5a5', fontSize: '0.82rem', display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center' }}>
+                <span>{kanbanErro}</span>
+                <button type="button" onClick={() => setKanbanErro('')} style={{ background: 'transparent', border: 'none', color: '#fca5a5', cursor: 'pointer', fontSize: '0.9rem', lineHeight: 1 }}>
+                  ×
+                </button>
+              </div>
+            )}
             <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '1rem', alignItems: 'flex-start' }}>
               {FASES.map(fase => (
                 <KanbanColuna key={fase.nome} fase={fase.nome} cor={fase.cor}
