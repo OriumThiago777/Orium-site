@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
+import { savePdfToCloud } from '@/lib/upload-helper'
+import SaveToast from '@/components/SaveToast'
 
 type Tipo = 'pessoa' | 'empresa' | null
 
@@ -18,6 +20,7 @@ export default function BriefingPage() {
   const [enviado, setEnviado] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle')
 
   const set = (name: string, value: string) =>
     setForm(prev => ({ ...prev, [name]: value }))
@@ -156,6 +159,106 @@ export default function BriefingPage() {
   const handleNext = () => { if (step < totalSteps - 1) setStep(s => s + 1) }
   const handleBack = () => { if (step > 0) setStep(s => s - 1) }
 
+  async function gerarBriefingBlob(
+    allData: Record<string, string>,
+    briefTipo: Tipo
+  ): Promise<Blob> {
+    if (!document.getElementById('briefing-gfonts')) {
+      const link = document.createElement('link')
+      link.id = 'briefing-gfonts'
+      link.rel = 'stylesheet'
+      link.href = 'https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;600;700&display=swap'
+      document.head.appendChild(link)
+      await new Promise(r => setTimeout(r, 1500))
+    }
+    await document.fonts.ready
+
+    const { default: jsPDF } = await import('jspdf')
+    const { default: html2canvas } = await import('html2canvas')
+
+    const clientName = briefTipo === 'pessoa'
+      ? (allData['Nome completo'] || 'Cliente')
+      : (allData['Nome da empresa'] || 'Empresa')
+    const hoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+    const curSteps = briefTipo === 'pessoa' ? pessoaSteps : empresaSteps
+
+    const PX_W = 794, PX_H = 1123
+    const P = "font-family:'Poppins',Arial,sans-serif;"
+    const A = "font-family:'Anton',Impact,sans-serif;"
+    const BAR = 'position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#FF6B00,#FF8C00 50%,#FF6B00);'
+
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+    let isFirst = true
+
+    async function capturePage(html: string) {
+      const el = document.createElement('div')
+      el.style.cssText = `position:fixed;left:-9999px;top:0;width:${PX_W}px;height:${PX_H}px;background:#080808;overflow:hidden;${P}box-sizing:border-box;`
+      el.innerHTML = html
+      document.body.appendChild(el)
+      try {
+        await new Promise(r => setTimeout(r, 80))
+        const canvas = await html2canvas(el, { backgroundColor: '#080808', scale: 2, useCORS: true, allowTaint: true, logging: false, width: PX_W, height: PX_H })
+        const imgData = canvas.toDataURL('image/jpeg', 0.92)
+        if (!isFirst) doc.addPage()
+        isFirst = false
+        doc.addImage(imgData, 'JPEG', 0, 0, 210, 297)
+      } finally { document.body.removeChild(el) }
+    }
+
+    await capturePage(`
+      <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:80px;box-sizing:border-box;">
+        <div style="${BAR}"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#FF6B00,#FF8C00 50%,#FF6B00);"></div>
+        <div style="${A}font-size:84px;color:#FF6B00;letter-spacing:6px;line-height:1;margin-bottom:8px;text-align:center;">BRIEFING</div>
+        <div style="${A}font-size:28px;color:#fff;letter-spacing:18px;text-align:center;margin-bottom:48px;">ORIUM</div>
+        <div style="width:56px;height:3px;background:#FF6B00;margin-bottom:48px;"></div>
+        <div style="text-align:center;">
+          <div style="color:#555;font-size:13px;letter-spacing:4px;text-transform:uppercase;margin-bottom:14px;">${briefTipo === 'pessoa' ? 'MARCA PESSOAL' : 'EMPRESA'}</div>
+          <div style="${A}font-size:42px;color:#fff;margin-bottom:10px;">${clientName.toUpperCase()}</div>
+          <div style="color:#444;font-size:14px;">${hoje}</div>
+        </div>
+        <div style="position:absolute;bottom:28px;color:#2a2a2a;font-size:10px;letter-spacing:3px;text-transform:uppercase;">Uso Interno · Orium Agency</div>
+      </div>
+    `)
+
+    const blocks: Array<{ bloco: string; fields: Array<{ label: string; value: string }> }> = []
+    for (const s of curSteps) {
+      const flds: Array<{ label: string; value: string }> = []
+      for (const c of s.campos) {
+        const val = allData[c.name] || ''
+        if (val.trim()) flds.push({ label: c.label, value: val })
+      }
+      if (flds.length) blocks.push({ bloco: s.bloco, fields: flds })
+    }
+
+    for (let i = 0; i < blocks.length; i += 2) {
+      const chunk = blocks.slice(i, i + 2)
+      const chunksHtml = chunk.map(b => `
+        <div style="margin-bottom:36px;">
+          <div style="${A}font-size:15px;color:#FF6B00;letter-spacing:4px;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(255,107,0,0.2);">${b.bloco}</div>
+          ${b.fields.map(f => `
+            <div style="margin-bottom:16px;">
+              <div style="color:#444;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;${P}">${f.label}</div>
+              <div style="color:#ccc;font-size:14px;line-height:1.8;${P}">${f.value.replace(/\n/g, '<br/>')}</div>
+            </div>
+          `).join('')}
+        </div>
+      `).join('')
+      await capturePage(`
+        <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;padding:70px 70px 80px;box-sizing:border-box;position:relative;overflow:hidden;">
+          <div style="${BAR}"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;padding-bottom:14px;border-bottom:1px solid #141414;">
+            <div style="color:#2a2a2a;font-size:10px;letter-spacing:3px;text-transform:uppercase;">ORIUM AGENCY · BRIEFING</div>
+            <div style="color:#2a2a2a;font-size:10px;">${clientName.toUpperCase()} · ${hoje}</div>
+          </div>
+          ${chunksHtml}
+        </div>
+      `)
+    }
+
+    return doc.output('blob')
+  }
+
   const handleSubmit = async () => {
     setEnviando(true)
     const multiAsString: Record<string, string> = {}
@@ -169,6 +272,24 @@ export default function BriefingPage() {
         body: JSON.stringify({ tipo, ...form, ...multiAsString }),
       })
       setEnviado(true)
+
+      // PDF em background — não bloqueia a tela de sucesso
+      const allData = { ...form, ...multiAsString }
+      const clientName = tipo === 'pessoa'
+        ? (allData['Nome completo'] || 'cliente')
+        : (allData['Nome da empresa'] || 'empresa')
+      const arquivo = `briefing-${clientName.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`
+      gerarBriefingBlob(allData, tipo).then(pdfBlob => {
+        const url = URL.createObjectURL(pdfBlob)
+        const a = document.createElement('a')
+        a.href = url; a.download = arquivo
+        document.body.appendChild(a); a.click()
+        document.body.removeChild(a); URL.revokeObjectURL(url)
+        setSaveStatus('saving')
+        savePdfToCloud(pdfBlob, clientName, 'Briefing', arquivo)
+          .then(result => { setSaveStatus(result.success ? 'success' : 'error'); setTimeout(() => setSaveStatus('idle'), 4000) })
+          .catch(() => { setSaveStatus('error'); setTimeout(() => setSaveStatus('idle'), 4000) })
+      }).catch(err => console.error('Erro ao gerar PDF do briefing:', err))
     } catch {
       alert('Erro ao enviar. Tente novamente.')
     } finally {
@@ -204,6 +325,7 @@ export default function BriefingPage() {
           <p style={{ color: '#aaa', lineHeight: 1.75, fontSize: '1rem' }}>Suas respostas chegaram. Em breve entraremos em contato.</p>
           <div style={{ width: '32px', height: '2px', background: '#FF6B00', margin: '2rem auto 0' }} />
         </div>
+        {saveStatus !== 'idle' && <SaveToast status={saveStatus} />}
       </div>
     )
   }

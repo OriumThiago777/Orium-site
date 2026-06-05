@@ -4,6 +4,8 @@ import { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { isAuthenticated, saveAuth } from '@/lib/auth';
+import { savePdfToCloud } from '@/lib/upload-helper';
+import SaveToast from '@/components/SaveToast';
 
 const FA = 'Anton, sans-serif';
 const FP = 'Poppins, sans-serif';
@@ -456,6 +458,8 @@ function ContratoPage() {
   const [copiado, setCopiado] = useState(false);
   const [documentoId, setDocumentoId] = useState<string | null>(null);
   const [savedMsg, setSavedMsg] = useState('');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [gerando, setGerando] = useState(false);
   const searchParams = useSearchParams();
   const docParam = searchParams.get('doc');
 
@@ -520,6 +524,99 @@ function ContratoPage() {
 
   function limpar() {
     if (window.confirm('Limpar todo o formulário? Esta ação não pode ser desfeita.')) { setForm(estadoInicial()); setEtapa(0); setErros([]); }
+  }
+
+  async function gerarContratoPDF() {
+    setGerando(true);
+    try {
+      if (!document.getElementById('contrato-gfonts')) {
+        const link = document.createElement('link');
+        link.id = 'contrato-gfonts';
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;600;700&display=swap';
+        document.head.appendChild(link);
+        await new Promise(r => setTimeout(r, 1500));
+      }
+      await document.fonts.ready;
+
+      const { default: jsPDF } = await import('jspdf');
+      const { default: html2canvas } = await import('html2canvas');
+
+      const texto = gerarContrato(form);
+      const clientName = form.cliente.empresa || 'cliente';
+      const hoje = new Date().toISOString().split('T')[0];
+      const arquivo = `contrato-${clientName.toLowerCase().replace(/\s+/g, '-')}-${hoje}.pdf`;
+
+      const el = document.createElement('div');
+      el.style.cssText = `position:fixed;left:-9999px;top:0;width:734px;background:#080808;padding:60px;box-sizing:border-box;font-family:'Poppins',Arial,sans-serif;border-top:5px solid #FF6B00;`;
+
+      const linhas = texto.split('\n');
+      const htmlLinhas = linhas.map(linha => {
+        if (/^═+$/.test(linha)) return `<div style="height:1px;background:#1a1a1a;margin:14px 0;"></div>`;
+        if (/^CLÁUSULA \d+/.test(linha)) return `<div style="font-family:'Anton',Impact,sans-serif;color:#FF6B00;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-top:6px;margin-bottom:4px;">${linha}</div>`;
+        if (/^CONTRATO DE PRESTAÇÃO|^IDENTIFICAÇÃO DAS PARTES/.test(linha)) return `<div style="font-family:'Anton',Impact,sans-serif;color:#fff;font-size:16px;letter-spacing:2px;margin-bottom:8px;">${linha}</div>`;
+        if (/^CONTRATADA:|^CONTRATANTE:/.test(linha)) return `<div style="color:#fff;font-size:13px;font-weight:600;line-height:1.8;">${linha}</div>`;
+        if (!linha.trim()) return `<div style="height:6px;"></div>`;
+        return `<div style="color:#aaa;font-size:12.5px;line-height:1.85;margin-bottom:2px;">${linha}</div>`;
+      }).join('');
+
+      el.innerHTML = htmlLinhas;
+      document.body.appendChild(el);
+
+      const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#080808', logging: false });
+      document.body.removeChild(el);
+
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+      const margin = 8;
+      const contentW = pageW - margin * 2;
+      const contentH = (canvas.height * contentW) / canvas.width;
+
+      if (contentH <= pageH - margin * 2) {
+        doc.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', margin, margin, contentW, contentH);
+      } else {
+        let remainingH = contentH;
+        let srcY = 0;
+        const sliceH = pageH - margin * 2;
+        const sliceHPx = (sliceH * canvas.width) / contentW;
+
+        while (remainingH > 0) {
+          if (srcY > 0) doc.addPage();
+          const thisSliceH = Math.min(sliceH, remainingH);
+          const thisSliceHPx = (thisSliceH * canvas.width) / contentW;
+
+          const sliceCanvas = document.createElement('canvas');
+          sliceCanvas.width = canvas.width;
+          sliceCanvas.height = Math.ceil(thisSliceHPx);
+          const ctx = sliceCanvas.getContext('2d');
+          if (ctx) ctx.drawImage(canvas, 0, srcY, canvas.width, thisSliceHPx, 0, 0, canvas.width, thisSliceHPx);
+
+          doc.addImage(sliceCanvas.toDataURL('image/jpeg', 0.92), 'JPEG', margin, margin, contentW, thisSliceH);
+          srcY += sliceHPx;
+          remainingH -= sliceH;
+        }
+      }
+
+      const pdfBlob = doc.output('blob');
+
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url; a.download = arquivo;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+
+      setSaveStatus('saving');
+      savePdfToCloud(pdfBlob, clientName, 'Contrato', arquivo)
+        .then(result => { setSaveStatus(result.success ? 'success' : 'error'); setTimeout(() => setSaveStatus('idle'), 4000); })
+        .catch(() => { setSaveStatus('error'); setTimeout(() => setSaveStatus('idle'), 4000); });
+
+    } catch (err) {
+      console.error('Erro ao gerar PDF do contrato:', err);
+      alert('Erro ao gerar o PDF. Tente novamente.');
+    } finally {
+      setGerando(false);
+    }
   }
 
   const restante = calcRestante(form.valorTotal, form.entrada);
@@ -903,6 +1000,15 @@ function ContratoPage() {
                   {copiado ? '✓ COPIADO!' : 'COPIAR CONTRATO'}
                 </button>
                 <button
+                  onClick={gerarContratoPDF}
+                  disabled={gerando}
+                  style={{ padding: '0.75rem 1.75rem', background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '8px', color: gerando ? '#555' : '#888', fontFamily: FP, fontSize: '0.88rem', cursor: gerando ? 'not-allowed' : 'pointer', transition: 'all 0.2s', opacity: gerando ? 0.7 : 1 }}
+                  onMouseEnter={e => { if (!gerando) { e.currentTarget.style.borderColor = '#FF6B00'; e.currentTarget.style.color = '#FF6B00'; } }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#1e1e1e'; e.currentTarget.style.color = gerando ? '#555' : '#888'; }}
+                >
+                  {gerando ? 'GERANDO PDF...' : 'GERAR PDF'}
+                </button>
+                <button
                   onClick={limpar}
                   style={{ padding: '0.75rem 1.75rem', background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '8px', color: '#444', fontFamily: FP, fontSize: '0.88rem', cursor: 'pointer', transition: 'all 0.2s' }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = '#444'; e.currentTarget.style.color = '#888'; }}
@@ -954,6 +1060,7 @@ function ContratoPage() {
           {savedMsg}
         </div>
       )}
+      {saveStatus !== 'idle' && <SaveToast status={saveStatus} />}
     </div>
   );
 }
