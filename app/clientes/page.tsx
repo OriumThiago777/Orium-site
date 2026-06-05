@@ -67,9 +67,34 @@ const STATUS_COR: Record<string, string> = {
 }
 
 const HEALTH_COR: Record<string, string> = {
-  verde: '#22C55E',
-  amarelo: '#EAB308',
+  verde: '#22c55e',
+  amarelo: '#f59e0b',
   vermelho: '#ef4444',
+}
+
+const FASE_AVATAR_BG: Record<string, string> = {
+  'Diagnóstico': '#1a3a2a',
+  'Estruturação Inicial': '#1a2a3a',
+  'Conteúdo e Comunicação': '#2a1a3a',
+  'Expansão Digital': '#3a2a1a',
+  'Pausado': '#2a2a2a',
+  'Finalizado': '#1a1a2a',
+}
+
+const FASE_EMPTY_MSG: Record<string, string> = {
+  'Diagnóstico': 'Nenhum cliente em diagnóstico ainda',
+  'Estruturação Inicial': 'Nenhum cliente em estruturação',
+  'Conteúdo e Comunicação': 'Nenhum conteúdo ativo',
+  'Expansão Digital': 'Nenhum cliente em expansão',
+  'Pausado': 'Nenhum cliente pausado',
+  'Finalizado': 'Nenhum cliente finalizado',
+}
+
+function getIniciais(nome: string): string {
+  const palavras = nome.trim().split(/\s+/).filter(Boolean)
+  if (!palavras.length) return '?'
+  if (palavras.length === 1) return palavras[0].slice(0, 2).toUpperCase()
+  return (palavras[0][0] + palavras[palavras.length - 1][0]).toUpperCase()
 }
 
 const BG_STYLE = 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%), linear-gradient(to bottom, #080808 0%, transparent 30%, transparent 70%, #080808 100%)'
@@ -200,6 +225,24 @@ function StatusBadge({ status }: { status: string }) {
       textTransform: 'uppercase' as const,
     }}>
       {status || '—'}
+    </span>
+  )
+}
+
+function HealthBadge({ health }: { health: HealthScore }) {
+  const label = health.cor === 'verde' ? 'Saudável' : health.cor === 'amarelo' ? 'Atenção' : 'Crítico'
+  const cor = HEALTH_COR[health.cor]
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: '4px',
+      padding: '2px 8px', borderRadius: '20px',
+      fontSize: '0.66rem', fontWeight: 600,
+      background: `${cor}18`, color: cor,
+      border: `1px solid ${cor}30`,
+      letterSpacing: '0.03em', whiteSpace: 'nowrap',
+    }}>
+      <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: cor, flexShrink: 0, display: 'inline-block' }} />
+      {label}
     </span>
   )
 }
@@ -767,9 +810,10 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loa
 }
 
 // ─── Kanban Card ─────────────────────────────────────────────────────────────
-function KanbanCard({ cliente, faseCor, progresso, onProgressoLoaded, onSelect }: {
+function KanbanCard({ cliente, faseCor, faseNome, progresso, onProgressoLoaded, onSelect }: {
   cliente: Cliente
   faseCor: string
+  faseNome: string
   progresso: ProgressoData | null
   onProgressoLoaded: (id: string, data: ProgressoData) => void
   onSelect: () => void
@@ -777,8 +821,8 @@ function KanbanCard({ cliente, faseCor, progresso, onProgressoLoaded, onSelect }
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: cliente.id })
   const health = getHealthScore(cliente)
   const semContato = diasDesdeInteracao(cliente) > 14
-  const healthTooltip = health.motivos[0]
   const [loadingProgresso, setLoadingProgresso] = useState(progresso === null)
+  const [hovered, setHovered] = useState(false)
 
   useEffect(() => {
     if (progresso !== null) { setLoadingProgresso(false); return }
@@ -792,17 +836,23 @@ function KanbanCard({ cliente, faseCor, progresso, onProgressoLoaded, onSelect }
       .catch(() => setLoadingProgresso(false))
   }, [cliente.id, cliente.nome]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const avatarBg = FASE_AVATAR_BG[faseNome] ?? '#1a1a1a'
+  const iniciais = getIniciais(cliente.nome)
+  const borderSide = isDragging ? faseCor : hovered ? 'rgba(255,107,0,0.55)' : '#1a1a1a'
+
   return (
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
       onClick={onSelect}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
-        background: '#1a1a1a',
-        border: '1px solid #222',
+        background: '#0f0f0f',
+        border: `1px solid ${borderSide}`,
         borderLeft: `3px solid ${faseCor}`,
-        borderRadius: '8px',
+        borderRadius: '10px',
         padding: '0.875rem 1rem',
         cursor: isDragging ? 'grabbing' : 'grab',
         marginBottom: '0.5rem',
@@ -811,43 +861,65 @@ function KanbanCard({ cliente, faseCor, progresso, onProgressoLoaded, onSelect }
         transform: CSS.Transform.toString(transform),
         zIndex: isDragging ? 50 : undefined,
         position: 'relative',
-        boxShadow: isDragging ? '0 8px 24px rgba(0,0,0,0.6)' : undefined,
-        transition: isDragging ? undefined : 'border-color 0.15s, opacity 0.15s',
+        boxShadow: isDragging ? '0 8px 24px rgba(0,0,0,0.6)' : hovered ? '0 4px 16px rgba(255,107,0,0.07)' : undefined,
+        transition: isDragging ? undefined : 'border-color 0.18s, box-shadow 0.18s',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.375rem' }}>
-        <span style={{ color: '#fff', fontWeight: 600, fontSize: '0.9rem', lineHeight: 1.3, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cliente.nome}</span>
-        <div style={{ display: 'flex', gap: '0.375rem', alignItems: 'center', flexShrink: 0, marginLeft: '0.5rem' }}>
-          {cliente.precisaRelatorio && <span title="Precisa relatório" style={{ fontSize: '0.8rem' }}>📊</span>}
-          <div title={healthTooltip} style={{ width: '10px', height: '10px', borderRadius: '50%', background: HEALTH_COR[health.cor], flexShrink: 0 }} />
+      {/* Avatar + nome */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.625rem' }}>
+        <div style={{
+          width: '34px', height: '34px', borderRadius: '50%',
+          background: avatarBg, border: `1px solid ${faseCor}30`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
+          <span style={{ color: faseCor, fontSize: '0.62rem', fontWeight: 700, fontFamily: 'Anton, sans-serif', letterSpacing: '0.04em' }}>
+            {iniciais}
+          </span>
         </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.25rem' }}>
+            <span style={{ color: '#f0f0f0', fontWeight: 600, fontSize: '0.88rem', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {cliente.nome}
+            </span>
+            {cliente.precisaRelatorio && <span title="Precisa relatório" style={{ fontSize: '0.72rem', flexShrink: 0 }}>📊</span>}
+          </div>
+        </div>
+      </div>
+
+      {/* Health badge */}
+      <div style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap' }}>
+        <HealthBadge health={health} />
+        {semContato && (
+          <span style={{ fontSize: '0.64rem', background: 'rgba(245,158,11,0.1)', color: '#f59e0b', borderRadius: '4px', padding: '2px 6px', border: '1px solid rgba(245,158,11,0.2)' }}>⚠ Sem contato</span>
+        )}
       </div>
 
       {/* Barra de progresso */}
       {loadingProgresso ? (
-        <div style={{ height: '4px', borderRadius: '2px', background: '#2a2a2a', marginBottom: '0.375rem', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: '45%', background: '#383838', borderRadius: '2px', animation: 'orium-pulse 1.5s ease-in-out infinite' }} />
+        <div style={{ height: '3px', borderRadius: '2px', background: '#1a1a1a', marginBottom: '0.5rem', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: '45%', background: '#2a2a2a', borderRadius: '2px', animation: 'orium-pulse 1.5s ease-in-out infinite' }} />
         </div>
       ) : progresso !== null ? (
-        <div style={{ marginBottom: '0.375rem' }}>
-          <div style={{ height: '4px', borderRadius: '2px', background: '#2a2a2a', position: 'relative', marginBottom: '0.2rem' }}>
-            <div style={{ height: '100%', width: `${progresso.percentual}%`, background: '#E8640C', borderRadius: '2px', transition: 'width 0.4s ease' }} />
+        <div style={{ marginBottom: '0.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+            <span style={{ color: '#555', fontSize: '0.64rem' }}>{progresso.concluidas}/{progresso.total} etapas</span>
+            <span style={{ color: '#FF6B00', fontSize: '0.64rem', fontWeight: 700 }}>{progresso.percentual}%</span>
           </div>
-          <span style={{ color: '#666', fontSize: '0.66rem' }}>{progresso.concluidas}/{progresso.total}</span>
+          <div style={{ height: '3px', borderRadius: '2px', background: '#1a1a1a' }}>
+            <div style={{ height: '100%', width: `${progresso.percentual}%`, background: '#FF6B00', borderRadius: '2px', transition: 'width 0.4s ease' }} />
+          </div>
         </div>
       ) : null}
 
-      <div style={{ marginBottom: '0.375rem', display: 'flex', flexWrap: 'wrap', gap: '0.3rem', alignItems: 'center' }}>
+      {/* Status + deliverable */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.375rem', flexWrap: 'wrap' }}>
         <StatusBadge status={cliente.status} />
-        {semContato && (
-          <span style={{ fontSize: '0.7rem', background: 'rgba(234,179,8,0.15)', color: '#EAB308', borderRadius: '4px', padding: '2px 6px' }}>⚠ Sem contato</span>
+        {cliente.proximoDeliverable && (
+          <span style={{ fontSize: '0.75rem' }}>
+            <DeliverableLabel dateStr={cliente.proximoDeliverable} />
+          </span>
         )}
       </div>
-      {cliente.proximoDeliverable && (
-        <div style={{ fontSize: '0.78rem', marginTop: '0.375rem' }}>
-          <DeliverableLabel dateStr={cliente.proximoDeliverable} />
-        </div>
-      )}
     </div>
   )
 }
@@ -893,13 +965,16 @@ function KanbanColuna({ fase, cor, clientes, progressos, onProgressoLoaded, onSe
             key={c.id}
             cliente={c}
             faseCor={cor}
+            faseNome={fase}
             progresso={progressos[c.id] ?? null}
             onProgressoLoaded={onProgressoLoaded}
             onSelect={() => onSelect(c)}
           />
         ))}
         {clientes.length === 0 && (
-          <p style={{ color: '#555', fontSize: '0.8rem', textAlign: 'center', padding: '1.5rem 0', borderRadius: '6px', border: '1px dashed #1a1a1a' }}>Nenhum cliente</p>
+          <div style={{ color: '#444', fontSize: '0.78rem', textAlign: 'center', padding: '2rem 0.5rem', borderRadius: '8px', border: '1px dashed #1a1a1a', lineHeight: 1.5 }}>
+            {FASE_EMPTY_MSG[fase] ?? 'Nenhum cliente'}
+          </div>
         )}
       </div>
       {receitaFase > 0 && (
@@ -1023,7 +1098,7 @@ function VistaTable({
                     <td style={{ padding: '0.875rem 1rem' }}><StatusBadge status={c.status} /></td>
                     <td style={{ padding: '0.875rem 1rem' }}><FaseBadge fase={c.faseAtual} /></td>
                     <td style={{ padding: '0.875rem 1rem' }}>
-                      <div title={healthTooltip} style={{ width: '10px', height: '10px', borderRadius: '50%', background: HEALTH_COR[health.cor], cursor: 'help' }} />
+                      <HealthBadge health={health} />
                     </td>
                     <td style={{ padding: '0.875rem 1rem' }}><DeliverableLabel dateStr={c.proximoDeliverable} /></td>
                     <td style={{ padding: '0.875rem 1rem', color: '#aaa', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>{formatBRL(c.valorMensal)}</td>
@@ -1228,6 +1303,7 @@ export default function ClientesPage() {
   const [ordenarPor, setOrdenarPor] = useState<OrdenarPor>('dataInicio')
   const [ordenarDir, setOrdenarDir] = useState<'asc' | 'desc'>('desc')
   const [filtroUrgente, setFiltroUrgente] = useState(false)
+  const [filtroAtencao, setFiltroAtencao] = useState(false)
   const [filtroStatus, setFiltroStatus] = useState('todos')
   const [exportando, setExportando] = useState(false)
   const [atividades, setAtividades] = useState<Atividade[]>([])
@@ -1334,9 +1410,9 @@ export default function ClientesPage() {
   const receitaMensal = clientes.filter(c => c.status === 'Ativo').reduce((acc, c) => acc + (c.valorMensal ?? 0), 0)
   const totalAtivos = clientes.filter(c => c.status === 'Ativo').length
 
-  const clientesFiltrados = busca.trim()
-    ? clientes.filter(c => c.nome.toLowerCase().includes(busca.toLowerCase()))
-    : clientes
+  const clientesFiltrados = clientes
+    .filter(c => !busca.trim() || c.nome.toLowerCase().includes(busca.toLowerCase()))
+    .filter(c => !filtroAtencao || getHealthScore(c).cor !== 'verde')
 
   return (
     <div style={{ position: 'fixed', inset: 0, overflowY: 'auto', background: '#080808', fontFamily: 'Poppins, sans-serif' }}>
@@ -1409,17 +1485,30 @@ export default function ClientesPage() {
           ))}
         </div>
 
-        {/* Busca */}
-        <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
-          <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.875rem', pointerEvents: 'none', lineHeight: 1 }}>🔍</span>
-          <input
-            value={busca}
-            onChange={e => setBusca(e.target.value)}
-            placeholder="Buscar cliente..."
-            style={{ width: '100%', background: '#111', border: '1px solid #333', borderRadius: '8px', padding: '0.625rem 1rem 0.625rem 2.25rem', color: '#fff', fontSize: '0.9rem', fontFamily: 'Poppins, sans-serif', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
-            onFocus={e => e.target.style.borderColor = '#FF6B00'}
-            onBlur={e => e.target.style.borderColor = '#333'}
-          />
+        {/* Busca + filtro atenção */}
+        <div style={{ display: 'flex', gap: '0.625rem', marginBottom: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
+            <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.875rem', pointerEvents: 'none', lineHeight: 1 }}>🔍</span>
+            <input
+              value={busca}
+              onChange={e => setBusca(e.target.value)}
+              placeholder="Buscar cliente..."
+              style={{ width: '100%', background: '#111', border: '1px solid #333', borderRadius: '8px', padding: '0.625rem 1rem 0.625rem 2.25rem', color: '#fff', fontSize: '0.9rem', fontFamily: 'Poppins, sans-serif', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
+              onFocus={e => e.target.style.borderColor = '#FF6B00'}
+              onBlur={e => e.target.style.borderColor = '#333'}
+            />
+          </div>
+          <button
+            onClick={() => setFiltroAtencao(a => !a)}
+            style={{
+              padding: '0.625rem 1rem', borderRadius: '8px', whiteSpace: 'nowrap', fontFamily: 'Poppins, sans-serif', fontSize: '0.82rem', cursor: 'pointer', transition: 'all 0.15s',
+              border: filtroAtencao ? '1px solid rgba(245,158,11,0.6)' : '1px solid #333',
+              background: filtroAtencao ? 'rgba(245,158,11,0.12)' : 'transparent',
+              color: filtroAtencao ? '#f59e0b' : '#666',
+            }}
+          >
+            ⚠ Precisa de Atenção{filtroAtencao ? ' ×' : ''}
+          </button>
         </div>
 
         {/* Conteúdo */}
