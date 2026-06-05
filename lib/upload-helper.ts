@@ -5,19 +5,17 @@ export async function savePdfToCloud(
   fileName: string
 ): Promise<{ success: boolean; fileUrl?: string; error?: string }> {
   try {
-    const formData = new FormData()
-    formData.append('file', pdfBlob, fileName)
-    formData.append('clientName', clientName)
-    formData.append('docType', docType)
-    formData.append('fileName', fileName)
+    const arrayBuffer = await pdfBlob.arrayBuffer()
+    const pdfBase64 = Buffer.from(arrayBuffer).toString('base64')
 
     const res = await fetch('/api/upload-pdf', {
       method: 'POST',
-      body: formData,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pdfBase64, clientName, docType, fileName }),
     })
 
     const data = await res.json()
-    if (!res.ok) throw new Error(data.error)
+    if (!data.success) throw new Error(data.error ?? 'Erro no upload')
 
     return { success: true, fileUrl: data.fileUrl }
   } catch (err: unknown) {
