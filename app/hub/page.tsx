@@ -40,15 +40,27 @@ const FERRAMENTAS = [
     descricao: 'Relatório mensal de resultados por cliente.',
     href: '/relatorio',
   },
-];
-
-const EM_BREVE = [
   {
-    tag: 'EM BREVE',
+    tag: 'ENTREGAS',
     titulo: 'CHECKLIST',
-    descricao: 'Checklist de entrega por fase e cliente.',
+    descricao: 'Checklist de entregas por cliente e período.',
+    href: '/checklist',
+  },
+  {
+    tag: 'CRM',
+    titulo: 'CLIENTES',
+    descricao: 'Gestão de clientes, fases e atividades.',
+    href: '/clientes',
+  },
+  {
+    tag: 'DOCUMENTOS',
+    titulo: 'MEUS DOCUMENTOS',
+    descricao: 'Histórico de documentos gerados.',
+    href: '/meus-documentos',
   },
 ];
+
+const EM_BREVE: { tag: string; titulo: string; descricao: string }[] = [];
 
 const BG_STYLE = 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%), linear-gradient(to bottom, #080808 0%, transparent 30%, transparent 70%, #080808 100%)';
 

@@ -342,6 +342,7 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loa
 
   const [form, setForm] = useState<Cliente>({ ...cliente })
   const [saving, setSaving] = useState(false)
+  const [erroSalvar, setErroSalvar] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [tab, setTab] = useState<'info' | 'acoes'>('info')
@@ -383,6 +384,7 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loa
 
   async function handleSave() {
     setSaving(true)
+    setErroSalvar('')
     try {
       const res = await fetch(`/api/clientes?id=${cliente.id}`, {
         method: 'PATCH',
@@ -391,6 +393,9 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loa
       })
       const data = await res.json()
       if (res.ok) { onUpdated(data); onClose() }
+      else { setErroSalvar(data?.detail || data?.error || 'Não foi possível salvar. Tente novamente.') }
+    } catch {
+      setErroSalvar('Não foi possível conectar ao servidor. Tente novamente.')
     } finally {
       setSaving(false)
     }
@@ -728,7 +733,13 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loa
             </div>
           )}
         </div>
-        <div style={{ padding: '1rem 2rem', borderTop: '1px solid #1a1a1a', display: 'flex', gap: '0.625rem', flexShrink: 0 }}>
+        <div style={{ padding: '1rem 2rem', borderTop: '1px solid #1a1a1a', flexShrink: 0 }}>
+          {erroSalvar && (
+            <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: '8px', padding: '0.625rem 0.875rem', color: '#fca5a5', fontSize: '0.82rem', marginBottom: '0.75rem', lineHeight: 1.5 }}>
+              {erroSalvar}
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: '0.625rem' }}>
           <button onClick={handleSave} disabled={saving} style={{ flex: 2, background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.75rem', color: '#fff', fontFamily: 'Anton, sans-serif', fontSize: '0.9rem', letterSpacing: '0.12em', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1, transition: 'opacity 0.15s' }}>
             {saving ? 'SALVANDO...' : 'SALVAR'}
           </button>
@@ -748,6 +759,7 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loa
               Deletar
             </button>
           )}
+          </div>
         </div>
       </div>
     </div>
