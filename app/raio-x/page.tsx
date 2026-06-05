@@ -4,6 +4,8 @@ import { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import NextImage from 'next/image';
 import { isAuthenticated, saveAuth } from '@/lib/auth';
+import { savePdfToCloud } from '@/lib/upload-helper';
+import SaveToast from '@/components/SaveToast';
 
 const DIMENSOES = [
   'Primeira Impressão',
@@ -100,6 +102,7 @@ function RaioXPage() {
   const [erroSenha, setErroSenha] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [gerando, setGerando] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [promptAberto, setPromptAberto] = useState(false);
   const [copiado, setCopiado] = useState(false);
   const [step, setStep] = useState(0);
@@ -369,7 +372,12 @@ function RaioXPage() {
       `);
 
       const arquivo = `raio-x-${form.nomeCliente.toLowerCase().replace(/\s+/g, '-')}-${form.dataAnalise}.pdf`;
+      const pdfBlob = doc.output('blob');
       doc.save(arquivo);
+      setSaveStatus('saving');
+      savePdfToCloud(pdfBlob, form.nomeCliente, 'Raio-X', arquivo)
+        .then(result => { setSaveStatus(result.success ? 'success' : 'error'); setTimeout(() => setSaveStatus('idle'), 4000); })
+        .catch(() => { setSaveStatus('error'); setTimeout(() => setSaveStatus('idle'), 4000); });
 
       const docId = documentoId || crypto.randomUUID();
       fetch('/api/documentos', {
@@ -694,6 +702,7 @@ function RaioXPage() {
           {savedMsg}
         </div>
       )}
+      {saveStatus !== 'idle' && <SaveToast status={saveStatus} />}
     </div>
   );
 }

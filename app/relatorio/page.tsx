@@ -4,6 +4,8 @@ import React, { useState, useRef, useEffect, Suspense } from 'react'
 import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { isAuthenticated, saveAuth } from '@/lib/auth'
+import { savePdfToCloud } from '@/lib/upload-helper'
+import SaveToast from '@/components/SaveToast'
 
 type FormData = {
   cliente: string
@@ -69,6 +71,7 @@ function RelatorioPage() {
   const [inputTemp, setInputTemp] = useState({ entregas: '', proximos: '' })
   const [copiado, setCopiado] = useState(false)
   const [exportando, setExportando] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle')
   const previewRef = useRef<HTMLDivElement>(null)
 
   const setF = (key: keyof FormData, value: string) =>
@@ -553,7 +556,13 @@ function RelatorioPage() {
       const clienteSlug = (form.cliente || 'relatorio').toLowerCase().replace(/\s+/g, '-')
       const mesSlug = (form.periodoMes || 'mes').toLowerCase()
       const anoSlug = form.periodoAno || 'ano'
-      doc.save(`relatorio-${clienteSlug}-${mesSlug}-${anoSlug}.pdf`)
+      const arquivo = `relatorio-${clienteSlug}-${mesSlug}-${anoSlug}.pdf`
+      const pdfBlob = doc.output('blob')
+      doc.save(arquivo)
+      setSaveStatus('saving')
+      savePdfToCloud(pdfBlob, form.cliente, 'Relatório', arquivo)
+        .then(result => { setSaveStatus(result.success ? 'success' : 'error'); setTimeout(() => setSaveStatus('idle'), 4000) })
+        .catch(() => { setSaveStatus('error'); setTimeout(() => setSaveStatus('idle'), 4000) })
     } catch (err) {
       console.error('Erro ao gerar PDF:', err)
       alert('Erro ao gerar PDF. Tente novamente.')
@@ -704,6 +713,7 @@ function RelatorioPage() {
           </div>
         )}
       </div>
+      {saveStatus !== 'idle' && <SaveToast status={saveStatus} />}
     </div>
   )
 }

@@ -4,6 +4,8 @@ import React, { useState, useRef, useEffect, Suspense } from 'react'
 import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { isAuthenticated, saveAuth } from '@/lib/auth'
+import { savePdfToCloud } from '@/lib/upload-helper'
+import SaveToast from '@/components/SaveToast'
 
 type ChecklistItem = {
   id: string
@@ -99,6 +101,7 @@ function ChecklistContent() {
   const [observacoes, setObservacoes] = useState('')
   const [items, setItems] = useState<ChecklistItem[]>(buildItems)
   const [salvando, setSalvando] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle')
 
   const itensMarcados = items.filter(i => i.incluido)
   const totalMarcados = itensMarcados.length
@@ -262,7 +265,13 @@ function ChecklistContent() {
 
       const clienteSlug = (cliente || 'cliente').toLowerCase().replace(/\s+/g, '-')
       const periodoSlug = (periodo || 'periodo').toLowerCase().replace(/\s+/g, '-')
-      doc.save(`checklist-${clienteSlug}-${periodoSlug}.pdf`)
+      const arquivo = `checklist-${clienteSlug}-${periodoSlug}.pdf`
+      const pdfBlob = doc.output('blob')
+      doc.save(arquivo)
+      setSaveStatus('saving')
+      savePdfToCloud(pdfBlob, cliente, 'Checklist', arquivo)
+        .then(result => { setSaveStatus(result.success ? 'success' : 'error'); setTimeout(() => setSaveStatus('idle'), 4000) })
+        .catch(() => { setSaveStatus('error'); setTimeout(() => setSaveStatus('idle'), 4000) })
 
       // Salvar no Notion
       const docId = `checklist-${Date.now()}`
@@ -621,6 +630,7 @@ function ChecklistContent() {
 
         </div>
       </div>
+      {saveStatus !== 'idle' && <SaveToast status={saveStatus} />}
     </div>
   )
 }
