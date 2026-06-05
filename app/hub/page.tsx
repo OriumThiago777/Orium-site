@@ -53,8 +53,8 @@ const FERRAMENTAS = [
     href: '/clientes',
   },
   {
-    tag: 'DOCUMENTOS',
-    titulo: 'MEUS DOCUMENTOS',
+    tag: 'BIBLIOTECA',
+    titulo: 'BIBLIOTECA',
     descricao: 'Histórico de documentos gerados.',
     href: '/meus-documentos',
   },

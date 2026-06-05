@@ -139,7 +139,7 @@ export default function MeusDocumentosPage() {
             ← PAINEL
           </a>
         </div>
-        <h1 style={{ fontFamily: FA, fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#fff', letterSpacing: '0.06em', lineHeight: 1, marginBottom: '1.5rem' }}>DOCUMENTOS GERADOS</h1>
+        <h1 style={{ fontFamily: FA, fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#fff', letterSpacing: '0.06em', lineHeight: 1, marginBottom: '1.5rem' }}>BIBLIOTECA</h1>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           {tiposFiltro.map(t => (
             <button

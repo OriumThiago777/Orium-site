@@ -21,23 +21,36 @@ export default function Home() {
 
       <main
         id="inicio"
-        className="relative overflow-hidden min-h-screen bg-black text-white flex items-center pt-24 md:pt-32 pb-12 md:pb-16"
+        className="relative w-full h-screen overflow-hidden"
       >
-        <div className="absolute top-[-220px] right-[-160px] w-[420px] md:w-[520px] h-[420px] md:h-[520px] bg-orange-500/20 blur-[130px] rounded-full"></div>
-        <div className="absolute bottom-[-260px] left-[-180px] w-[360px] md:w-[460px] h-[360px] md:h-[460px] bg-orange-500/10 blur-[130px] rounded-full"></div>
+        {/* Imagem de fundo — borda a borda */}
+        <Image
+          src="/hero.jpg"
+          alt="Ambiente criativo ORIUM"
+          fill
+          className="object-cover object-center"
+          priority
+        />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-8 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 items-center">
-            <div className="max-w-3xl">
+        {/* Overlay: escuro na esquerda (texto), transparente na direita */}
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(to right, rgba(8,8,8,0.88) 0%, rgba(8,8,8,0.65) 45%, rgba(8,8,8,0.25) 70%, transparent 100%)' }}
+        />
+
+        {/* Conteúdo sobreposto */}
+        <div className="relative z-10 h-full flex items-center pt-20">
+          <div className="max-w-7xl mx-auto px-6 md:px-16 w-full">
+            <div className="max-w-2xl">
               <p className="text-orange-500 font-semibold mb-4 tracking-widest uppercase text-sm md:text-base">
                 Estruturação Digital
               </p>
 
-              <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold leading-tight mb-5 md:mb-6">
+              <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold leading-tight mb-5 md:mb-6 text-white">
                 Seu negócio vale mais do que parece.
               </h1>
 
-              <p className="text-zinc-400 text-base sm:text-lg md:text-xl mb-8 md:mb-10 leading-relaxed">
+              <p className="text-zinc-300 text-base sm:text-lg md:text-xl mb-8 md:mb-10 leading-relaxed">
                 A ORIUM estrutura como você se apresenta — posicionamento,
                 presença e percepção de valor, do Instagram ao site.
               </p>
@@ -55,19 +68,6 @@ export default function Home() {
                 <a href="#projetos" className={secondaryButton}>
                   Ver Projetos
                 </a>
-              </div>
-            </div>
-
-            <div className="hidden lg:block">
-              <div className="relative h-[460px] rounded-3xl border border-zinc-800 overflow-hidden shadow-2xl shadow-orange-500/10">
-                <Image
-                  src="/hero.jpg"
-                  alt="Ambiente criativo ORIUM"
-                  fill
-                  className="object-cover"
-                  priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-orange-500/10" />
               </div>
             </div>
           </div>
