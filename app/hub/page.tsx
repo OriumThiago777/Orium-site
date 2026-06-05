@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { isAuthenticated, saveAuth } from '@/lib/auth';
 
 const FERRAMENTAS = [
   {
@@ -75,9 +76,15 @@ function BgImage() {
 
 export default function HubPage() {
   const [autenticado, setAutenticado] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [senha, setSenha] = useState('');
   const [erroSenha, setErroSenha] = useState(false);
   const [carregando, setCarregando] = useState(false);
+
+  useEffect(() => {
+    setAutenticado(isAuthenticated());
+    setAuthChecked(true);
+  }, []);
 
   async function handleSenha(e: React.FormEvent) {
     e.preventDefault();
@@ -89,7 +96,7 @@ export default function HubPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ senha }),
       });
-      if (res.ok) setAutenticado(true);
+      if (res.ok) { saveAuth(); setAutenticado(true); }
       else setErroSenha(true);
     } catch {
       setErroSenha(true);
@@ -99,6 +106,7 @@ export default function HubPage() {
   }
 
   // ── Tela de senha ─────────────────────────────────────────────────────────────
+  if (!authChecked) return null;
   if (!autenticado) {
     return (
       <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif' }}>

@@ -32,7 +32,8 @@ function fmtData(iso: string | null): string {
 }
 
 export default function MeusDocumentosPage() {
-  const [autenticado, setAutenticado] = useState(() => isAuthenticated());
+  const [autenticado, setAutenticado] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [senha, setSenha] = useState('');
   const [erroSenha, setErroSenha] = useState(false);
   const [carregando, setCarregando] = useState(false);
@@ -67,6 +68,11 @@ export default function MeusDocumentosPage() {
   }
 
   useEffect(() => {
+    setAutenticado(isAuthenticated());
+    setAuthChecked(true);
+  }, []);
+
+  useEffect(() => {
     if (autenticado) carregarDocs();
   }, [autenticado]);
 
@@ -83,6 +89,7 @@ export default function MeusDocumentosPage() {
   const FP = 'Poppins, sans-serif';
   const FA = 'Anton, sans-serif';
 
+  if (!authChecked) return null;
   if (!autenticado) {
     return (
       <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FP }}>

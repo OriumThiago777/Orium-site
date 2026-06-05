@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import NextImage from 'next/image';
+import { isAuthenticated, saveAuth } from '@/lib/auth';
 
 const DIMENSOES = [
   'Primeira Impressão',
@@ -94,6 +95,7 @@ function CharCounter({ value, max }: { value: string; max: number }) {
 
 function RaioXPage() {
   const [autenticado, setAutenticado] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [senha, setSenha] = useState('');
   const [erroSenha, setErroSenha] = useState(false);
   const [carregando, setCarregando] = useState(false);
@@ -102,6 +104,11 @@ function RaioXPage() {
   const [copiado, setCopiado] = useState(false);
   const [step, setStep] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setAutenticado(isAuthenticated());
+    setAuthChecked(true);
+  }, []);
 
   useEffect(() => {
     if (contentRef.current) contentRef.current.scrollTop = 0;
@@ -140,7 +147,7 @@ function RaioXPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ senha }),
       });
-      if (res.ok) setAutenticado(true);
+      if (res.ok) { saveAuth(); setAutenticado(true); }
       else setErroSenha(true);
     } catch {
       setErroSenha(true);
@@ -380,6 +387,7 @@ function RaioXPage() {
   }
 
   // ── Tela de senha ──────────────────────────────────────────────────────────────
+  if (!authChecked) return null;
   if (!autenticado) {
     return (
       <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif' }}>

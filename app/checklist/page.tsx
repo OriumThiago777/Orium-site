@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, Suspense } from 'react'
+import React, { useState, useRef, useEffect, Suspense } from 'react'
 import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { isAuthenticated, saveAuth } from '@/lib/auth'
@@ -77,10 +77,16 @@ function ChecklistContent() {
   const searchParams = useSearchParams()
   const clienteParam = searchParams.get('cliente')
 
-  const [autenticado, setAutenticado] = useState(() => isAuthenticated())
+  const [autenticado, setAutenticado] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
   const [senha, setSenha] = useState('')
   const [erroSenha, setErroSenha] = useState(false)
   const [carregando, setCarregando] = useState(false)
+
+  useEffect(() => {
+    setAutenticado(isAuthenticated())
+    setAuthChecked(true)
+  }, [])
 
   const [step, setStep] = useState(0)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -116,6 +122,7 @@ function ChecklistContent() {
   )
 
   // ── Tela de senha ──────────────────────────────────────────────────────────
+  if (!authChecked) return null
   if (!autenticado) {
     return (
       <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif' }}>

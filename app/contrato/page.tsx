@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
+import { isAuthenticated, saveAuth } from '@/lib/auth';
 
 const FA = 'Anton, sans-serif';
 const FP = 'Poppins, sans-serif';
@@ -431,12 +432,18 @@ function CharCounter({ value, max }: { value: string; max: number }) {
 
 function ContratoPage() {
   const [autenticado, setAutenticado] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [senha, setSenha] = useState('');
   const [erroSenha, setErroSenha] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [etapa, setEtapa] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setAutenticado(isAuthenticated());
+    setAuthChecked(true);
+  }, []);
 
   useEffect(() => {
     if (contentRef.current) contentRef.current.scrollTop = 0;
@@ -465,7 +472,7 @@ function ContratoPage() {
     setCarregando(true); setErroSenha(false);
     try {
       const res = await fetch('/api/raio-x/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senha }) });
-      if (res.ok) setAutenticado(true); else setErroSenha(true);
+      if (res.ok) { saveAuth(); setAutenticado(true); } else setErroSenha(true);
     } catch { setErroSenha(true); } finally { setCarregando(false); }
   }
 
@@ -520,6 +527,7 @@ function ContratoPage() {
   const progress = ((etapa + 1) / ETAPAS.length) * 100;
 
   // ── Tela de acesso ──────────────────────────────────────────────────────────
+  if (!authChecked) return null;
   if (!autenticado) {
     return (
       <div style={{ position: 'fixed', inset: 0, background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FP }}>

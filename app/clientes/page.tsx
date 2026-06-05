@@ -1217,7 +1217,8 @@ function TelaSenha({ onAuth }: { onAuth: () => void }) {
 
 // ─── Página Principal ─────────────────────────────────────────────────────────
 export default function ClientesPage() {
-  const [autenticado, setAutenticado] = useState(() => isAuthenticated())
+  const [autenticado, setAutenticado] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [loading, setLoading] = useState(false)
   const [vistaAtiva, setVistaAtiva] = useState<'kanban' | 'table'>('kanban')
@@ -1239,6 +1240,11 @@ export default function ClientesPage() {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   )
+
+  useEffect(() => {
+    setAutenticado(isAuthenticated())
+    setAuthChecked(true)
+  }, [])
 
   useEffect(() => {
     if (!autenticado) return
@@ -1322,6 +1328,7 @@ export default function ClientesPage() {
     setFiltroUrgente(true)
   }
 
+  if (!authChecked) return null
   if (!autenticado) return <TelaSenha onAuth={() => setAutenticado(true)} />
 
   const receitaMensal = clientes.filter(c => c.status === 'Ativo').reduce((acc, c) => acc + (c.valorMensal ?? 0), 0)
