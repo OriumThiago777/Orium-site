@@ -17,13 +17,24 @@ export default function ServiceCard({ title, description, index, icon }: Service
       {/* Icon + Decorative number stacked */}
       <div className="flex-shrink-0 flex flex-col items-start gap-3 pt-1" style={{ width: "100px" }}>
         {icon && (
-          <Image
-            src={`/icons/icon-${icon}.svg`}
-            alt={title}
-            width={32}
-            height={32}
-            className="opacity-60 group-hover:opacity-100 transition-opacity duration-300"
-          />
+          <div
+            className="flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity duration-300"
+            style={{
+              width: "64px",
+              height: "64px",
+              minWidth: "64px",
+              background: "rgba(255,107,0,0.08)",
+              border: "1px solid rgba(255,107,0,0.2)",
+            }}
+          >
+            <Image
+              src={`/icons/icon-${icon}.svg`}
+              alt={title}
+              width={40}
+              height={40}
+              style={{ width: "40px", height: "40px", minWidth: "40px", minHeight: "40px", objectFit: "contain" }}
+            />
+          </div>
         )}
         <div
           className="leading-none select-none opacity-[0.15] group-hover:opacity-100 transition-opacity duration-300"

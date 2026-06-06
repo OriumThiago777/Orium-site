@@ -242,13 +242,27 @@ export default function Home() {
                     key={item.title}
                     style={{ display: "flex", alignItems: "center", gap: "12px" }}
                   >
-                    <Image
-                      src={`/icons/icon-${item.icon}.svg`}
-                      alt={item.title}
-                      width={32}
-                      height={32}
-                      className="flex-shrink-0 opacity-80"
-                    />
+                    <div
+                      style={{
+                        width: "64px",
+                        height: "64px",
+                        minWidth: "64px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "rgba(255,107,0,0.08)",
+                        border: "1px solid rgba(255,107,0,0.2)",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Image
+                        src={`/icons/icon-${item.icon}.svg`}
+                        alt={item.title}
+                        width={40}
+                        height={40}
+                        style={{ width: "40px", height: "40px", minWidth: "40px", minHeight: "40px", objectFit: "contain" }}
+                      />
+                    </div>
                     <span
                       className="flex-shrink-0"
                       style={{
@@ -551,13 +565,26 @@ export default function Home() {
                   key={item.title}
                   className="p-6 md:p-8 border-r border-b border-[#1a1a1a] flex flex-col gap-3"
                 >
-                  <Image
-                    src={`/icons/icon-${item.icon}.svg`}
-                    alt={item.title}
-                    width={48}
-                    height={48}
-                    className="opacity-80"
-                  />
+                  <div
+                    style={{
+                      width: "72px",
+                      height: "72px",
+                      minWidth: "72px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "rgba(255,107,0,0.08)",
+                      border: "1px solid rgba(255,107,0,0.2)",
+                    }}
+                  >
+                    <Image
+                      src={`/icons/icon-${item.icon}.svg`}
+                      alt={item.title}
+                      width={48}
+                      height={48}
+                      style={{ width: "48px", height: "48px", minWidth: "48px", minHeight: "48px", objectFit: "contain" }}
+                    />
+                  </div>
                   <div>
                     <h3
                       className="mb-2 text-white"
@@ -656,34 +683,45 @@ export default function Home() {
                   className={`group relative flex flex-col transition-all duration-300${
                     i < 3 ? " border-b border-[#1a1a1a] md:border-b-0" : ""
                   }`}
-                  style={{ padding: "0 2rem", paddingTop: "0", paddingBottom: i < 3 ? "2rem" : "0" }}
+                  style={{ padding: "0 2rem", paddingBottom: i < 3 ? "2rem" : "0", paddingTop: "0" }}
                 >
-                  {/* Bordas verticais (desktop) via elemento absoluto para hover funcionar */}
+                  {/* Borda vertical separadora (desktop, não no último) */}
                   {i < 3 && (
                     <div className="hidden md:block absolute top-0 right-0 bottom-0 w-px bg-[#1a1a1a] group-hover:bg-[#FF6B00] transition-colors duration-300" />
                   )}
 
-                  {/* Ícone 64x64 */}
-                  <div className="flex justify-start mb-4">
-                    <Image
-                      src={`/icons/${item.icon}.svg`}
-                      alt={item.title}
-                      width={64}
-                      height={64}
-                      className="opacity-70 group-hover:opacity-100 transition-opacity duration-300"
-                    />
+                  {/* Ícone 88x88 com container */}
+                  <div className="mb-4">
+                    <div
+                      className="flex items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity duration-300"
+                      style={{
+                        width: "88px",
+                        height: "88px",
+                        minWidth: "88px",
+                        background: "rgba(255,107,0,0.08)",
+                        border: "1px solid rgba(255,107,0,0.2)",
+                      }}
+                    >
+                      <Image
+                        src={`/icons/${item.icon}.svg`}
+                        alt={item.title}
+                        width={56}
+                        height={56}
+                        style={{ width: "56px", height: "56px", minWidth: "56px", minHeight: "56px", objectFit: "contain" }}
+                      />
+                    </div>
                   </div>
 
-                  {/* Linha conectora laranja (só desktop, não no último) */}
-                  {i < 3 && (
-                    <div
-                      className="hidden md:block w-full mb-4"
-                      style={{
-                        height: "1px",
-                        background: "linear-gradient(to right, #FF6B00, transparent)",
-                      }}
-                    />
-                  )}
+                  {/* Linha conectora — todas as colunas, gradiente invertido na última */}
+                  <div
+                    className="hidden md:block w-full mb-4"
+                    style={{
+                      height: "1px",
+                      background: i < 3
+                        ? "linear-gradient(to right, #FF6B00, transparent)"
+                        : "linear-gradient(to left, #FF6B00, transparent)",
+                    }}
+                  />
 
                   {/* Número decorativo */}
                   <div
