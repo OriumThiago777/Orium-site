@@ -6,15 +6,37 @@ import Navbar from "../components/Navbar";
 import CTALink from "../components/CTALink";
 import Image from "next/image";
 
+const GRAIN =
+  "data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E";
+
+function Eyebrow({ children }: { children: string }) {
+  return (
+    <div className="flex items-center gap-3 mb-5">
+      <div style={{ width: 40, height: 1, background: "#FF6B00", flexShrink: 0 }} />
+      <span
+        style={{
+          fontFamily: "Poppins, sans-serif",
+          fontSize: "0.75rem",
+          letterSpacing: "0.3em",
+          color: "#FF6B00",
+          textTransform: "uppercase",
+        }}
+      >
+        {children}
+      </span>
+    </div>
+  );
+}
+
 export default function Home() {
   const whatsappLink = "https://wa.me/5531999352065";
   const diagnosticWhatsappLink = `${whatsappLink}?text=${encodeURIComponent("Olá, quero solicitar um diagnóstico digital para minha marca.")}`;
 
   const primaryButton =
-    "w-full sm:w-auto bg-orange-500 text-black px-8 py-4 rounded-2xl font-bold transition duration-300 text-center md:hover:bg-orange-400 md:hover:-translate-y-1 md:hover:shadow-2xl md:hover:shadow-orange-500/20";
+    "w-full sm:w-auto bg-[#FF6B00] text-black px-8 py-4 font-bold transition-all duration-300 text-center hover:bg-[#cc5500] tracking-[0.08em]";
 
   const secondaryButton =
-    "w-full sm:w-auto border border-zinc-700 text-white px-8 py-4 rounded-2xl font-semibold transition duration-300 text-center md:hover:border-orange-500 md:hover:text-orange-500 md:hover:-translate-y-1 md:hover:bg-orange-500/5";
+    "w-full sm:w-auto border border-[#333] text-white px-8 py-4 font-semibold transition-all duration-300 text-center hover:border-[#FF6B00] hover:text-[#FF6B00]";
 
   return (
     <div className="overflow-x-hidden">
@@ -33,12 +55,12 @@ export default function Home() {
           priority
         />
 
-        {/* Overlay principal: escuro na esquerda → transparente */}
+        {/* Overlay: escuro denso à esquerda, alivia à direita */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(to right, rgba(8,8,8,0.93) 0%, rgba(8,8,8,0.70) 40%, rgba(8,8,8,0.20) 65%, transparent 100%)",
+              "linear-gradient(to right, rgba(8,8,8,0.95) 40%, rgba(8,8,8,0.4) 100%)",
           }}
         />
         {/* Vinheta inferior */}
@@ -53,15 +75,19 @@ export default function Home() {
         <div className="relative z-10 h-full flex items-center pt-20">
           <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 w-full">
             <div className="max-w-2xl">
-              <p className="text-orange-500 font-semibold mb-4 tracking-widest uppercase text-[0.95rem]">
-                Estruturação Digital
-              </p>
+              <Eyebrow>Estruturação Digital</Eyebrow>
 
               <h1
-                className="font-bold leading-tight mb-5 md:mb-6 text-white"
-                style={{ fontSize: "clamp(2rem, 7vw, 5rem)" }}
+                className="font-bold text-white mb-5 md:mb-6"
+                style={{
+                  fontSize: "clamp(3.5rem, 8vw, 7rem)",
+                  fontFamily: "'Anton', sans-serif",
+                  lineHeight: 1.0,
+                }}
               >
-                Seu negócio vale mais do que parece.
+                Seu negócio<br />
+                vale mais<br />
+                do que parece.
               </h1>
 
               <p className="text-zinc-300 text-[0.95rem] sm:text-lg md:text-xl mb-8 md:mb-10 leading-[1.6]">
@@ -92,33 +118,37 @@ export default function Home() {
       <Reveal>
         <section
           id="servicos"
-          className="bg-black text-white py-16 md:py-24 lg:py-32 border-t border-zinc-900 scroll-mt-24"
+          className="bg-[#080808] text-white py-16 md:py-24 lg:py-32 border-t border-[#1a1a1a] scroll-mt-24"
         >
           <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
             <div className="mb-12 md:mb-16">
-              <p className="text-orange-500 uppercase tracking-widest font-semibold mb-4 text-[0.95rem]">
-                Serviços
-              </p>
+              <Eyebrow>Serviços</Eyebrow>
               <h2
                 className="font-bold max-w-2xl leading-tight"
-                style={{ fontSize: "clamp(1.8rem, 5vw, 3.5rem)" }}
+                style={{
+                  fontSize: "clamp(1.8rem, 5vw, 3.5rem)",
+                  fontFamily: "'Anton', sans-serif",
+                }}
               >
                 Soluções integradas para empresas que querem crescer com clareza.
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            <div className="border-t border-[#1a1a1a]">
               <ServiceCard
                 title="Branding"
                 description="Construção de posicionamento, identidade visual e percepção premium para marcas locais."
+                index={0}
               />
               <ServiceCard
                 title="Sites"
                 description="Landing pages e estruturas digitais modernas focadas em conversão e presença profissional."
+                index={1}
               />
               <ServiceCard
                 title="Automação"
                 description="Sistemas, formulários, integrações e automações para aumentar capacidade operacional."
+                index={2}
               />
             </div>
           </div>
@@ -127,18 +157,25 @@ export default function Home() {
 
       {/* ── DIFERENCIAL ───────────────────────────────────────────────────── */}
       <Reveal delay={0.1}>
-        <section className="relative overflow-hidden bg-zinc-950 text-white py-16 md:py-24 lg:py-32 border-t border-zinc-900">
-          <div className="absolute top-[-180px] left-[-160px] w-[360px] md:w-[420px] h-[360px] md:h-[420px] bg-orange-500/10 blur-[120px] rounded-full" />
+        <section
+          className="relative overflow-hidden text-white py-16 md:py-24 lg:py-32 border-t border-[#1a1a1a]"
+          style={{
+            background: "#080808",
+            backgroundImage: `url("${GRAIN}")`,
+          }}
+        >
+          <div className="absolute top-[-180px] left-[-160px] w-[360px] md:w-[420px] h-[360px] md:h-[420px] bg-orange-500/10 blur-[120px] rounded-full pointer-events-none" />
 
           <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 lg:px-16 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
             <div className="space-y-8">
               <div>
-                <p className="text-orange-500 uppercase tracking-widest font-semibold mb-4 text-[0.95rem]">
-                  Diferencial
-                </p>
+                <Eyebrow>Diferencial</Eyebrow>
                 <h2
                   className="font-bold leading-tight mb-6"
-                  style={{ fontSize: "clamp(1.8rem, 5vw, 3.5rem)" }}
+                  style={{
+                    fontSize: "clamp(1.8rem, 5vw, 3.5rem)",
+                    fontFamily: "'Anton', sans-serif",
+                  }}
                 >
                   Não entregamos só conteúdo. Estruturamos sua presença digital
                   de ponta a ponta.
@@ -150,7 +187,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="relative h-56 md:h-64 rounded-3xl border border-zinc-800 overflow-hidden shadow-xl shadow-orange-500/10">
+              <div className="relative h-56 md:h-64 border border-[#1a1a1a] overflow-hidden shadow-xl shadow-orange-500/10">
                 <Image
                   src="/estrategia.jpg"
                   alt="Estratégia digital ORIUM"
@@ -161,7 +198,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
+            <div className="flex flex-col border-t border-[#1a1a1a]">
               {[
                 {
                   title: "Posicionamento",
@@ -182,10 +219,34 @@ export default function Home() {
               ].map((item) => (
                 <div
                   key={item.title}
-                  className="rounded-2xl border border-zinc-800 bg-black/70 p-5 md:p-6 backdrop-blur-sm"
+                  className="flex gap-4 py-6 border-b border-[#1a1a1a]"
                 >
-                  <h3 className="text-lg md:text-xl font-bold mb-2">{item.title}</h3>
-                  <p className="text-zinc-400 text-[0.95rem] leading-[1.6]">{item.text}</p>
+                  <span
+                    className="flex-shrink-0 mt-[3px]"
+                    style={{
+                      color: "#FF6B00",
+                      fontFamily: "Poppins, sans-serif",
+                      fontSize: "1rem",
+                    }}
+                  >
+                    —
+                  </span>
+                  <div>
+                    <h3
+                      className="mb-2 text-white"
+                      style={{
+                        fontFamily: "'Anton', sans-serif",
+                        fontSize: "1.1rem",
+                        letterSpacing: "0.15em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {item.title}
+                    </h3>
+                    <p className="text-[#999] text-[0.95rem] leading-[1.6]">
+                      {item.text}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -195,15 +256,16 @@ export default function Home() {
 
       {/* ── PROCESSO ──────────────────────────────────────────────────────── */}
       <Reveal delay={0.2}>
-        <section className="bg-black text-white py-16 md:py-24 lg:py-32 border-t border-zinc-900">
+        <section className="bg-[#080808] text-white py-16 md:py-24 lg:py-32 border-t border-[#1a1a1a]">
           <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
             <div className="mb-12 md:mb-16 max-w-3xl">
-              <p className="text-orange-500 uppercase tracking-widest font-semibold mb-4 text-[0.95rem]">
-                Processo
-              </p>
+              <Eyebrow>Processo</Eyebrow>
               <h2
                 className="font-bold leading-tight mb-6"
-                style={{ fontSize: "clamp(1.8rem, 5vw, 3.5rem)" }}
+                style={{
+                  fontSize: "clamp(1.8rem, 5vw, 3.5rem)",
+                  fontFamily: "'Anton', sans-serif",
+                }}
               >
                 Um processo claro para transformar presença digital em resultado
                 comercial consistente.
@@ -214,7 +276,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="relative mb-10 md:mb-12 h-44 md:h-56 rounded-3xl border border-zinc-800 overflow-hidden shadow-xl shadow-orange-500/10">
+            <div className="relative mb-10 md:mb-12 h-44 md:h-56 border border-[#1a1a1a] overflow-hidden shadow-xl shadow-orange-500/10">
               <Image
                 src="/processo.jpg"
                 alt="Processo ORIUM"
@@ -254,19 +316,20 @@ export default function Home() {
       <Reveal delay={0.3}>
         <section
           id="projetos"
-          className="relative overflow-hidden bg-black text-white py-16 md:py-24 lg:py-32 border-t border-zinc-900 scroll-mt-24"
+          className="relative overflow-hidden bg-[#080808] text-white py-16 md:py-24 lg:py-32 border-t border-[#1a1a1a] scroll-mt-24"
         >
-          <div className="absolute right-[-180px] top-[-220px] h-[380px] md:h-[460px] w-[380px] md:w-[460px] rounded-full bg-orange-500/10 blur-[130px]" />
+          <div className="absolute right-[-180px] top-[-220px] h-[380px] md:h-[460px] w-[380px] md:w-[460px] rounded-full bg-orange-500/10 blur-[130px] pointer-events-none" />
 
           <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-12 md:mb-16">
               <div>
-                <p className="text-orange-500 uppercase tracking-widest font-semibold mb-4 text-[0.95rem]">
-                  Projetos
-                </p>
+                <Eyebrow>Projetos</Eyebrow>
                 <h2
                   className="font-bold max-w-2xl leading-tight"
-                  style={{ fontSize: "clamp(1.8rem, 5vw, 3.5rem)" }}
+                  style={{
+                    fontSize: "clamp(1.8rem, 5vw, 3.5rem)",
+                    fontFamily: "'Anton', sans-serif",
+                  }}
                 >
                   Projetos reais com foco em percepção, autoridade e geração de
                   demanda.
@@ -278,47 +341,62 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-              {/* Altemans */}
-              <div className="group relative overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950/80 p-6 md:p-8 transition duration-300 md:hover:-translate-y-2 md:hover:border-orange-500/70 md:hover:shadow-2xl md:hover:shadow-orange-500/10">
-                <div className="absolute right-[-100px] top-[-100px] h-56 w-56 rounded-full bg-orange-500/0 blur-3xl transition duration-300 group-hover:bg-orange-500/10" />
-                <div className="relative z-10">
-                  <div className="relative mb-8 h-[200px] md:h-44 rounded-2xl border border-zinc-800 overflow-hidden">
-                    <Image
-                      src="/altemans.jpg"
-                      alt="Projeto Altemans Barbearia"
-                      fill
-                      className="object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+            <div className="flex flex-col border border-[#1a1a1a]">
+              {/* Altemans — imagem esquerda | conteúdo direita */}
+              <div className="group flex flex-col md:flex-row border-b border-[#1a1a1a] overflow-hidden transition-all duration-300">
+                <div className="relative w-full md:w-[45%] h-64 md:h-auto flex-shrink-0 overflow-hidden">
+                  <Image
+                    src="/altemans.jpg"
+                    alt="Projeto Altemans Barbearia"
+                    fill
+                    className="object-cover scale-100 group-hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-black/50 group-hover:bg-black/25 transition-all duration-500" />
+                </div>
+                <div className="flex-1 p-7 md:p-10 bg-[#080808] flex flex-col justify-between gap-7">
+                  <div>
+                    <span
+                      className="inline-block mb-5 px-3 py-1 text-[0.7rem] tracking-[0.15em] uppercase"
+                      style={{
+                        border: "1px solid #FF6B00",
+                        color: "#FF6B00",
+                        fontFamily: "Poppins, sans-serif",
+                      }}
+                    >
+                      Barbearia
+                    </span>
+                    <h3
+                      className="mb-4 text-white"
+                      style={{
+                        fontFamily: "'Anton', sans-serif",
+                        fontSize: "clamp(1.4rem, 3vw, 2rem)",
+                        lineHeight: 1.1,
+                      }}
+                    >
+                      Altemans Barbearia
+                    </h3>
+                    <p className="text-[#999] leading-[1.7] mb-6 text-[0.95rem]">
+                      Reestruturação completa da presença digital: identidade
+                      visual, perfil do Instagram, destaques, comunicação e
+                      planejamento mensal de conteúdo. Resultado: presença mais
+                      profissional, comunicação clara e consistência na publicação.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {["Social Media", "Direção Visual", "Conteúdo"].map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-3 py-1 text-[0.7rem] text-[#999]"
+                          style={{
+                            background: "#111",
+                            fontFamily: "Poppins, sans-serif",
+                          }}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <p className="text-orange-500 text-[0.95rem] uppercase tracking-widest font-semibold mb-4">
-                    Barbearia
-                  </p>
-                  <h3
-                    className="font-bold mb-4"
-                    style={{ fontSize: "clamp(1.2rem, 3vw, 1.75rem)" }}
-                  >
-                    Altemans Barbearia
-                  </h3>
-                  <p className="text-zinc-400 leading-[1.6] mb-8 text-[0.95rem]">
-                    Reestruturação completa da presença digital: identidade
-                    visual, perfil do Instagram, destaques, comunicação e
-                    planejamento mensal de conteúdo. Resultado: presença mais
-                    profissional, comunicação clara e consistência na publicação.
-                  </p>
-                  <div className="flex flex-wrap gap-3">
-                    <span className="rounded-full border border-zinc-700 bg-black/50 px-4 py-2 text-sm text-zinc-300">
-                      Social Media
-                    </span>
-                    <span className="rounded-full border border-zinc-700 bg-black/50 px-4 py-2 text-sm text-zinc-300">
-                      Direção Visual
-                    </span>
-                    <span className="rounded-full border border-zinc-700 bg-black/50 px-4 py-2 text-sm text-zinc-300">
-                      Conteúdo
-                    </span>
-                  </div>
-                  <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <a
                       href="https://www.instagram.com/altemansbarbearia/"
                       target="_blank"
@@ -338,46 +416,61 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Prof. Marcelo */}
-              <div className="group relative overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950/80 p-6 md:p-8 transition duration-300 md:hover:-translate-y-2 md:hover:border-orange-500/70 md:hover:shadow-2xl md:hover:shadow-orange-500/10">
-                <div className="absolute right-[-100px] top-[-100px] h-56 w-56 rounded-full bg-orange-500/0 blur-3xl transition duration-300 group-hover:bg-orange-500/10" />
-                <div className="relative z-10">
-                  <div className="relative mb-8 h-[200px] md:h-44 rounded-2xl border border-zinc-800 overflow-hidden">
-                    <Image
-                      src="/marcelo.jpg"
-                      alt="Projeto Prof. Marcelo Félix"
-                      fill
-                      className="object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              {/* Prof. Marcelo — conteúdo esquerda | imagem direita */}
+              <div className="group flex flex-col md:flex-row-reverse overflow-hidden transition-all duration-300">
+                <div className="relative w-full md:w-[45%] h-64 md:h-auto flex-shrink-0 overflow-hidden">
+                  <Image
+                    src="/marcelo.jpg"
+                    alt="Projeto Prof. Marcelo Félix"
+                    fill
+                    className="object-cover scale-100 group-hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-black/50 group-hover:bg-black/25 transition-all duration-500" />
+                </div>
+                <div className="flex-1 p-7 md:p-10 bg-[#080808] flex flex-col justify-between gap-7 border-t md:border-t-0 border-[#1a1a1a]">
+                  <div>
+                    <span
+                      className="inline-block mb-5 px-3 py-1 text-[0.7rem] tracking-[0.15em] uppercase"
+                      style={{
+                        border: "1px solid #FF6B00",
+                        color: "#FF6B00",
+                        fontFamily: "Poppins, sans-serif",
+                      }}
+                    >
+                      Saúde e educação
+                    </span>
+                    <h3
+                      className="mb-4 text-white"
+                      style={{
+                        fontFamily: "'Anton', sans-serif",
+                        fontSize: "clamp(1.4rem, 3vw, 2rem)",
+                        lineHeight: 1.1,
+                      }}
+                    >
+                      Prof. Marcelo Félix
+                    </h3>
+                    <p className="text-[#999] leading-[1.7] mb-6 text-[0.95rem]">
+                      Posicionamento digital para autoridade profissional na área
+                      de saúde e educação. Organização de perfil, identidade
+                      visual, linguagem e comunicação para cursos, palestras e
+                      treinamentos.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {["Branding", "Autoridade", "Posicionamento"].map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-3 py-1 text-[0.7rem] text-[#999]"
+                          style={{
+                            background: "#111",
+                            fontFamily: "Poppins, sans-serif",
+                          }}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <p className="text-orange-500 text-[0.95rem] uppercase tracking-widest font-semibold mb-4">
-                    Saúde e educação
-                  </p>
-                  <h3
-                    className="font-bold mb-4"
-                    style={{ fontSize: "clamp(1.2rem, 3vw, 1.75rem)" }}
-                  >
-                    Prof. Marcelo Félix
-                  </h3>
-                  <p className="text-zinc-400 leading-[1.6] mb-8 text-[0.95rem]">
-                    Posicionamento digital para autoridade profissional na área
-                    de saúde e educação. Organização de perfil, identidade
-                    visual, linguagem e comunicação para cursos, palestras e
-                    treinamentos.
-                  </p>
-                  <div className="flex flex-wrap gap-3">
-                    <span className="rounded-full border border-zinc-700 bg-black/50 px-4 py-2 text-sm text-zinc-300">
-                      Branding
-                    </span>
-                    <span className="rounded-full border border-zinc-700 bg-black/50 px-4 py-2 text-sm text-zinc-300">
-                      Autoridade
-                    </span>
-                    <span className="rounded-full border border-zinc-700 bg-black/50 px-4 py-2 text-sm text-zinc-300">
-                      Posicionamento
-                    </span>
-                  </div>
-                  <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <a
                       href="https://www.instagram.com/prof.marcelofelix/"
                       target="_blank"
@@ -405,18 +498,19 @@ export default function Home() {
       <Reveal delay={0.35}>
         <section
           id="diagnostico"
-          className="relative overflow-hidden bg-black text-white py-16 md:py-24 lg:py-32 border-t border-zinc-900"
+          className="relative overflow-hidden bg-[#080808] text-white py-16 md:py-24 lg:py-32 border-t border-[#1a1a1a]"
         >
-          <div className="absolute left-[-160px] bottom-[-200px] h-[360px] md:h-[420px] w-[360px] md:w-[420px] rounded-full bg-orange-500/10 blur-[120px]" />
+          <div className="absolute left-[-160px] bottom-[-200px] h-[360px] md:h-[420px] w-[360px] md:w-[420px] rounded-full bg-orange-500/10 blur-[120px] pointer-events-none" />
 
           <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
             <div className="max-w-3xl mb-12 md:mb-16">
-              <p className="text-orange-500 uppercase tracking-widest font-semibold mb-4 text-[0.95rem]">
-                DIAGNÓSTICO DIGITAL
-              </p>
+              <Eyebrow>DIAGNÓSTICO DIGITAL</Eyebrow>
               <h2
                 className="font-bold leading-tight mb-6"
-                style={{ fontSize: "clamp(1.8rem, 5vw, 3.5rem)" }}
+                style={{
+                  fontSize: "clamp(1.8rem, 5vw, 3.5rem)",
+                  fontFamily: "'Anton', sans-serif",
+                }}
               >
                 Antes de produzir conteúdo, avaliamos a estrutura da sua marca.
               </h2>
@@ -427,7 +521,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 border-l border-t border-[#1a1a1a] mb-10">
               {[
                 { title: "Presença visual", text: "Instagram, identidade e percepção da marca." },
                 { title: "Comunicação", text: "Clareza da mensagem, oferta e posicionamento." },
@@ -436,10 +530,28 @@ export default function Home() {
               ].map((item) => (
                 <div
                   key={item.title}
-                  className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-5 md:p-7"
+                  className="p-6 md:p-8 border-r border-b border-[#1a1a1a] flex gap-4"
                 >
-                  <h3 className="text-lg md:text-xl font-bold mb-3">{item.title}</h3>
-                  <p className="text-zinc-400 text-[0.95rem] leading-[1.6]">{item.text}</p>
+                  <span
+                    className="flex-shrink-0 mt-[3px]"
+                    style={{ color: "#FF6B00", fontFamily: "Poppins, sans-serif" }}
+                  >
+                    —
+                  </span>
+                  <div>
+                    <h3
+                      className="mb-2 text-white"
+                      style={{
+                        fontFamily: "'Anton', sans-serif",
+                        fontSize: "1.1rem",
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {item.title}
+                    </h3>
+                    <p className="text-[#999] text-[0.95rem] leading-[1.6]">{item.text}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -457,15 +569,16 @@ export default function Home() {
 
       {/* ── COMO FUNCIONA ─────────────────────────────────────────────────── */}
       <Reveal delay={0.4}>
-        <section className="relative overflow-hidden bg-zinc-950 text-white py-16 md:py-20 lg:py-24 border-t border-zinc-900">
+        <section className="relative overflow-hidden bg-[#0a0a0a] text-white py-16 md:py-20 lg:py-24 border-t border-[#1a1a1a]">
           <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
             <div className="max-w-3xl mb-10 md:mb-12">
-              <p className="text-orange-500 uppercase tracking-widest font-semibold mb-4 text-[0.95rem]">
-                COMO FUNCIONA
-              </p>
+              <Eyebrow>COMO FUNCIONA</Eyebrow>
               <h2
                 className="font-bold leading-tight mb-5"
-                style={{ fontSize: "clamp(1.8rem, 5vw, 3.5rem)" }}
+                style={{
+                  fontSize: "clamp(1.8rem, 5vw, 3.5rem)",
+                  fontFamily: "'Anton', sans-serif",
+                }}
               >
                 Como funciona o diagnóstico?
               </h2>
@@ -475,17 +588,41 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+            <div className="flex flex-col border-t border-[#1a1a1a]">
               {[
                 { n: "01", title: "Primeiro contato", text: "Entendemos seu negócio, momento atual e principais objetivos antes de qualquer análise." },
                 { n: "02", title: "Analisamos sua presença digital", text: "Observamos Instagram, identidade, comunicação, site, links e jornada do cliente." },
                 { n: "03", title: "Indicamos pontos de melhoria", text: "Mostramos onde sua marca pode ficar mais clara, profissional e preparada para vender." },
                 { n: "04", title: "Se fizer sentido, montamos uma proposta", text: "A ORIUM apresenta um plano de trabalho alinhado ao momento da sua marca." },
               ].map((item) => (
-                <div key={item.n} className="rounded-2xl border border-zinc-800 bg-black/40 p-5 md:p-6">
-                  <p className="text-orange-500 text-sm font-semibold mb-3">{item.n}</p>
-                  <h3 className="text-lg md:text-xl font-bold mb-2">{item.title}</h3>
-                  <p className="text-zinc-400 text-[0.95rem] leading-[1.6]">{item.text}</p>
+                <div
+                  key={item.n}
+                  className="flex items-start gap-6 md:gap-10 py-7 border-b border-[#1a1a1a]"
+                >
+                  <span
+                    className="flex-shrink-0"
+                    style={{
+                      fontFamily: "'Anton', sans-serif",
+                      fontSize: "1rem",
+                      color: "#FF6B00",
+                      letterSpacing: "0.05em",
+                      minWidth: "2.5rem",
+                    }}
+                  >
+                    {item.n}.
+                  </span>
+                  <div>
+                    <h3
+                      className="mb-2 text-white"
+                      style={{
+                        fontFamily: "'Anton', sans-serif",
+                        fontSize: "1.25rem",
+                      }}
+                    >
+                      {item.title}
+                    </h3>
+                    <p className="text-[#999] text-[0.95rem] leading-[1.6]">{item.text}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -495,31 +632,57 @@ export default function Home() {
 
       {/* ── DÚVIDAS ───────────────────────────────────────────────────────── */}
       <Reveal delay={0.43}>
-        <section className="bg-zinc-950 text-white py-16 md:py-20 border-t border-zinc-900">
+        <section className="bg-[#080808] text-white py-16 md:py-20 border-t border-[#1a1a1a]">
           <div className="max-w-4xl mx-auto px-4 md:px-8 lg:px-16">
             <div className="max-w-3xl mb-10 md:mb-12">
-              <p className="text-orange-500 uppercase tracking-widest font-semibold mb-4 text-[0.95rem]">
-                DÚVIDAS FREQUENTES
-              </p>
+              <Eyebrow>DÚVIDAS FREQUENTES</Eyebrow>
               <h2
                 className="font-bold leading-tight"
-                style={{ fontSize: "clamp(1.8rem, 5vw, 3.5rem)" }}
+                style={{
+                  fontSize: "clamp(1.8rem, 5vw, 3.5rem)",
+                  fontFamily: "'Anton', sans-serif",
+                }}
               >
                 Antes de falar com a ORIUM, vale esclarecer:
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:gap-5">
+            <div className="flex flex-col border-t border-[#1a1a1a]">
               {[
-                { q: "1. O diagnóstico é gratuito?", a: "Sim. É uma conversa inicial para entender o momento da sua marca e mapear oportunidades de melhoria." },
-                { q: "2. A ORIUM faz apenas posts para Instagram?", a: "Não. A ORIUM trabalha com estrutura digital: posicionamento, branding, conteúdo, sites, automações e presença profissional." },
-                { q: "3. Vocês atendem apenas negócios locais?", a: "O foco principal são negócios locais, profissionais e marcas em crescimento que precisam de mais organização e confiança no digital." },
-                { q: "4. Depois do diagnóstico eu sou obrigado a contratar?", a: "Não. O diagnóstico serve para entender o cenário. Se fizer sentido para os dois lados, a ORIUM apresenta uma proposta." },
-                { q: "5. A ORIUM cria site também?", a: "Sim. Criamos landing pages, sites institucionais e estruturas digitais focadas em presença profissional e conversão." },
+                { n: "01", q: "O diagnóstico é gratuito?", a: "Sim. É uma conversa inicial para entender o momento da sua marca e mapear oportunidades de melhoria." },
+                { n: "02", q: "A ORIUM faz apenas posts para Instagram?", a: "Não. A ORIUM trabalha com estrutura digital: posicionamento, branding, conteúdo, sites, automações e presença profissional." },
+                { n: "03", q: "Vocês atendem apenas negócios locais?", a: "O foco principal são negócios locais, profissionais e marcas em crescimento que precisam de mais organização e confiança no digital." },
+                { n: "04", q: "Depois do diagnóstico eu sou obrigado a contratar?", a: "Não. O diagnóstico serve para entender o cenário. Se fizer sentido para os dois lados, a ORIUM apresenta uma proposta." },
+                { n: "05", q: "A ORIUM cria site também?", a: "Sim. Criamos landing pages, sites institucionais e estruturas digitais focadas em presença profissional e conversão." },
               ].map((item) => (
-                <div key={item.q} className="rounded-2xl border border-zinc-800 bg-black/40 p-5 md:p-6">
-                  <h3 className="text-lg md:text-xl font-bold text-white mb-2">{item.q}</h3>
-                  <p className="text-zinc-400 text-[0.95rem] leading-[1.6]">{item.a}</p>
+                <div
+                  key={item.n}
+                  className="flex items-start gap-6 md:gap-10 py-7 border-b border-[#1a1a1a]"
+                >
+                  <span
+                    className="flex-shrink-0"
+                    style={{
+                      fontFamily: "'Anton', sans-serif",
+                      fontSize: "1rem",
+                      color: "#FF6B00",
+                      letterSpacing: "0.05em",
+                      minWidth: "2.5rem",
+                    }}
+                  >
+                    {item.n}.
+                  </span>
+                  <div>
+                    <h3
+                      className="mb-2 text-white"
+                      style={{
+                        fontFamily: "'Anton', sans-serif",
+                        fontSize: "1.2rem",
+                      }}
+                    >
+                      {item.q}
+                    </h3>
+                    <p className="text-[#999] text-[0.95rem] leading-[1.6]">{item.a}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -531,7 +694,7 @@ export default function Home() {
       <Reveal delay={0.45}>
         <section
           id="contato"
-          className="relative overflow-hidden bg-zinc-950 text-white py-16 md:py-24 lg:py-32 border-t border-zinc-900 scroll-mt-24"
+          className="relative overflow-hidden bg-[#080808] text-white py-16 md:py-24 lg:py-32 border-t border-[#1a1a1a] scroll-mt-24"
         >
           <div className="absolute inset-0">
             <Image
@@ -540,22 +703,48 @@ export default function Home() {
               fill
               className="object-cover opacity-20"
             />
-            <div className="absolute inset-0 bg-black/70" />
+            <div
+              className="absolute inset-0"
+              style={{ background: "rgba(8,8,8,0.85)" }}
+            />
           </div>
-          <div className="absolute top-[-220px] left-1/2 h-[360px] md:h-[420px] w-[360px] md:w-[420px] -translate-x-1/2 rounded-full bg-orange-500/10 blur-[120px]" />
+          <div className="absolute top-[-220px] left-1/2 h-[360px] md:h-[420px] w-[360px] md:w-[420px] -translate-x-1/2 rounded-full bg-orange-500/10 blur-[120px] pointer-events-none" />
 
           <div className="relative z-10 max-w-5xl mx-auto px-4 md:px-8 lg:px-16 text-center">
-            <p className="text-orange-500 uppercase tracking-widest font-semibold mb-4 text-[0.95rem]">
-              Vamos construir sua presença digital
-            </p>
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <div style={{ width: 40, height: 1, background: "#FF6B00", flexShrink: 0 }} />
+              <span
+                style={{
+                  fontFamily: "Poppins, sans-serif",
+                  fontSize: "0.75rem",
+                  letterSpacing: "0.3em",
+                  color: "#FF6B00",
+                  textTransform: "uppercase",
+                }}
+              >
+                Vamos construir sua presença digital
+              </span>
+              <div style={{ width: 40, height: 1, background: "#FF6B00", flexShrink: 0 }} />
+            </div>
+
             <h2
-              className="font-bold leading-tight mb-8"
-              style={{ fontSize: "clamp(1.8rem, 5vw, 3.5rem)" }}
+              className="font-bold leading-tight mb-6"
+              style={{
+                fontSize: "clamp(2.5rem, 5vw, 4.5rem)",
+                fontFamily: "'Anton', sans-serif",
+              }}
             >
               Sua marca pode operar com mais clareza, valor percebido e
               consistência comercial.
             </h2>
-            <p className="text-zinc-400 text-base md:text-xl leading-[1.6] max-w-3xl mx-auto mb-8">
+
+            {/* Linha decorativa */}
+            <div
+              className="mx-auto mb-8"
+              style={{ width: 60, height: 2, background: "#FF6B00" }}
+            />
+
+            <p className="text-zinc-400 text-base md:text-xl leading-[1.6] max-w-3xl mx-auto mb-10">
               Estruturamos sua presença digital de ponta a ponta para atrair os
               clientes certos, comunicar melhor e vender com consistência.
             </p>
@@ -576,18 +765,52 @@ export default function Home() {
       </Reveal>
 
       {/* ── FOOTER ────────────────────────────────────────────────────────── */}
-      <footer className="bg-black border-t border-zinc-900 py-12 md:py-14">
+      <footer
+        className="bg-[#080808] py-12 md:py-14"
+        style={{ borderTop: "1px solid #1a1a1a" }}
+      >
         <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 text-center md:text-left">
             <div>
-              <h3 className="text-orange-500 text-xl md:text-2xl font-bold mb-4">ORIUM</h3>
-              <p className="text-zinc-400 leading-[1.6] text-[0.95rem] max-w-sm mx-auto md:mx-0">
+              <h3
+                className="text-orange-500 mb-4"
+                style={{
+                  fontFamily: "'Anton', sans-serif",
+                  fontSize: "1.5rem",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                ORIUM
+              </h3>
+              <p
+                className="max-w-sm mx-auto md:mx-0"
+                style={{
+                  fontFamily: "'Anton', sans-serif",
+                  fontSize: "1.1rem",
+                  color: "#333",
+                  lineHeight: 1.4,
+                }}
+              >
                 Negócios bons merecem parecer tão bons quanto são.
               </p>
             </div>
             <div>
-              <h4 className="text-white font-semibold mb-4">Navegação</h4>
-              <nav className="flex flex-col gap-3 text-zinc-400 text-[0.95rem]">
+              <h4
+                className="text-white mb-4"
+                style={{
+                  fontFamily: "Poppins, sans-serif",
+                  fontSize: "0.8rem",
+                  letterSpacing: "0.15em",
+                  textTransform: "uppercase",
+                  fontWeight: 600,
+                }}
+              >
+                Navegação
+              </h4>
+              <nav
+                className="flex flex-col gap-3 text-zinc-400"
+                style={{ fontSize: "0.8rem", letterSpacing: "0.1em" }}
+              >
                 <a href="#inicio" className="md:hover:text-orange-500 transition">Início</a>
                 <a href="#servicos" className="md:hover:text-orange-500 transition">Serviços</a>
                 <a href="#projetos" className="md:hover:text-orange-500 transition">Projetos</a>
@@ -596,8 +819,22 @@ export default function Home() {
               </nav>
             </div>
             <div>
-              <h4 className="text-white font-semibold mb-4">Contato</h4>
-              <div className="flex flex-col gap-3 text-zinc-400 text-[0.95rem]">
+              <h4
+                className="text-white mb-4"
+                style={{
+                  fontFamily: "Poppins, sans-serif",
+                  fontSize: "0.8rem",
+                  letterSpacing: "0.15em",
+                  textTransform: "uppercase",
+                  fontWeight: 600,
+                }}
+              >
+                Contato
+              </h4>
+              <div
+                className="flex flex-col gap-3 text-zinc-400"
+                style={{ fontSize: "0.8rem", letterSpacing: "0.1em" }}
+              >
                 <a
                   href="https://www.instagram.com/orium.agc/"
                   target="_blank"
@@ -619,8 +856,19 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mt-10 pt-6 border-t border-zinc-900 text-center">
-            <p className="text-sm text-zinc-500">© 2026 ORIUM. Todos os direitos reservados.</p>
+          <div
+            className="mt-10 pt-6 text-center"
+            style={{ borderTop: "1px solid #1a1a1a" }}
+          >
+            <p
+              style={{
+                fontSize: "0.75rem",
+                color: "#444",
+                fontFamily: "Poppins, sans-serif",
+              }}
+            >
+              © 2026 ORIUM. Todos os direitos reservados.
+            </p>
           </div>
         </div>
       </footer>

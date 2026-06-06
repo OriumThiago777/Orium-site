@@ -1,21 +1,44 @@
 type ServiceCardProps = {
   title: string;
   description: string;
+  index: number;
 };
 
-export default function ServiceCard({ title, description }: ServiceCardProps) {
+export default function ServiceCard({ title, description, index }: ServiceCardProps) {
+  const num = String(index + 1).padStart(2, "0");
   return (
-    <div className="group relative overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950/70 p-6 md:p-8 transition duration-300 md:hover:-translate-y-2 md:hover:border-orange-500/70 md:hover:bg-zinc-950 md:hover:shadow-2xl md:hover:shadow-orange-500/10">
-      <div className="absolute right-[-80px] top-[-80px] h-40 w-40 rounded-full bg-orange-500/0 blur-xl transition duration-300 group-hover:bg-orange-500/10" />
+    <div className="group relative flex items-start gap-8 md:gap-14 py-8 md:py-10 border-b border-[#1a1a1a] transition-all duration-300 cursor-default pl-4">
+      {/* Left orange accent line on hover */}
+      <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#FF6B00] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-      <div className="relative z-10">
-        <div className="mb-6 h-2 w-12 rounded-full bg-orange-500/80 transition duration-300 group-hover:w-20" />
+      {/* Decorative number */}
+      <div
+        className="flex-shrink-0 leading-none select-none opacity-[0.15] group-hover:opacity-100 transition-opacity duration-300"
+        style={{
+          fontFamily: "'Anton', sans-serif",
+          fontSize: "4rem",
+          color: "#FF6B00",
+        }}
+      >
+        {num}
+      </div>
 
-        <h3 className="mb-4 text-xl md:text-2xl font-bold text-white">
+      {/* Content */}
+      <div className="flex-1 pt-3">
+        <h3
+          className="mb-2 md:mb-3 text-white"
+          style={{
+            fontFamily: "'Anton', sans-serif",
+            fontSize: "clamp(1.4rem, 3vw, 2rem)",
+            lineHeight: 1.1,
+          }}
+        >
           {title}
         </h3>
-
-        <p className="text-[0.95rem] leading-[1.6] text-zinc-400">
+        <p
+          className="text-[#999] text-[0.9rem] leading-[1.7]"
+          style={{ fontFamily: "Poppins, sans-serif" }}
+        >
           {description}
         </p>
       </div>
