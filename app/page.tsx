@@ -243,18 +243,23 @@ export default function Home() {
                     style={{ display: "flex", alignItems: "center", gap: "12px" }}
                   >
                     <div
-                      className="flex items-center justify-center flex-shrink-0 w-14 h-14"
                       style={{
-                        minWidth: "56px",
-                        minHeight: "56px",
-                        background: "rgba(255,107,0,0.08)",
-                        border: "1px solid rgba(255,107,0,0.2)",
+                        width: "64px",
+                        height: "64px",
+                        minWidth: "64px",
+                        minHeight: "64px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "rgba(255, 107, 0, 0.06)",
+                        border: "1px solid rgba(255, 107, 0, 0.25)",
+                        flexShrink: 0,
                       }}
                     >
                       <img
                         src={`/icons/icon-${item.icon}.svg`}
                         alt={item.title}
-                        style={{ width: "32px", height: "32px", minWidth: "32px", minHeight: "32px", objectFit: "contain", display: "block" }}
+                        style={{ width: "40px", height: "40px", minWidth: "40px", minHeight: "40px", objectFit: "contain", display: "block" }}
                       />
                     </div>
                     <span
@@ -560,18 +565,23 @@ export default function Home() {
                   className="p-6 md:p-8 border-r border-b border-[#1a1a1a] flex flex-col gap-3"
                 >
                   <div
-                    className="flex items-center justify-center w-16 h-16 md:w-[72px] md:h-[72px]"
                     style={{
-                      minWidth: "64px",
-                      minHeight: "64px",
-                      background: "rgba(255,107,0,0.08)",
-                      border: "1px solid rgba(255,107,0,0.2)",
+                      width: "72px",
+                      height: "72px",
+                      minWidth: "72px",
+                      minHeight: "72px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "rgba(255, 107, 0, 0.06)",
+                      border: "1px solid rgba(255, 107, 0, 0.25)",
+                      flexShrink: 0,
                     }}
                   >
                     <img
                       src={`/icons/icon-${item.icon}.svg`}
                       alt={item.title}
-                      style={{ width: "40px", height: "40px", minWidth: "40px", minHeight: "40px", objectFit: "contain", display: "block" }}
+                      style={{ width: "44px", height: "44px", minWidth: "44px", minHeight: "44px", objectFit: "contain", display: "block" }}
                     />
                   </div>
                   <div>
@@ -681,18 +691,24 @@ export default function Home() {
                   {/* Ícone 88x88 com container */}
                   <div className="mb-4">
                     <div
-                      className="flex items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity duration-300 w-[72px] h-[72px] md:w-[88px] md:h-[88px]"
+                      className="opacity-70 group-hover:opacity-100 transition-opacity duration-300"
                       style={{
-                        minWidth: "72px",
-                        minHeight: "72px",
-                        background: "rgba(255,107,0,0.08)",
-                        border: "1px solid rgba(255,107,0,0.2)",
+                        width: "80px",
+                        height: "80px",
+                        minWidth: "80px",
+                        minHeight: "80px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "rgba(255, 107, 0, 0.06)",
+                        border: "1px solid rgba(255, 107, 0, 0.25)",
+                        flexShrink: 0,
                       }}
                     >
                       <img
                         src={`/icons/${item.icon}.svg`}
                         alt={item.title}
-                        style={{ width: "48px", height: "48px", minWidth: "48px", minHeight: "48px", objectFit: "contain", display: "block" }}
+                        style={{ width: "52px", height: "52px", minWidth: "52px", minHeight: "52px", objectFit: "contain", display: "block" }}
                       />
                     </div>
                   </div>
