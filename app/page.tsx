@@ -244,22 +244,24 @@ export default function Home() {
                   >
                     <div
                       style={{
-                        width: "64px",
-                        height: "64px",
-                        minWidth: "64px",
-                        minHeight: "64px",
+                        width: "72px",
+                        height: "72px",
+                        minWidth: "72px",
+                        minHeight: "72px",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         background: "rgba(255, 107, 0, 0.06)",
                         border: "1px solid rgba(255, 107, 0, 0.25)",
+                        padding: "8px",
                         flexShrink: 0,
+                        boxSizing: "border-box",
                       }}
                     >
                       <img
                         src={`/icons/icon-${item.icon}.svg`}
                         alt={item.title}
-                        style={{ width: "40px", height: "40px", minWidth: "40px", minHeight: "40px", objectFit: "contain", display: "block" }}
+                        style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
                       />
                     </div>
                     <span
@@ -566,22 +568,24 @@ export default function Home() {
                 >
                   <div
                     style={{
-                      width: "72px",
-                      height: "72px",
-                      minWidth: "72px",
-                      minHeight: "72px",
+                      width: "80px",
+                      height: "80px",
+                      minWidth: "80px",
+                      minHeight: "80px",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       background: "rgba(255, 107, 0, 0.06)",
                       border: "1px solid rgba(255, 107, 0, 0.25)",
+                      padding: "10px",
                       flexShrink: 0,
+                      boxSizing: "border-box",
                     }}
                   >
                     <img
                       src={`/icons/icon-${item.icon}.svg`}
                       alt={item.title}
-                      style={{ width: "44px", height: "44px", minWidth: "44px", minHeight: "44px", objectFit: "contain", display: "block" }}
+                      style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
                     />
                   </div>
                   <div>
@@ -693,22 +697,24 @@ export default function Home() {
                     <div
                       className="opacity-70 group-hover:opacity-100 transition-opacity duration-300"
                       style={{
-                        width: "80px",
-                        height: "80px",
-                        minWidth: "80px",
-                        minHeight: "80px",
+                        width: "88px",
+                        height: "88px",
+                        minWidth: "88px",
+                        minHeight: "88px",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         background: "rgba(255, 107, 0, 0.06)",
                         border: "1px solid rgba(255, 107, 0, 0.25)",
+                        padding: "10px",
                         flexShrink: 0,
+                        boxSizing: "border-box",
                       }}
                     >
                       <img
                         src={`/icons/${item.icon}.svg`}
                         alt={item.title}
-                        style={{ width: "52px", height: "52px", minWidth: "52px", minHeight: "52px", objectFit: "contain", display: "block" }}
+                        style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
                       />
                     </div>
                   </div>
