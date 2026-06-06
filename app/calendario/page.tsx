@@ -706,6 +706,13 @@ export default function CalendarioPage() {
               {!sidebarCollapsed && <span>PAINEL</span>}
             </a>
             {!sidebarCollapsed && (
+              <a href="/biblioteca" style={{ color: '#777', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none', transition: 'color 0.2s', fontFamily: 'Poppins, sans-serif' }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#777'; }}>
+                BIBLIOTECA
+              </a>
+            )}
+            {!sidebarCollapsed && (
               <button
                 onClick={() => { clearAuth(); setAutenticado(false); }}
                 style={{ background: 'none', border: 'none', color: '#1a1a1a', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', cursor: 'pointer', transition: 'color 0.2s', padding: 0, fontFamily: 'Poppins, sans-serif' }}

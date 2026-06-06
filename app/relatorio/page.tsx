@@ -639,7 +639,7 @@ function RelatorioPage() {
           )}
 
           {/* Link hub */}
-          <div style={{ borderTop: '1px solid #0f0f0f', padding: sidebarCollapsed ? '1rem 0' : '1rem 1.75rem 1.5rem', flexShrink: 0, display: 'flex', justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}>
+          <div style={{ borderTop: '1px solid #0f0f0f', padding: sidebarCollapsed ? '1rem 0' : '1rem 1.75rem 1.5rem', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: sidebarCollapsed ? 'center' : 'flex-start', gap: '0.75rem' }}>
             <a href="/hub" title="Voltar ao painel"
               style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#888888', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none', transition: 'all 0.15s', border: '1px solid #1e1e1e', padding: '8px 12px', borderRadius: '8px' }}
               onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; e.currentTarget.style.borderColor = '#FF6B00' }}
@@ -648,6 +648,13 @@ function RelatorioPage() {
               <span>←</span>
               {!sidebarCollapsed && <span>PAINEL</span>}
             </a>
+            {!sidebarCollapsed && (
+              <a href="/biblioteca" style={{ color: '#777', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none', transition: 'color 0.2s' }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00' }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#777' }}>
+                BIBLIOTECA
+              </a>
+            )}
           </div>
         </div>
       </div>

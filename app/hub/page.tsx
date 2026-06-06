@@ -54,10 +54,16 @@ const FERRAMENTAS = [
     href: '/clientes',
   },
   {
-    tag: 'BIBLIOTECA',
+    tag: 'DOCUMENTOS',
     titulo: 'BIBLIOTECA',
     descricao: 'Histórico de documentos gerados.',
     href: '/meus-documentos',
+  },
+  {
+    tag: 'ACERVO',
+    titulo: 'BIBLIOTECA DE ASSETS',
+    descricao: 'Templates e criações organizados por segmento.',
+    href: '/biblioteca',
   },
 ];
 

@@ -552,7 +552,7 @@ function ChecklistContent() {
           )}
 
           {/* Link painel */}
-          <div style={{ borderTop: '1px solid #0f0f0f', padding: sidebarCollapsed ? '1rem 0' : '1rem 1.75rem 1.5rem', flexShrink: 0, display: 'flex', justifyContent: sidebarCollapsed ? 'center' : 'flex-start' }}>
+          <div style={{ borderTop: '1px solid #0f0f0f', padding: sidebarCollapsed ? '1rem 0' : '1rem 1.75rem 1.5rem', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: sidebarCollapsed ? 'center' : 'flex-start', gap: '0.75rem' }}>
             <a
               href="/hub"
               title="Voltar ao painel"
@@ -563,6 +563,13 @@ function ChecklistContent() {
               <span>←</span>
               {!sidebarCollapsed && <span>PAINEL</span>}
             </a>
+            {!sidebarCollapsed && (
+              <a href="/biblioteca" style={{ color: '#777', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none', transition: 'color 0.2s', fontFamily: 'Poppins, sans-serif' }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00' }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#777' }}>
+                BIBLIOTECA
+              </a>
+            )}
           </div>
 
         </div>

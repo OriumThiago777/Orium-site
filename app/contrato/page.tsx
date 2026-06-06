@@ -734,6 +734,13 @@ function ContratoPage() {
                 DOCUMENTOS
               </a>
             )}
+            {!sidebarCollapsed && (
+              <a href="/biblioteca" style={{ color: '#777', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none', transition: 'color 0.2s', fontFamily: FP }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#777'; }}>
+                BIBLIOTECA
+              </a>
+            )}
           </div>
 
         </div>
