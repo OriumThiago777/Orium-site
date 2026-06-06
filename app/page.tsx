@@ -3,6 +3,7 @@ import ServiceCard from "../components/ServiceCard";
 import ProcessStep from "../components/ProcessStep";
 import StatsStrip from "../components/StatsStrip";
 import Navbar from "../components/Navbar";
+import CTALink from "../components/CTALink";
 import Image from "next/image";
 
 export default function Home() {
@@ -69,14 +70,13 @@ export default function Home() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <a
+                <CTALink
                   href={whatsappLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className={primaryButton}
+                  label="hero-falar-com-orium"
                 >
                   Falar com a ORIUM
-                </a>
+                </CTALink>
                 <a href="#projetos" className={secondaryButton}>
                   Ver Projetos
                 </a>
@@ -327,14 +327,13 @@ export default function Home() {
                     >
                       Ver Instagram
                     </a>
-                    <a
+                    <CTALink
                       href={whatsappLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className={primaryButton}
+                      label="projetos-altemans"
                     >
                       Quero algo parecido
-                    </a>
+                    </CTALink>
                   </div>
                 </div>
               </div>
@@ -387,14 +386,13 @@ export default function Home() {
                     >
                       Ver Instagram
                     </a>
-                    <a
+                    <CTALink
                       href={whatsappLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className={primaryButton}
+                      label="projetos-marcelo"
                     >
                       Quero algo parecido
-                    </a>
+                    </CTALink>
                   </div>
                 </div>
               </div>
@@ -446,14 +444,13 @@ export default function Home() {
               ))}
             </div>
 
-            <a
+            <CTALink
               href={diagnosticWhatsappLink}
-              target="_blank"
-              rel="noopener noreferrer"
               className={primaryButton}
+              label="diagnostico-solicitar"
             >
               Solicitar diagnóstico
-            </a>
+            </CTALink>
           </div>
         </section>
       </Reveal>
@@ -563,14 +560,13 @@ export default function Home() {
               clientes certos, comunicar melhor e vender com consistência.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <a
+              <CTALink
                 href={whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
                 className={primaryButton}
+                label="cta-final-falar-whatsapp"
               >
                 Falar no WhatsApp
-              </a>
+              </CTALink>
               <a href="#projetos" className={secondaryButton}>
                 Ver Projetos
               </a>

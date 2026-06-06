@@ -278,18 +278,18 @@ function PropostaPage() {
       const PX_W = 794;
       const PX_H = 1123;
 
-      const logoBase64 = await new Promise<string>(resolve => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          const c = document.createElement('canvas');
-          c.width = img.width; c.height = img.height;
-          c.getContext('2d')!.drawImage(img, 0, 0);
-          resolve(c.toDataURL('image/png'));
-        };
+      const loadImg = (src: string) => new Promise<string>(resolve => {
+        const img = new Image(); img.crossOrigin = 'anonymous';
+        img.onload = () => { const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; c.getContext('2d')!.drawImage(img, 0, 0); resolve(c.toDataURL('image/png')); };
         img.onerror = () => resolve('');
-        img.src = '/lglaranja.png';
+        img.src = src;
       });
+
+      const [logoBase64, logoWhiteBase64, bgData] = await Promise.all([
+        loadImg('/lglaranja.png'),
+        loadImg('/lgbranca.png'),
+        loadImg('/hero.jpg'),
+      ]);
 
       const logoLg = logoBase64
         ? `<img src="${logoBase64}" style="height:72px;object-fit:contain;" />`
@@ -300,6 +300,12 @@ function PropostaPage() {
       const logoXs = logoBase64
         ? `<img src="${logoBase64}" style="height:28px;object-fit:contain;" />`
         : `<span style="font-family:'Anton',Impact,sans-serif;font-size:16px;color:#FF6B00;letter-spacing:4px;">ORIUM</span>`;
+      const logoWhiteSm = logoWhiteBase64
+        ? `<img src="${logoWhiteBase64}" style="height:40px;object-fit:contain;" />`
+        : `<span style="font-family:'Anton',Impact,sans-serif;font-size:22px;color:#fff;letter-spacing:6px;">ORIUM</span>`;
+      const logoWhiteXs = logoWhiteBase64
+        ? `<img src="${logoWhiteBase64}" style="height:28px;object-fit:contain;" />`
+        : `<span style="font-family:'Anton',Impact,sans-serif;font-size:16px;color:#fff;letter-spacing:4px;">ORIUM</span>`;
 
       const dataFormatada = new Date(form.dataProposta + 'T12:00:00').toLocaleDateString('pt-BR', {
         day: '2-digit', month: 'long', year: 'numeric',
@@ -345,17 +351,18 @@ function PropostaPage() {
 
       const nomeFontSize = form.nomeCliente.length > 12 ? '64' : form.nomeCliente.length > 8 ? '80' : '96';
       await addPage(`
-        <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:80px;box-sizing:border-box;">
-          <div style="${BAR}"></div><div style="${BBAR}"></div>
-          <div style="position:absolute;top:56px;display:flex;flex-direction:column;align-items:center;gap:8px;">${logoSm}<div style="color:#2a2a2a;font-size:9px;letter-spacing:5px;text-transform:uppercase;margin-top:5px;${P}">ESTRUTURA · PRESENÇA · RESULTADOS</div></div>
-          <div style="text-align:center;">
+        <div style="${P}width:${PX_W}px;height:${PX_H}px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px;box-sizing:border-box;">
+          ${bgData ? `<img src="${bgData}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" />` : '<div style="position:absolute;inset:0;background:#080808;"></div>'}
+          <div style="position:absolute;inset:0;background:rgba(0,0,0,0.80);"></div>
+          <div style="position:absolute;top:56px;z-index:1;display:flex;flex-direction:column;align-items:center;gap:8px;">${logoWhiteSm}<div style="color:rgba(255,255,255,0.2);font-size:9px;letter-spacing:5px;text-transform:uppercase;margin-top:5px;${P}">ESTRUTURA · PRESENÇA · RESULTADOS</div></div>
+          <div style="position:relative;z-index:1;text-align:center;">
             <div style="color:#FF6B00;font-size:11px;letter-spacing:8px;text-transform:uppercase;margin-bottom:22px;font-weight:600;${P}">PROPOSTA COMERCIAL</div>
             <div style="${A}font-size:${nomeFontSize}px;color:#fff;letter-spacing:3px;line-height:0.9;margin-bottom:18px;text-transform:uppercase;">${form.nomeCliente.trim().toUpperCase()}</div>
-            <div style="color:#252525;font-size:13px;letter-spacing:2px;margin-bottom:18px;">━━━━━━━━━━━━━━━━━━━━━</div>
+            <div style="color:rgba(255,255,255,0.15);font-size:13px;letter-spacing:2px;margin-bottom:18px;">━━━━━━━━━━━━━━━━━━━━━</div>
             <div style="${A}font-size:20px;color:#fff;letter-spacing:6px;margin-bottom:10px;">ESTRUTURAÇÃO DIGITAL</div>
             <div style="color:#FF6B00;font-size:11px;letter-spacing:4px;${P}">PRESENÇA · AUTORIDADE · CRESCIMENTO</div>
           </div>
-          <div style="position:absolute;bottom:54px;display:flex;flex-direction:column;align-items:center;gap:8px;">${logoXs}<div style="color:#1a1a1a;font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-top:3px;${P}">ESTRUTURAMOS O QUE GERA RESULTADOS.</div></div>
+          <div style="position:absolute;bottom:54px;z-index:1;display:flex;flex-direction:column;align-items:center;gap:8px;">${logoWhiteXs}<div style="color:rgba(255,255,255,0.15);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-top:3px;${P}">ESTRUTURAMOS O QUE GERA RESULTADOS.</div></div>
         </div>
       `);
 
@@ -396,7 +403,7 @@ function PropostaPage() {
               <div style="${A}font-size:54px;color:#fff;line-height:0.95;margin-bottom:10px;text-transform:uppercase;">${faseNome.toUpperCase()}</div>
               ${fase.subtitulo.trim() ? `<div style="color:#FF6B00;font-size:16px;margin-bottom:18px;font-weight:600;${P}">${fase.subtitulo.trim()}</div>` : ''}
               <div style="width:44px;height:2px;background:#FF6B00;margin-bottom:18px;"></div>
-              ${fase.descricao.trim() ? `<div style="color:#888;font-size:17px;line-height:2.0;margin-bottom:22px;max-width:600px;${P}">${fase.descricao.trim().replace(/\n/g, '<br/>')}</div>` : ''}
+              ${fase.descricao.trim() ? `<div style="color:#888;font-size:17px;line-height:2.0;margin-bottom:22px;max-width:600px;word-wrap:break-word;overflow-wrap:break-word;${P}">${fase.descricao.trim().replace(/\n/g, '<br/>')}</div>` : ''}
               ${entregasHtml ? `<div><div style="color:#3a3a3a;font-size:13px;letter-spacing:4px;text-transform:uppercase;margin-bottom:10px;${P}">O QUE SERÁ DESENVOLVIDO</div>${entregasHtml}</div>` : ''}
             </div>
             <div style="background:#FF6B00;padding:18px 70px;display:flex;justify-content:space-between;align-items:center;">

@@ -510,6 +510,49 @@ function RelatorioPage() {
       const { default: jsPDF } = await import('jspdf')
       const { default: html2canvas } = await import('html2canvas')
 
+      await document.fonts.ready
+
+      const loadImg = (src: string) => new Promise<string>(resolve => {
+        const img = new window.Image(); img.crossOrigin = 'anonymous'
+        img.onload = () => { const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; c.getContext('2d')!.drawImage(img, 0, 0); resolve(c.toDataURL('image/png')) }
+        img.onerror = () => resolve('')
+        img.src = src
+      })
+
+      const [bgData, logoWhiteData] = await Promise.all([loadImg('/hero.jpg'), loadImg('/lgbranca.png')])
+
+      const A = "font-family:'Anton',Impact,sans-serif;"
+      const P2 = "font-family:'Poppins',Arial,sans-serif;"
+      const clienteNome = form.cliente || 'CLIENTE'
+      const periodoTexto = form.periodoMes && form.periodoAno ? `${form.periodoMes.toUpperCase()} DE ${form.periodoAno}` : ''
+      const logoHtml = logoWhiteData
+        ? `<img src="${logoWhiteData}" style="height:40px;object-fit:contain;" />`
+        : `<span style="${A}font-size:22px;color:#fff;letter-spacing:6px;">ORIUM</span>`
+      const coverFontSize = clienteNome.length > 14 ? '52' : clienteNome.length > 10 ? '64' : '80'
+
+      const coverEl = document.createElement('div')
+      coverEl.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;height:1123px;overflow:hidden;'
+      coverEl.innerHTML = `
+        <div style="${P2}width:794px;height:1123px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px;box-sizing:border-box;">
+          ${bgData ? `<img src="${bgData}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" />` : '<div style="position:absolute;inset:0;background:#080808;"></div>'}
+          <div style="position:absolute;inset:0;background:rgba(0,0,0,0.80);"></div>
+          <div style="position:absolute;top:56px;z-index:1;display:flex;flex-direction:column;align-items:center;gap:8px;">${logoHtml}<div style="color:rgba(255,255,255,0.2);font-size:9px;letter-spacing:5px;text-transform:uppercase;margin-top:5px;${P2}">ESTRUTURA · PRESENÇA · RESULTADOS</div></div>
+          <div style="position:relative;z-index:1;text-align:center;">
+            <div style="color:#FF6B00;font-size:11px;letter-spacing:8px;text-transform:uppercase;margin-bottom:24px;font-weight:600;${P2}">RELATÓRIO MENSAL</div>
+            <div style="${A}font-size:${coverFontSize}px;color:#fff;letter-spacing:3px;line-height:0.95;margin-bottom:20px;text-transform:uppercase;">${clienteNome.toUpperCase()}</div>
+            ${periodoTexto ? `<div style="color:rgba(255,255,255,0.5);font-size:13px;letter-spacing:4px;text-transform:uppercase;${P2}">${periodoTexto}</div>` : ''}
+          </div>
+          <div style="position:absolute;bottom:54px;z-index:1;"><div style="color:rgba(255,255,255,0.12);font-size:9px;letter-spacing:3px;text-transform:uppercase;${P2}">ORIUM™ · ANÁLISE DE RESULTADOS</div></div>
+        </div>
+      `
+      document.body.appendChild(coverEl)
+      const coverCanvas = await html2canvas(coverEl, { backgroundColor: null, scale: 2, useCORS: true, allowTaint: true, logging: false, width: 794, height: 1123 })
+      document.body.removeChild(coverEl)
+
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      doc.addImage(coverCanvas.toDataURL('image/jpeg', 0.93), 'JPEG', 0, 0, 210, 297)
+
+      doc.addPage()
       const el = previewRef.current
       const canvas = await html2canvas(el, {
         scale: 2,
@@ -519,7 +562,6 @@ function RelatorioPage() {
       })
 
       const imgData = canvas.toDataURL('image/png')
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
       const pageW = doc.internal.pageSize.getWidth()
       const pageH = doc.internal.pageSize.getHeight()
       const margin = 10
