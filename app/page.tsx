@@ -48,7 +48,7 @@ export default function Home() {
         className="relative w-full overflow-hidden h-[75vh] min-h-[480px]"
       >
         <Image
-          src="/hero.jpg"
+          src="/fotos/hero2.png"
           alt="Ambiente criativo ORIUM"
           fill
           className="object-cover object-center"
@@ -140,16 +140,19 @@ export default function Home() {
                   title="Branding"
                   description="Construção de posicionamento, identidade visual e percepção premium para marcas locais."
                   index={0}
+                  icon="branding"
                 />
                 <ServiceCard
                   title="Sites"
                   description="Landing pages e estruturas digitais modernas focadas em conversão e presença profissional."
                   index={1}
+                  icon="sites"
                 />
                 <ServiceCard
                   title="Automação"
                   description="Sistemas, formulários, integrações e automações para aumentar capacidade operacional."
                   index={2}
+                  icon="automacao"
                 />
               </div>
             </div>
@@ -172,7 +175,7 @@ export default function Home() {
             {/* Imagem — aparece primeiro no mobile (acima), vai para direita no desktop */}
             <div className="relative h-[320px] md:h-[500px] overflow-hidden order-first md:order-last">
               <Image
-                src="/estrategia.jpg"
+                src="/fotos/estrategia.png"
                 alt="Estratégia digital ORIUM"
                 fill
                 className="object-cover"
@@ -207,23 +210,37 @@ export default function Home() {
                   {
                     title: "Posicionamento",
                     text: "Como sua marca é percebida define quem ela atrai — e quanto cobra.",
+                    icon: "posicionamento",
                   },
                   {
                     title: "Percepção premium",
                     text: "Design, linguagem e presença alinhados ao valor real do que você entrega.",
+                    icon: "percepcao",
                   },
                   {
                     title: "Operação digital",
                     text: "Estruturas e automações para você operar com método, não no improviso.",
+                    icon: "operacao",
                   },
                   {
                     title: "Crescimento sustentável",
                     text: "Presença construída para gerar continuidade — não picos que somem em duas semanas.",
+                    icon: "crescimento",
                   },
                 ].map((item) => (
-                  <div key={item.title} className="flex gap-4">
+                  <div
+                    key={item.title}
+                    style={{ display: "flex", alignItems: "center", gap: "12px" }}
+                  >
+                    <Image
+                      src={`/icons/icon-${item.icon}.svg`}
+                      alt={item.title}
+                      width={32}
+                      height={32}
+                      className="flex-shrink-0 opacity-80"
+                    />
                     <span
-                      className="flex-shrink-0 mt-[3px]"
+                      className="flex-shrink-0"
                       style={{
                         color: "#FF6B00",
                         fontFamily: "Poppins, sans-serif",
@@ -338,7 +355,7 @@ export default function Home() {
               <div className="group flex flex-col md:flex-row border-b border-[#1a1a1a] overflow-hidden transition-all duration-300">
                 <div className="relative w-full md:w-[45%] h-64 md:h-auto flex-shrink-0 overflow-hidden">
                   <Image
-                    src="/altemans.jpg"
+                    src="/fotos/altemans.png"
                     alt="Projeto Altemans Barbearia"
                     fill
                     className="object-cover scale-100 group-hover:scale-105 transition-transform duration-700"
@@ -412,7 +429,7 @@ export default function Home() {
               <div className="group flex flex-col md:flex-row-reverse overflow-hidden transition-all duration-300">
                 <div className="relative w-full md:w-[45%] h-64 md:h-auto flex-shrink-0 overflow-hidden">
                   <Image
-                    src="/marcelo.jpg"
+                    src="/fotos/marcelo.png"
                     alt="Projeto Prof. Marcelo Félix"
                     fill
                     className="object-cover scale-100 group-hover:scale-105 transition-transform duration-700"
@@ -515,21 +532,22 @@ export default function Home() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 border-l border-t border-[#1a1a1a] mb-10">
               {[
-                { title: "Presença visual", text: "Instagram, identidade e percepção da marca." },
-                { title: "Comunicação", text: "Clareza da mensagem, oferta e posicionamento." },
-                { title: "Estrutura digital", text: "Site, links, automações e jornada do cliente." },
-                { title: "Próximos passos", text: "Plano inicial para organizar e fortalecer sua presença." },
+                { title: "Presença visual", text: "Instagram, identidade e percepção da marca.", icon: "presenca" },
+                { title: "Comunicação", text: "Clareza da mensagem, oferta e posicionamento.", icon: "comunicacao" },
+                { title: "Estrutura digital", text: "Site, links, automações e jornada do cliente.", icon: "estrutura" },
+                { title: "Próximos passos", text: "Plano inicial para organizar e fortalecer sua presença.", icon: "proximos" },
               ].map((item) => (
                 <div
                   key={item.title}
-                  className="p-6 md:p-8 border-r border-b border-[#1a1a1a] flex gap-4"
+                  className="p-6 md:p-8 border-r border-b border-[#1a1a1a] flex flex-col gap-3"
                 >
-                  <span
-                    className="flex-shrink-0 mt-[3px]"
-                    style={{ color: "#FF6B00", fontFamily: "Poppins, sans-serif" }}
-                  >
-                    —
-                  </span>
+                  <Image
+                    src={`/icons/icon-${item.icon}.svg`}
+                    alt={item.title}
+                    width={48}
+                    height={48}
+                    className="opacity-80"
+                  />
                   <div>
                     <h3
                       className="mb-2 text-white"
@@ -561,10 +579,25 @@ export default function Home() {
 
       {/* ── COMO FUNCIONA ─────────────────────────────────────────────────── */}
       <Reveal delay={0.4}>
-        <section className="relative overflow-hidden bg-[#0a0a0a] text-white py-16 md:py-20 lg:py-24 border-t border-[#1a1a1a]">
+        <section className="relative overflow-hidden bg-[#0a0a0a] text-white border-t border-[#1a1a1a]" style={{ padding: "6rem 0" }}>
           <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
-            <div className="max-w-3xl mb-10 md:mb-12">
-              <Eyebrow>COMO FUNCIONA</Eyebrow>
+            {/* Header centralizado */}
+            <div className="max-w-3xl mx-auto text-center mb-16">
+              <div className="flex items-center justify-center gap-3 mb-5">
+                <div style={{ width: 40, height: 1, background: "#FF6B00", flexShrink: 0 }} />
+                <span
+                  style={{
+                    fontFamily: "Poppins, sans-serif",
+                    fontSize: "0.75rem",
+                    letterSpacing: "0.3em",
+                    color: "#FF6B00",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  COMO FUNCIONA
+                </span>
+                <div style={{ width: 40, height: 1, background: "#FF6B00", flexShrink: 0 }} />
+              </div>
               <h2
                 className="font-bold leading-tight mb-5"
                 style={{
@@ -580,41 +613,100 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="flex flex-col border-t border-[#1a1a1a]">
+            {/* Timeline horizontal */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-0">
               {[
-                { n: "01", title: "Primeiro contato", text: "Entendemos seu negócio, momento atual e principais objetivos antes de qualquer análise." },
-                { n: "02", title: "Analisamos sua presença digital", text: "Observamos Instagram, identidade, comunicação, site, links e jornada do cliente." },
-                { n: "03", title: "Indicamos pontos de melhoria", text: "Mostramos onde sua marca pode ficar mais clara, profissional e preparada para vender." },
-                { n: "04", title: "Se fizer sentido, montamos uma proposta", text: "A ORIUM apresenta um plano de trabalho alinhado ao momento da sua marca." },
-              ].map((item) => (
+                {
+                  n: "01",
+                  title: "Primeiro contato",
+                  text: "Entendemos seu negócio, momento atual e principais objetivos antes de qualquer análise.",
+                  icon: "icon-contato",
+                },
+                {
+                  n: "02",
+                  title: "Analisamos sua presença",
+                  text: "Observamos Instagram, identidade, comunicação, site, links e jornada do cliente.",
+                  icon: "icon-analise",
+                },
+                {
+                  n: "03",
+                  title: "Indicamos melhorias",
+                  text: "Mostramos onde sua marca pode ficar mais clara, profissional e preparada para vender.",
+                  icon: "icon-melhorias",
+                },
+                {
+                  n: "04",
+                  title: "Montamos uma proposta",
+                  text: "A ORIUM apresenta um plano de trabalho alinhado ao momento da sua marca.",
+                  icon: "icon-proposta",
+                },
+              ].map((item, i) => (
                 <div
                   key={item.n}
-                  className="flex items-start gap-6 md:gap-10 py-7 border-b border-[#1a1a1a]"
+                  className={`group relative flex flex-col transition-all duration-300${
+                    i < 3 ? " border-b border-[#1a1a1a] md:border-b-0" : ""
+                  }`}
+                  style={{ padding: "0 2rem", paddingTop: "0", paddingBottom: i < 3 ? "2rem" : "0" }}
                 >
-                  <span
-                    className="flex-shrink-0"
+                  {/* Bordas verticais (desktop) via elemento absoluto para hover funcionar */}
+                  {i < 3 && (
+                    <div className="hidden md:block absolute top-0 right-0 bottom-0 w-px bg-[#1a1a1a] group-hover:bg-[#FF6B00] transition-colors duration-300" />
+                  )}
+
+                  {/* Ícone 64x64 */}
+                  <div className="flex justify-start mb-4">
+                    <Image
+                      src={`/icons/${item.icon}.svg`}
+                      alt={item.title}
+                      width={64}
+                      height={64}
+                      className="opacity-70 group-hover:opacity-100 transition-opacity duration-300"
+                    />
+                  </div>
+
+                  {/* Linha conectora laranja (só desktop, não no último) */}
+                  {i < 3 && (
+                    <div
+                      className="hidden md:block w-full mb-4"
+                      style={{
+                        height: "1px",
+                        background: "linear-gradient(to right, #FF6B00, transparent)",
+                      }}
+                    />
+                  )}
+
+                  {/* Número decorativo */}
+                  <div
+                    className="mb-2 opacity-[0.3] group-hover:opacity-[0.8] transition-opacity duration-300"
                     style={{
                       fontFamily: "'Anton', sans-serif",
-                      fontSize: "1rem",
+                      fontSize: "2rem",
                       color: "#FF6B00",
-                      letterSpacing: "0.05em",
-                      minWidth: "2.5rem",
+                      lineHeight: 1,
                     }}
                   >
-                    {item.n}.
-                  </span>
-                  <div>
-                    <h3
-                      className="mb-2 text-white"
-                      style={{
-                        fontFamily: "'Anton', sans-serif",
-                        fontSize: "1.25rem",
-                      }}
-                    >
-                      {item.title}
-                    </h3>
-                    <p className="text-[#999] text-[0.95rem] leading-[1.6]">{item.text}</p>
+                    {item.n}
                   </div>
+
+                  {/* Título */}
+                  <h3
+                    className="mb-2 text-white"
+                    style={{
+                      fontFamily: "'Anton', sans-serif",
+                      fontSize: "1.1rem",
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {item.title}
+                  </h3>
+
+                  {/* Descrição */}
+                  <p
+                    className="text-[#999] leading-[1.6]"
+                    style={{ fontFamily: "Poppins, sans-serif", fontSize: "0.85rem" }}
+                  >
+                    {item.text}
+                  </p>
                 </div>
               ))}
             </div>
@@ -688,7 +780,7 @@ export default function Home() {
           id="contato"
           className="relative overflow-hidden text-white py-16 md:py-24 lg:py-32 border-t border-[#1a1a1a] scroll-mt-24"
           style={{
-            backgroundImage: "url(/cta.jpg)",
+            backgroundImage: "url(/fotos/cta.png)",
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
