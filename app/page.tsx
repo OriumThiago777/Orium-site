@@ -57,18 +57,20 @@ export default function Home() {
 
         {/* Overlay: escuro denso à esquerda, alivia à direita */}
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 pointer-events-none"
           style={{
             background:
               "linear-gradient(to right, rgba(8,8,8,0.95) 40%, rgba(8,8,8,0.4) 100%)",
+            zIndex: 1,
           }}
         />
         {/* Vinheta inferior */}
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 pointer-events-none"
           style={{
             background:
               "linear-gradient(to top, rgba(8,8,8,0.55) 0%, transparent 40%)",
+            zIndex: 1,
           }}
         />
 
@@ -80,9 +82,9 @@ export default function Home() {
               <h1
                 className="font-bold text-white mb-5 md:mb-6"
                 style={{
-                  fontSize: "clamp(3.5rem, 8vw, 7rem)",
+                  fontSize: "clamp(2.5rem, 5vw, 4.5rem)",
                   fontFamily: "'Anton', sans-serif",
-                  lineHeight: 1.0,
+                  lineHeight: 1.05,
                 }}
               >
                 Seu negócio<br />
@@ -90,12 +92,20 @@ export default function Home() {
                 do que parece.
               </h1>
 
-              <p className="text-zinc-300 text-[0.95rem] sm:text-lg md:text-xl mb-8 md:mb-10 leading-[1.6]">
+              <p
+                className="mb-8 md:mb-10 leading-[1.6]"
+                style={{
+                  fontFamily: "Poppins, sans-serif",
+                  fontSize: "1rem",
+                  color: "#999",
+                  maxWidth: "500px",
+                }}
+              >
                 A ORIUM estrutura como você se apresenta — posicionamento,
                 presença e percepção de valor, do Instagram ao site.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative z-10 flex flex-col sm:flex-row gap-4">
                 <CTALink
                   href={whatsappLink}
                   className={primaryButton}
