@@ -82,7 +82,7 @@ export default function Home() {
               <h1
                 className="font-bold text-white mb-5 md:mb-6"
                 style={{
-                  fontSize: "clamp(2.5rem, 5vw, 4.5rem)",
+                  fontSize: "clamp(2rem, 7vw, 4.5rem)",
                   fontFamily: "'Anton', sans-serif",
                   lineHeight: 1.05,
                 }}
@@ -96,9 +96,9 @@ export default function Home() {
                 className="mb-8 md:mb-10 leading-[1.6]"
                 style={{
                   fontFamily: "Poppins, sans-serif",
-                  fontSize: "1rem",
+                  fontSize: "clamp(0.875rem, 3.5vw, 1rem)",
                   color: "#999",
-                  maxWidth: "500px",
+                  maxWidth: "min(500px, 100%)",
                 }}
               >
                 A ORIUM estrutura como você se apresenta — posicionamento,
@@ -243,24 +243,18 @@ export default function Home() {
                     style={{ display: "flex", alignItems: "center", gap: "12px" }}
                   >
                     <div
+                      className="flex items-center justify-center flex-shrink-0 w-14 h-14"
                       style={{
-                        width: "64px",
-                        height: "64px",
-                        minWidth: "64px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        minWidth: "56px",
+                        minHeight: "56px",
                         background: "rgba(255,107,0,0.08)",
                         border: "1px solid rgba(255,107,0,0.2)",
-                        flexShrink: 0,
                       }}
                     >
-                      <Image
+                      <img
                         src={`/icons/icon-${item.icon}.svg`}
                         alt={item.title}
-                        width={40}
-                        height={40}
-                        style={{ width: "40px", height: "40px", minWidth: "40px", minHeight: "40px", objectFit: "contain" }}
+                        style={{ width: "32px", height: "32px", minWidth: "32px", minHeight: "32px", objectFit: "contain", display: "block" }}
                       />
                     </div>
                     <span
@@ -377,7 +371,7 @@ export default function Home() {
             <div className="flex flex-col border border-[#1a1a1a]">
               {/* Altemans — imagem esquerda | conteúdo direita */}
               <div className="group flex flex-col md:flex-row border-b border-[#1a1a1a] overflow-hidden transition-all duration-300">
-                <div className="relative w-full md:w-[45%] h-64 md:h-auto flex-shrink-0 overflow-hidden">
+                <div className="relative w-full md:w-[45%] h-[200px] md:h-auto flex-shrink-0 overflow-hidden">
                   <Image
                     src="/fotos/altemans.png"
                     alt="Projeto Altemans Barbearia"
@@ -451,7 +445,7 @@ export default function Home() {
 
               {/* Prof. Marcelo — conteúdo esquerda | imagem direita */}
               <div className="group flex flex-col md:flex-row-reverse overflow-hidden transition-all duration-300">
-                <div className="relative w-full md:w-[45%] h-64 md:h-auto flex-shrink-0 overflow-hidden">
+                <div className="relative w-full md:w-[45%] h-[200px] md:h-auto flex-shrink-0 overflow-hidden">
                   <Image
                     src="/fotos/marcelo.png"
                     alt="Projeto Prof. Marcelo Félix"
@@ -566,23 +560,18 @@ export default function Home() {
                   className="p-6 md:p-8 border-r border-b border-[#1a1a1a] flex flex-col gap-3"
                 >
                   <div
+                    className="flex items-center justify-center w-16 h-16 md:w-[72px] md:h-[72px]"
                     style={{
-                      width: "72px",
-                      height: "72px",
-                      minWidth: "72px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
+                      minWidth: "64px",
+                      minHeight: "64px",
                       background: "rgba(255,107,0,0.08)",
                       border: "1px solid rgba(255,107,0,0.2)",
                     }}
                   >
-                    <Image
+                    <img
                       src={`/icons/icon-${item.icon}.svg`}
                       alt={item.title}
-                      width={48}
-                      height={48}
-                      style={{ width: "48px", height: "48px", minWidth: "48px", minHeight: "48px", objectFit: "contain" }}
+                      style={{ width: "40px", height: "40px", minWidth: "40px", minHeight: "40px", objectFit: "contain", display: "block" }}
                     />
                   </div>
                   <div>
@@ -616,7 +605,7 @@ export default function Home() {
 
       {/* ── COMO FUNCIONA ─────────────────────────────────────────────────── */}
       <Reveal delay={0.4}>
-        <section className="relative overflow-hidden bg-[#0a0a0a] text-white border-t border-[#1a1a1a]" style={{ padding: "6rem 0" }}>
+        <section className="relative overflow-hidden bg-[#0a0a0a] text-white border-t border-[#1a1a1a] py-16 md:py-24 lg:py-32">
           <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
             {/* Header centralizado */}
             <div className="max-w-3xl mx-auto text-center mb-16">
@@ -680,10 +669,9 @@ export default function Home() {
               ].map((item, i) => (
                 <div
                   key={item.n}
-                  className={`group relative flex flex-col transition-all duration-300${
+                  className={`group relative flex flex-col transition-all duration-300 px-0 py-6 md:px-8 md:py-0${
                     i < 3 ? " border-b border-[#1a1a1a] md:border-b-0" : ""
                   }`}
-                  style={{ padding: "0 2rem", paddingBottom: i < 3 ? "2rem" : "0", paddingTop: "0" }}
                 >
                   {/* Borda vertical separadora (desktop, não no último) */}
                   {i < 3 && (
@@ -693,21 +681,18 @@ export default function Home() {
                   {/* Ícone 88x88 com container */}
                   <div className="mb-4">
                     <div
-                      className="flex items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity duration-300"
+                      className="flex items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity duration-300 w-[72px] h-[72px] md:w-[88px] md:h-[88px]"
                       style={{
-                        width: "88px",
-                        height: "88px",
-                        minWidth: "88px",
+                        minWidth: "72px",
+                        minHeight: "72px",
                         background: "rgba(255,107,0,0.08)",
                         border: "1px solid rgba(255,107,0,0.2)",
                       }}
                     >
-                      <Image
+                      <img
                         src={`/icons/${item.icon}.svg`}
                         alt={item.title}
-                        width={56}
-                        height={56}
-                        style={{ width: "56px", height: "56px", minWidth: "56px", minHeight: "56px", objectFit: "contain" }}
+                        style={{ width: "48px", height: "48px", minWidth: "48px", minHeight: "48px", objectFit: "contain", display: "block" }}
                       />
                     </div>
                   </div>
@@ -862,7 +847,7 @@ export default function Home() {
             <h2
               className="font-bold leading-tight mb-6"
               style={{
-                fontSize: "clamp(2.5rem, 5vw, 4.5rem)",
+                fontSize: "clamp(1.75rem, 6vw, 4.5rem)",
                 fontFamily: "'Anton', sans-serif",
               }}
             >
@@ -923,8 +908,8 @@ export default function Home() {
                 <Image
                   src="/lgbranca.png"
                   alt="ORIUM"
-                  width={100}
-                  height={32}
+                  width={80}
+                  height={26}
                   style={{ objectFit: "contain" }}
                 />
               </div>

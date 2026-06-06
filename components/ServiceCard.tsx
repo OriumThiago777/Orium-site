@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 type ServiceCardProps = {
   title: string;
   description: string;
@@ -10,29 +8,24 @@ type ServiceCardProps = {
 export default function ServiceCard({ title, description, index, icon }: ServiceCardProps) {
   const num = String(index + 1).padStart(2, "0");
   return (
-    <div className="group relative flex items-start gap-8 md:gap-14 py-6 border-b border-[#1a1a1a] transition-all duration-300 cursor-default pl-4">
-      {/* Left orange accent line on hover */}
+    <div className="group relative flex items-start gap-6 md:gap-14 py-6 border-b border-[#1a1a1a] transition-all duration-300 cursor-default pl-4">
       <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#FF6B00] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-      {/* Icon + Decorative number stacked */}
-      <div className="flex-shrink-0 flex flex-col items-start gap-3 pt-1" style={{ width: "100px" }}>
+      <div className="flex-shrink-0 flex flex-col items-start gap-3 pt-1" style={{ width: "80px" }}>
         {icon && (
           <div
-            className="flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity duration-300"
+            className="flex items-center justify-center w-14 h-14 opacity-60 group-hover:opacity-100 transition-opacity duration-300"
             style={{
-              width: "64px",
-              height: "64px",
-              minWidth: "64px",
+              minWidth: "56px",
+              minHeight: "56px",
               background: "rgba(255,107,0,0.08)",
               border: "1px solid rgba(255,107,0,0.2)",
             }}
           >
-            <Image
+            <img
               src={`/icons/icon-${icon}.svg`}
               alt={title}
-              width={40}
-              height={40}
-              style={{ width: "40px", height: "40px", minWidth: "40px", minHeight: "40px", objectFit: "contain" }}
+              style={{ width: "32px", height: "32px", minWidth: "32px", minHeight: "32px", objectFit: "contain", display: "block" }}
             />
           </div>
         )}
@@ -40,7 +33,7 @@ export default function ServiceCard({ title, description, index, icon }: Service
           className="leading-none select-none opacity-[0.15] group-hover:opacity-100 transition-opacity duration-300"
           style={{
             fontFamily: "'Anton', sans-serif",
-            fontSize: "4rem",
+            fontSize: "3.5rem",
             color: "#FF6B00",
           }}
         >
@@ -48,21 +41,20 @@ export default function ServiceCard({ title, description, index, icon }: Service
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 pt-3">
+      <div className="flex-1 pt-2">
         <h3
           className="mb-2 md:mb-3 text-white"
           style={{
             fontFamily: "'Anton', sans-serif",
-            fontSize: "clamp(1.4rem, 3vw, 2rem)",
+            fontSize: "clamp(1.25rem, 3vw, 2rem)",
             lineHeight: 1.1,
           }}
         >
           {title}
         </h3>
         <p
-          className="text-[#999] text-[0.9rem] leading-[1.7]"
-          style={{ fontFamily: "Poppins, sans-serif" }}
+          className="text-[#999] leading-[1.7]"
+          style={{ fontFamily: "Poppins, sans-serif", fontSize: "clamp(0.875rem, 3.5vw, 0.9rem)" }}
         >
           {description}
         </p>
