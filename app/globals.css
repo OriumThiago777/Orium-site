@@ -60,3 +60,27 @@ a {
 .orium-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #ff8a2a;
 }
+
+/* Scrollbar ORIUM */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #FF6B00;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #cc5500;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #FF6B00 #0a0a0a;
+}

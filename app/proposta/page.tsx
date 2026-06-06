@@ -236,6 +236,13 @@ function PropostaPage() {
   }
 
   // ── Formatação de valor ─────────────────────────────────────────────────────
+  function formatCurrency(value: string): string {
+    const numbers = value.replace(/\D/g, '')
+    if (!numbers) return ''
+    const amount = parseInt(numbers) / 100
+    return amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  }
+
   function formatarValorPDF(valor: string): string {
     const v = valor.trim();
     if (!v) return 'A DEFINIR';
@@ -600,7 +607,7 @@ function PropostaPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div><label className={labelClass}>Objetivo da Fase</label><input type="text" placeholder="Ex: Consolidar a identidade digital" value={fase.objetivo} onChange={e => setFase(i, 'objetivo', e.target.value)} className={inputClass} /></div>
-                    <div><label className={labelClass}>Valor da Fase</label><input type="text" maxLength={30} placeholder="Ex: R$ 1.199 ou 1499" value={fase.valor} onChange={e => setFase(i, 'valor', e.target.value)} className={inputClass} /><CharCounter value={fase.valor} max={30} /></div>
+                    <div><label className={labelClass}>Valor da Fase</label><input type="text" maxLength={20} placeholder="Ex: R$ 1.500,00" value={fase.valor} onChange={e => setFase(i, 'valor', formatCurrency(e.target.value))} className={inputClass} /></div>
                     <div><label className={labelClass}>Prazo Estimado</label><input type="text" maxLength={30} placeholder="Ex: 2 semanas" value={fase.prazo} onChange={e => setFase(i, 'prazo', e.target.value)} className={inputClass} /><CharCounter value={fase.prazo} max={30} /></div>
                   </div>
                 </div>
