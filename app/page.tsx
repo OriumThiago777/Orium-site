@@ -121,35 +121,37 @@ export default function Home() {
           className="bg-[#080808] text-white py-16 md:py-24 lg:py-32 border-t border-[#1a1a1a] scroll-mt-24"
         >
           <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
-            <div className="mb-12 md:mb-16">
-              <Eyebrow>Serviços</Eyebrow>
-              <h2
-                className="font-bold max-w-2xl leading-tight"
-                style={{
-                  fontSize: "clamp(1.8rem, 5vw, 3.5rem)",
-                  fontFamily: "'Anton', sans-serif",
-                }}
-              >
-                Soluções integradas para empresas que querem crescer com clareza.
-              </h2>
-            </div>
+            <div className="max-w-[800px] mx-auto">
+              <div className="mb-12 md:mb-16">
+                <Eyebrow>Serviços</Eyebrow>
+                <h2
+                  className="font-bold max-w-2xl leading-tight"
+                  style={{
+                    fontSize: "clamp(1.8rem, 5vw, 3.5rem)",
+                    fontFamily: "'Anton', sans-serif",
+                  }}
+                >
+                  Soluções integradas para empresas que querem crescer com clareza.
+                </h2>
+              </div>
 
-            <div className="border-t border-[#1a1a1a]">
-              <ServiceCard
-                title="Branding"
-                description="Construção de posicionamento, identidade visual e percepção premium para marcas locais."
-                index={0}
-              />
-              <ServiceCard
-                title="Sites"
-                description="Landing pages e estruturas digitais modernas focadas em conversão e presença profissional."
-                index={1}
-              />
-              <ServiceCard
-                title="Automação"
-                description="Sistemas, formulários, integrações e automações para aumentar capacidade operacional."
-                index={2}
-              />
+              <div className="border-t border-[#1a1a1a]">
+                <ServiceCard
+                  title="Branding"
+                  description="Construção de posicionamento, identidade visual e percepção premium para marcas locais."
+                  index={0}
+                />
+                <ServiceCard
+                  title="Sites"
+                  description="Landing pages e estruturas digitais modernas focadas em conversão e presença profissional."
+                  index={1}
+                />
+                <ServiceCard
+                  title="Automação"
+                  description="Sistemas, formulários, integrações e automações para aumentar capacidade operacional."
+                  index={2}
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -166,89 +168,89 @@ export default function Home() {
         >
           <div className="absolute top-[-180px] left-[-160px] w-[360px] md:w-[420px] h-[360px] md:h-[420px] bg-orange-500/10 blur-[120px] rounded-full pointer-events-none" />
 
-          <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 lg:px-16 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
-            <div className="space-y-8">
-              <div>
-                <Eyebrow>Diferencial</Eyebrow>
-                <h2
-                  className="font-bold leading-tight mb-6"
-                  style={{
-                    fontSize: "clamp(1.8rem, 5vw, 3.5rem)",
-                    fontFamily: "'Anton', sans-serif",
-                  }}
-                >
-                  Não entregamos só conteúdo. Estruturamos sua presença digital
-                  de ponta a ponta.
-                </h2>
-                <p className="text-zinc-400 text-base md:text-lg leading-[1.6]">
-                  A ORIUM organiza posicionamento, comunicação e ativos digitais
-                  para sua empresa transmitir valor, gerar confiança e vender
-                  com consistência.
-                </p>
-              </div>
-
-              <div className="relative h-56 md:h-64 border border-[#1a1a1a] overflow-hidden shadow-xl shadow-orange-500/10">
-                <Image
-                  src="/estrategia.jpg"
-                  alt="Estratégia digital ORIUM"
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/25 to-transparent" />
-              </div>
+          <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 lg:px-16 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-start">
+            {/* Imagem — aparece primeiro no mobile (acima), vai para direita no desktop */}
+            <div className="relative h-[320px] md:h-[500px] overflow-hidden order-first md:order-last">
+              <Image
+                src="/estrategia.jpg"
+                alt="Estratégia digital ORIUM"
+                fill
+                className="object-cover"
+              />
+              <div
+                className="absolute inset-0"
+                style={{ background: "linear-gradient(to bottom, transparent 60%, #080808 100%)" }}
+              />
             </div>
 
-            <div className="flex flex-col border-t border-[#1a1a1a]">
-              {[
-                {
-                  title: "Posicionamento",
-                  text: "Como sua marca é percebida define quem ela atrai — e quanto cobra.",
-                },
-                {
-                  title: "Percepção premium",
-                  text: "Design, linguagem e presença alinhados ao valor real do que você entrega.",
-                },
-                {
-                  title: "Operação digital",
-                  text: "Estruturas e automações para você operar com método, não no improviso.",
-                },
-                {
-                  title: "Crescimento sustentável",
-                  text: "Presença construída para gerar continuidade — não picos que somem em duas semanas.",
-                },
-              ].map((item) => (
-                <div
-                  key={item.title}
-                  className="flex gap-4 py-6 border-b border-[#1a1a1a]"
-                >
-                  <span
-                    className="flex-shrink-0 mt-[3px]"
-                    style={{
-                      color: "#FF6B00",
-                      fontFamily: "Poppins, sans-serif",
-                      fontSize: "1rem",
-                    }}
-                  >
-                    —
-                  </span>
-                  <div>
-                    <h3
-                      className="mb-2 text-white"
+            {/* Texto + itens — vai para esquerda no desktop */}
+            <div className="order-last md:order-first">
+              <Eyebrow>Diferencial</Eyebrow>
+              <h2
+                className="font-bold leading-tight mb-6"
+                style={{
+                  fontSize: "clamp(1.8rem, 5vw, 3.5rem)",
+                  fontFamily: "'Anton', sans-serif",
+                }}
+              >
+                Não entregamos só conteúdo. Estruturamos sua presença digital
+                de ponta a ponta.
+              </h2>
+              <p className="text-zinc-400 text-base md:text-lg leading-[1.6] mb-8">
+                A ORIUM organiza posicionamento, comunicação e ativos digitais
+                para sua empresa transmitir valor, gerar confiança e vender
+                com consistência.
+              </p>
+
+              <div className="flex flex-col gap-6">
+                {[
+                  {
+                    title: "Posicionamento",
+                    text: "Como sua marca é percebida define quem ela atrai — e quanto cobra.",
+                  },
+                  {
+                    title: "Percepção premium",
+                    text: "Design, linguagem e presença alinhados ao valor real do que você entrega.",
+                  },
+                  {
+                    title: "Operação digital",
+                    text: "Estruturas e automações para você operar com método, não no improviso.",
+                  },
+                  {
+                    title: "Crescimento sustentável",
+                    text: "Presença construída para gerar continuidade — não picos que somem em duas semanas.",
+                  },
+                ].map((item) => (
+                  <div key={item.title} className="flex gap-4">
+                    <span
+                      className="flex-shrink-0 mt-[3px]"
                       style={{
-                        fontFamily: "'Anton', sans-serif",
-                        fontSize: "1.1rem",
-                        letterSpacing: "0.15em",
-                        textTransform: "uppercase",
+                        color: "#FF6B00",
+                        fontFamily: "Poppins, sans-serif",
+                        fontSize: "1rem",
                       }}
                     >
-                      {item.title}
-                    </h3>
-                    <p className="text-[#999] text-[0.95rem] leading-[1.6]">
-                      {item.text}
-                    </p>
+                      —
+                    </span>
+                    <div>
+                      <h3
+                        className="mb-1 text-white"
+                        style={{
+                          fontFamily: "'Anton', sans-serif",
+                          fontSize: "1.1rem",
+                          letterSpacing: "0.15em",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {item.title}
+                      </h3>
+                      <p className="text-[#999] text-[0.95rem] leading-[1.6]">
+                        {item.text}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -276,17 +278,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="relative mb-10 md:mb-12 h-44 md:h-56 border border-[#1a1a1a] overflow-hidden shadow-xl shadow-orange-500/10">
-              <Image
-                src="/processo.jpg"
-                alt="Processo ORIUM"
-                fill
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/45 to-black/60" />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="flex flex-col gap-12">
               <ProcessStep
                 number="1"
                 title="Diagnóstico antes de qualquer post."
@@ -694,21 +686,21 @@ export default function Home() {
       <Reveal delay={0.45}>
         <section
           id="contato"
-          className="relative overflow-hidden bg-[#080808] text-white py-16 md:py-24 lg:py-32 border-t border-[#1a1a1a] scroll-mt-24"
+          className="relative overflow-hidden text-white py-16 md:py-24 lg:py-32 border-t border-[#1a1a1a] scroll-mt-24"
+          style={{
+            backgroundImage: "url(/cta.jpg)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
         >
-          <div className="absolute inset-0">
-            <Image
-              src="/cta.jpg"
-              alt="CTA ORIUM"
-              fill
-              className="object-cover opacity-20"
-            />
-            <div
-              className="absolute inset-0"
-              style={{ background: "rgba(8,8,8,0.85)" }}
-            />
-          </div>
-          <div className="absolute top-[-220px] left-1/2 h-[360px] md:h-[420px] w-[360px] md:w-[420px] -translate-x-1/2 rounded-full bg-orange-500/10 blur-[120px] pointer-events-none" />
+          <div
+            className="absolute inset-0"
+            style={{ background: "rgba(8,8,8,0.85)", zIndex: 0 }}
+          />
+          <div
+            className="absolute top-[-220px] left-1/2 h-[360px] md:h-[420px] w-[360px] md:w-[420px] -translate-x-1/2 rounded-full bg-orange-500/10 blur-[120px] pointer-events-none"
+            style={{ zIndex: 1 }}
+          />
 
           <div className="relative z-10 max-w-5xl mx-auto px-4 md:px-8 lg:px-16 text-center">
             <div className="flex items-center justify-center gap-4 mb-6">
@@ -764,6 +756,21 @@ export default function Home() {
         </section>
       </Reveal>
 
+      {/* WhatsApp flutuante — apenas na página principal, nunca nas ferramentas */}
+      <a
+        href={whatsappLink}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full hover:scale-110 transition-all duration-300"
+        style={{
+          background: "#25D366",
+          boxShadow: "0 4px 24px rgba(37,211,102,0.4)",
+        }}
+        aria-label="Falar pelo WhatsApp"
+      >
+        <Image src="/wpp.png" alt="WhatsApp" width={30} height={30} />
+      </a>
+
       {/* ── FOOTER ────────────────────────────────────────────────────────── */}
       <footer
         className="bg-[#080808] py-12 md:py-14"
@@ -772,16 +779,15 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 text-center md:text-left">
             <div>
-              <h3
-                className="text-orange-500 mb-4"
-                style={{
-                  fontFamily: "'Anton', sans-serif",
-                  fontSize: "1.5rem",
-                  letterSpacing: "0.05em",
-                }}
-              >
-                ORIUM
-              </h3>
+              <div className="mb-4">
+                <Image
+                  src="/lgbranca.png"
+                  alt="ORIUM"
+                  width={100}
+                  height={32}
+                  style={{ objectFit: "contain" }}
+                />
+              </div>
               <p
                 className="max-w-sm mx-auto md:mx-0"
                 style={{

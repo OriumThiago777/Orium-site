@@ -1,42 +1,48 @@
 export default function StatsStrip() {
   const items = [
-    "Estratégia antes da execução",
-    "Presença digital com percepção",
-    "Branding, conteúdo e estrutura",
-    "Tecnologia aplicada ao negócio",
+    { num: "01", text: "Estratégia antes da execução" },
+    { num: "02", text: "Presença digital com percepção" },
+    { num: "03", text: "Branding, conteúdo e estrutura" },
+    { num: "04", text: "Tecnologia aplicada ao negócio" },
   ];
 
   return (
-    <section className="border-t border-[#1a1a1a] bg-[#080808] py-8">
-      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-0 px-4 md:grid-cols-4 md:px-8 lg:px-16">
-        {items.map((text, i) => (
+    <section
+      className="py-16 border-t border-[#1a1a1a]"
+      style={{ background: "#0d0d0d" }}
+    >
+      <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-0 px-4 md:px-0">
+        {items.map((item, i) => (
           <div
-            key={text}
-            className="px-5 py-4 border-r border-[#1a1a1a] last:border-r-0 first:pl-0"
+            key={item.num}
+            className="group flex flex-col items-start transition-all duration-300 cursor-default px-6 md:px-12"
+            style={{
+              borderRight: i < items.length - 1 ? "1px solid #1a1a1a" : "none",
+            }}
           >
-            <div className="flex items-center gap-3 mb-3">
-              <div
-                style={{
-                  width: 20,
-                  height: 1,
-                  background: "#FF6B00",
-                  opacity: 0.6,
-                  flexShrink: 0,
-                }}
-              />
-              <p
-                style={{
-                  fontFamily: "Poppins, sans-serif",
-                  fontSize: "0.65rem",
-                  letterSpacing: "0.2em",
-                  color: "#FF6B00",
-                  fontWeight: 500,
-                }}
-              >
-                {String(i + 1).padStart(2, "0")}
-              </p>
+            <div
+              className="leading-none mb-3 opacity-80 group-hover:opacity-100 transition-opacity duration-300 select-none"
+              style={{
+                fontFamily: "'Anton', sans-serif",
+                fontSize: "3rem",
+                color: "#FF6B00",
+                lineHeight: 1,
+                marginBottom: "0.75rem",
+              }}
+            >
+              {item.num}
             </div>
-            <p className="text-[0.9rem] leading-[1.55] text-zinc-400">{text}</p>
+            <p
+              className="text-white group-hover:text-[#FF6B00] transition-colors duration-300"
+              style={{
+                fontFamily: "'Anton', sans-serif",
+                fontSize: "0.85rem",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
+            >
+              {item.text}
+            </p>
           </div>
         ))}
       </div>
