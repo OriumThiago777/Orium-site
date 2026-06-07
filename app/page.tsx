@@ -245,7 +245,7 @@ export default function Home() {
                     <img
                       src={`/icons/icon-${item.icon}.svg`}
                       alt={item.title}
-                      style={{ width: "56px", height: "56px", objectFit: "contain", display: "block", marginBottom: "1.25rem" }}
+                      style={{ width: "78px", height: "78px", objectFit: "contain", display: "block", marginBottom: "1.25rem" }}
                     />
                     <span
                       className="flex-shrink-0"
@@ -552,7 +552,7 @@ export default function Home() {
                   <img
                     src={`/icons/icon-${item.icon}.svg`}
                     alt={item.title}
-                    style={{ width: "64px", height: "64px", objectFit: "contain", display: "block", marginBottom: "0.5rem" }}
+                    style={{ width: "90px", height: "90px", objectFit: "contain", display: "block", marginBottom: "0.5rem" }}
                   />
                   <div>
                     <h3
@@ -662,7 +662,7 @@ export default function Home() {
                     src={`/icons/${item.icon}.svg`}
                     alt={item.title}
                     className="opacity-70 group-hover:opacity-100 transition-opacity duration-300"
-                    style={{ width: "72px", height: "72px", objectFit: "contain", display: "block", marginBottom: "1.25rem" }}
+                    style={{ width: "100px", height: "100px", objectFit: "contain", display: "block", marginBottom: "1.25rem" }}
                   />
 
                   {/* Linha conectora — todas as colunas, gradiente invertido na última */}

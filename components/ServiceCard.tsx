@@ -17,7 +17,7 @@ export default function ServiceCard({ title, description, index, icon }: Service
             src={`/icons/icon-${icon}.svg`}
             alt={title}
             className="opacity-60 group-hover:opacity-100 transition-opacity duration-300"
-            style={{ width: "56px", height: "56px", objectFit: "contain", display: "block" }}
+            style={{ width: "78px", height: "78px", objectFit: "contain", display: "block" }}
           />
         )}
         <div
