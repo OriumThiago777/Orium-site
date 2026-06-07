@@ -1,9 +1,12 @@
+"use client";
+
+import { useState } from "react";
 import Reveal from "../components/Reveal";
 import ServiceCard from "../components/ServiceCard";
 import ProcessStep from "../components/ProcessStep";
 import StatsStrip from "../components/StatsStrip";
 import Navbar from "../components/Navbar";
-import CTALink from "../components/CTALink";
+import ContactModal from "../components/ContactModal";
 import Image from "next/image";
 
 const GRAIN =
@@ -29,9 +32,7 @@ function Eyebrow({ children }: { children: string }) {
 }
 
 export default function Home() {
-  const whatsappMessage =
-    "Olá, vim pelo site da ORIUM e gostaria de saber mais sobre estruturação digital.";
-  const whatsappLink = `https://wa.me/5531999352065?text=${encodeURIComponent(whatsappMessage)}`;
+  const [modalOpen, setModalOpen] = useState(false);
 
   const primaryButton =
     "w-full sm:w-auto bg-[#FF6B00] text-black px-8 py-4 font-bold transition-all duration-300 text-center hover:bg-[#cc5500] tracking-[0.08em]";
@@ -133,13 +134,9 @@ export default function Home() {
                 className="relative z-10 flex flex-col sm:flex-row sm:items-center"
                 style={{ gap: "1rem" }}
               >
-                <CTALink
-                  href={whatsappLink}
-                  className={heroPrimaryButton}
-                  label="hero-falar-com-orium"
-                >
+                <button onClick={() => setModalOpen(true)} className={heroPrimaryButton}>
                   Falar com a ORIUM
-                </CTALink>
+                </button>
                 <a href="#projetos" className={heroSecondaryButton}>
                   Ver Projetos
                 </a>
@@ -458,13 +455,9 @@ export default function Home() {
                     >
                       Ver Instagram
                     </a>
-                    <CTALink
-                      href={whatsappLink}
-                      className={primaryButton}
-                      label="projetos-altemans"
-                    >
+                    <button onClick={() => setModalOpen(true)} className={primaryButton}>
                       Quero algo parecido
-                    </CTALink>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -532,13 +525,9 @@ export default function Home() {
                     >
                       Ver Instagram
                     </a>
-                    <CTALink
-                      href={whatsappLink}
-                      className={primaryButton}
-                      label="projetos-marcelo"
-                    >
+                    <button onClick={() => setModalOpen(true)} className={primaryButton}>
                       Quero algo parecido
-                    </CTALink>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -608,13 +597,9 @@ export default function Home() {
               ))}
             </div>
 
-            <CTALink
-              href={whatsappLink}
-              className={primaryButton}
-              label="diagnostico-solicitar"
-            >
+            <button onClick={() => setModalOpen(true)} className={primaryButton}>
               Solicitar diagnóstico
-            </CTALink>
+            </button>
           </div>
         </section>
       </Reveal>
@@ -870,13 +855,9 @@ export default function Home() {
               clientes certos, comunicar melhor e vender com consistência.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <CTALink
-                href={whatsappLink}
-                className={primaryButton}
-                label="cta-final-falar-whatsapp"
-              >
+              <button onClick={() => setModalOpen(true)} className={primaryButton}>
                 Falar no WhatsApp
-              </CTALink>
+              </button>
               <a href="#projetos" className={secondaryButton}>
                 Ver Projetos
               </a>
@@ -886,19 +867,29 @@ export default function Home() {
       </Reveal>
 
       {/* WhatsApp flutuante — apenas na página principal, nunca nas ferramentas */}
-      <a
-        href={whatsappLink}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full hover:scale-110 transition-all duration-300"
+      <button
+        onClick={() => setModalOpen(true)}
+        aria-label="Falar com a ORIUM"
         style={{
+          position: "fixed",
+          bottom: "1.5rem",
+          right: "1.5rem",
+          width: "56px",
+          height: "56px",
           background: "#25D366",
-          boxShadow: "0 4px 24px rgba(37,211,102,0.4)",
+          border: "none",
+          borderRadius: "50%",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 999,
+          boxShadow: "0 4px 20px rgba(37,211,102,0.3)",
         }}
-        aria-label="Falar pelo WhatsApp"
+        className="hover:scale-110 transition-all duration-300"
       >
         <Image src="/wpp.png" alt="WhatsApp" width={30} height={30} />
-      </a>
+      </button>
 
       {/* ── FOOTER ────────────────────────────────────────────────────────── */}
       <footer
@@ -978,14 +969,12 @@ export default function Home() {
                 >
                   Instagram
                 </a>
-                <a
-                  href={whatsappLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="md:hover:text-orange-500 transition"
+                <button
+                  onClick={() => setModalOpen(true)}
+                  className="text-left md:hover:text-orange-500 transition"
                 >
                   WhatsApp
-                </a>
+                </button>
                 <p className="text-zinc-500">Belo Horizonte - MG</p>
               </div>
             </div>
@@ -1007,6 +996,8 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      <ContactModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
     </div>
   );
 }
