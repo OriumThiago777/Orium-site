@@ -258,7 +258,7 @@ export default function Home() {
                   <img
                     src={`/icons/icon-${item.icon}.svg`}
                     alt={item.title}
-                    style={{ width: "48px", height: "48px", objectFit: "contain", display: "block", marginBottom: "1.25rem" }}
+                    style={{ width: "68px", height: "68px", objectFit: "contain", display: "block", marginBottom: "1.25rem" }}
                   />
                   <h3
                     style={{
@@ -561,7 +561,7 @@ export default function Home() {
                   <img
                     src={`/icons/icon-${item.icon}.svg`}
                     alt={item.title}
-                    style={{ width: "90px", height: "90px", objectFit: "contain", display: "block", marginBottom: "0.5rem" }}
+                    style={{ width: "126px", height: "126px", objectFit: "contain", display: "block", marginBottom: "0.5rem" }}
                   />
                   <div>
                     <h3
