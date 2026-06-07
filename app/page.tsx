@@ -181,102 +181,111 @@ export default function Home() {
         >
           <div className="absolute top-[-180px] left-[-160px] w-[360px] md:w-[420px] h-[360px] md:h-[420px] bg-orange-500/10 blur-[120px] rounded-full pointer-events-none" />
 
-          <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 lg:px-16 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-start">
-            {/* Imagem — aparece primeiro no mobile (acima), vai para direita no desktop */}
-            <div className="relative h-[320px] md:h-[500px] overflow-hidden order-first md:order-last">
-              <Image
-                src="/fotos/estrategia.png"
-                alt="Estratégia digital ORIUM"
-                fill
-                className="object-cover"
-              />
-              <div
-                className="absolute inset-0"
-                style={{ background: "linear-gradient(to bottom, transparent 60%, #080808 100%)" }}
-              />
-            </div>
+          <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
 
-            {/* Texto + itens — vai para esquerda no desktop */}
-            <div className="order-last md:order-first">
-              <Eyebrow>Diferencial</Eyebrow>
-              <h2
-                className="font-bold leading-tight mb-6"
-                style={{
-                  fontSize: "clamp(1.8rem, 5vw, 3.5rem)",
-                  fontFamily: "'Anton', sans-serif",
-                }}
-              >
-                Não entregamos só conteúdo. Estruturamos sua presença digital
-                de ponta a ponta.
-              </h2>
-              <p className="text-zinc-400 text-base md:text-lg leading-[1.6] mb-8">
-                A ORIUM organiza posicionamento, comunicação e ativos digitais
-                para sua empresa transmitir valor, gerar confiança e vender
-                com consistência.
-              </p>
+            {/* Bloco superior: texto | imagem */}
+            <div className="grid grid-cols-1 md:grid-cols-2 items-start" style={{ gap: "4rem" }}>
+              {/* Imagem — acima no mobile, direita no desktop */}
+              <div className="relative h-[280px] md:h-[460px] overflow-hidden order-first md:order-last">
+                <Image
+                  src="/fotos/estrategia.png"
+                  alt="Estratégia digital ORIUM"
+                  fill
+                  className="object-cover"
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{ background: "linear-gradient(to bottom, transparent 60%, #080808 100%)" }}
+                />
+              </div>
 
-              <div className="flex flex-col gap-6">
-                {[
-                  {
-                    title: "Posicionamento",
-                    text: "Como sua marca é percebida define quem ela atrai — e quanto cobra.",
-                    icon: "posicionamento",
-                  },
-                  {
-                    title: "Percepção premium",
-                    text: "Design, linguagem e presença alinhados ao valor real do que você entrega.",
-                    icon: "percepcao",
-                  },
-                  {
-                    title: "Operação digital",
-                    text: "Estruturas e automações para você operar com método, não no improviso.",
-                    icon: "operacao",
-                  },
-                  {
-                    title: "Crescimento sustentável",
-                    text: "Presença construída para gerar continuidade — não picos que somem em duas semanas.",
-                    icon: "crescimento",
-                  },
-                ].map((item) => (
-                  <div
-                    key={item.title}
-                    style={{ display: "flex", alignItems: "center", gap: "12px" }}
-                  >
-                    <img
-                      src={`/icons/icon-${item.icon}.svg`}
-                      alt={item.title}
-                      style={{ width: "78px", height: "78px", objectFit: "contain", display: "block", marginBottom: "1.25rem" }}
-                    />
-                    <span
-                      className="flex-shrink-0"
-                      style={{
-                        color: "#FF6B00",
-                        fontFamily: "Poppins, sans-serif",
-                        fontSize: "1rem",
-                      }}
-                    >
-                      —
-                    </span>
-                    <div>
-                      <h3
-                        className="mb-1 text-white"
-                        style={{
-                          fontFamily: "'Anton', sans-serif",
-                          fontSize: "1.1rem",
-                          letterSpacing: "0.15em",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        {item.title}
-                      </h3>
-                      <p className="text-[#999] text-[0.95rem] leading-[1.6]">
-                        {item.text}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+              {/* Texto — abaixo no mobile, esquerda no desktop */}
+              <div className="order-last md:order-first">
+                <Eyebrow>Diferencial</Eyebrow>
+                <h2
+                  className="font-bold leading-tight mb-6"
+                  style={{
+                    fontSize: "clamp(1.8rem, 5vw, 3.5rem)",
+                    fontFamily: "'Anton', sans-serif",
+                  }}
+                >
+                  Não entregamos só conteúdo. Estruturamos sua presença digital
+                  de ponta a ponta.
+                </h2>
+                <p className="text-zinc-400 text-base md:text-lg leading-[1.6]">
+                  A ORIUM organiza posicionamento, comunicação e ativos digitais
+                  para sua empresa transmitir valor, gerar confiança e vender
+                  com consistência.
+                </p>
               </div>
             </div>
+
+            {/* Bloco inferior: 4 cards horizontais */}
+            <div
+              className="grid grid-cols-2 md:grid-cols-4"
+              style={{ marginTop: "4rem", gap: "1.5rem" }}
+            >
+              {[
+                {
+                  title: "Posicionamento",
+                  text: "Como sua marca é percebida define quem ela atrai — e quanto cobra.",
+                  icon: "posicionamento",
+                },
+                {
+                  title: "Percepção Premium",
+                  text: "Design, linguagem e presença alinhados ao valor real do que você entrega.",
+                  icon: "percepcao",
+                },
+                {
+                  title: "Operação Digital",
+                  text: "Estruturas e automações para você operar com método, não no improviso.",
+                  icon: "operacao",
+                },
+                {
+                  title: "Crescimento Sustentável",
+                  text: "Presença construída para gerar continuidade — não picos que somem em duas semanas.",
+                  icon: "crescimento",
+                },
+              ].map((item) => (
+                <div
+                  key={item.title}
+                  className="border border-[#1a1a1a] hover:border-[#FF6B00] transition-colors duration-300"
+                  style={{
+                    background: "#0f0f0f",
+                    padding: "2rem 1.5rem",
+                  }}
+                >
+                  <img
+                    src={`/icons/icon-${item.icon}.svg`}
+                    alt={item.title}
+                    style={{ width: "48px", height: "48px", objectFit: "contain", display: "block", marginBottom: "1.25rem" }}
+                  />
+                  <h3
+                    style={{
+                      fontFamily: "'Anton', sans-serif",
+                      fontSize: "0.95rem",
+                      color: "#fff",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.1em",
+                      marginBottom: "0.75rem",
+                    }}
+                  >
+                    {item.title}
+                  </h3>
+                  <p
+                    style={{
+                      fontFamily: "Poppins, sans-serif",
+                      fontSize: "0.8rem",
+                      color: "#999",
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    {item.text}
+                  </p>
+                </div>
+              ))}
+            </div>
+
           </div>
         </section>
       </Reveal>
