@@ -29,8 +29,9 @@ function Eyebrow({ children }: { children: string }) {
 }
 
 export default function Home() {
-  const whatsappLink = "https://wa.me/5531999352065";
-  const diagnosticWhatsappLink = `${whatsappLink}?text=${encodeURIComponent("Olá, quero solicitar um diagnóstico digital para minha marca.")}`;
+  const whatsappMessage =
+    "Olá, vim pelo site da ORIUM e gostaria de saber mais sobre estruturação digital.";
+  const whatsappLink = `https://wa.me/5531999352065?text=${encodeURIComponent(whatsappMessage)}`;
 
   const primaryButton =
     "w-full sm:w-auto bg-[#FF6B00] text-black px-8 py-4 font-bold transition-all duration-300 text-center hover:bg-[#cc5500] tracking-[0.08em]";
@@ -608,7 +609,7 @@ export default function Home() {
             </div>
 
             <CTALink
-              href={diagnosticWhatsappLink}
+              href={whatsappLink}
               className={primaryButton}
               label="diagnostico-solicitar"
             >
