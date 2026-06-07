@@ -6,7 +6,10 @@ import { useState } from "react";
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const whatsappLink = "https://wa.me/5531999352065";
+  const handleCTAClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    window.dispatchEvent(new CustomEvent("openContactModal"));
+  };
 
   return (
     <header className="fixed top-0 left-0 z-50 w-full border-b border-white/10 bg-black/80 backdrop-blur-xl">
@@ -45,9 +48,8 @@ export default function Navbar() {
         </div>
 
         <a
-          href={whatsappLink}
-          target="_blank"
-          rel="noopener noreferrer"
+          href="#"
+          onClick={handleCTAClick}
           className="hidden md:inline-flex border border-orange-500/40 text-orange-500 hover:bg-orange-500 hover:text-black px-5 py-2 rounded-full transition font-semibold text-sm"
         >
           Falar agora
@@ -111,10 +113,11 @@ export default function Navbar() {
             </div>
 
             <a
-              href={whatsappLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setMenuOpen(false)}
+              href="#"
+              onClick={(e) => {
+                handleCTAClick(e);
+                setMenuOpen(false);
+              }}
               className="mt-4 block bg-orange-500 text-black px-5 py-3 rounded-2xl text-center font-semibold transition hover:bg-orange-400"
             >
               Falar no WhatsApp

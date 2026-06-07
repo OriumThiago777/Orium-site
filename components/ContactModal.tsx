@@ -56,6 +56,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
   const [segmento, setSegmento] = useState('');
   const [necessidade, setNecessidade] = useState('');
   const [instagram, setInstagram] = useState('');
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -80,6 +81,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
 *Nome:* ${nome}
 *Segmento:* ${segmento}
 *Instagram:* ${instagram || 'Não informado'}
+*Email:* ${email || 'Não informado'}
 *Necessidade:* ${necessidade}
 
 Gostaria de saber mais sobre estruturação digital.`;
@@ -151,7 +153,7 @@ Gostaria de saber mais sobre estruturação digital.`;
         <h2
           style={{
             fontFamily: "'Anton', sans-serif",
-            fontSize: '1.75rem',
+            fontSize: '1.6rem',
             color: '#fff',
             marginBottom: '0.5rem',
           }}
@@ -200,6 +202,19 @@ Gostaria de saber mais sobre estruturação digital.`;
             value={instagram}
             onChange={(e) => setInstagram(e.target.value)}
             placeholder="@seunegocio"
+            style={inputStyle}
+            onFocus={focusOrange}
+            onBlur={blurGray}
+          />
+        </div>
+
+        <div style={{ marginBottom: '1.25rem' }}>
+          <label style={labelStyle}>EMAIL (OPCIONAL)</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="seu@email.com"
             style={inputStyle}
             onFocus={focusOrange}
             onBlur={blurGray}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Reveal from "../components/Reveal";
 import ServiceCard from "../components/ServiceCard";
 import ProcessStep from "../components/ProcessStep";
@@ -33,6 +33,12 @@ function Eyebrow({ children }: { children: string }) {
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setModalOpen(true);
+    window.addEventListener("openContactModal", handler);
+    return () => window.removeEventListener("openContactModal", handler);
+  }, []);
 
   const primaryButton =
     "w-full sm:w-auto bg-[#FF6B00] text-black px-8 py-4 font-bold transition-all duration-300 text-center hover:bg-[#cc5500] tracking-[0.08em]";
