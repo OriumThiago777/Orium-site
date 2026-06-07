@@ -39,10 +39,10 @@ export default function Home() {
     "w-full sm:w-auto border border-[#333] text-white px-8 py-4 font-semibold transition-all duration-300 text-center hover:border-[#FF6B00] hover:text-[#FF6B00]";
 
   const heroPrimaryButton =
-    "inline-flex items-center justify-center bg-[#FF6B00] text-black px-9 py-4 text-[0.9rem] font-semibold tracking-[0.05em] border-none transition-all duration-[250ms] ease-[ease] hover:bg-[#ff7d1a] hover:-translate-y-0.5 w-full sm:w-auto";
+    "inline-flex items-center justify-center bg-[#FF6B00] text-black px-[28px] py-[12px] text-[0.85rem] font-semibold tracking-[0.04em] border-none transition-all duration-[250ms] ease-[ease] hover:bg-[#ff7d1a] hover:-translate-y-0.5 w-full sm:w-auto";
 
   const heroSecondaryButton =
-    "inline-flex items-center justify-center bg-transparent text-white px-9 py-4 text-[0.9rem] font-medium tracking-[0.05em] border border-[#333] transition-all duration-[250ms] ease-[ease] hover:border-[#FF6B00] hover:text-[#FF6B00] w-full sm:w-auto";
+    "inline-flex items-center justify-center bg-transparent text-white px-[28px] py-[12px] text-[0.85rem] font-medium tracking-[0.04em] border border-[#333] transition-all duration-[250ms] ease-[ease] hover:border-[#FF6B00] hover:text-[#FF6B00] w-full sm:w-auto";
 
   return (
     <div className="overflow-x-hidden">
@@ -51,7 +51,7 @@ export default function Home() {
       {/* ── HERO ──────────────────────────────────────────────────────────── */}
       <main
         id="inicio"
-        className="relative w-full overflow-hidden h-[75vh] min-h-[480px]"
+        className="relative w-full overflow-hidden"
       >
         <Image
           src="/fotos/hero2.png"
@@ -80,7 +80,7 @@ export default function Home() {
           }}
         />
 
-        <div className="relative z-10 h-full flex items-center pt-[100px] md:pt-[120px]">
+        <div className="relative z-10 pt-[140px] pb-[100px]">
           <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 w-full">
             <div className="max-w-2xl">
               {/* Eyebrow refinado */}
@@ -100,10 +100,11 @@ export default function Home() {
               </div>
 
               <h1
-                className="font-bold text-white text-[clamp(2rem,8vw,3rem)] md:text-[clamp(2.5rem,6vw,5rem)]"
+                className="font-bold text-white"
                 style={{
                   fontFamily: "'Anton', sans-serif",
-                  lineHeight: 1.05,
+                  fontSize: "clamp(1.8rem, 4vw, 3.2rem)",
+                  lineHeight: 1.1,
                   letterSpacing: "-0.01em",
                   marginBottom: "2rem",
                 }}
@@ -114,16 +115,17 @@ export default function Home() {
               </h1>
 
               <p
-                className="leading-[1.7] text-[0.95rem] md:text-[clamp(1rem,2vw,1.15rem)]"
                 style={{
                   fontFamily: "Poppins, sans-serif",
+                  fontSize: "0.95rem",
+                  lineHeight: 1.6,
                   color: "#b0b0b0",
-                  maxWidth: "540px",
+                  maxWidth: "480px",
                   marginBottom: "3rem",
                 }}
               >
-                A ORIUM estrutura como você se apresenta — posicionamento,
-                presença e percepção de valor, do Instagram ao site.
+                A ORIUM estrutura como você se apresenta. Posicionamento,
+                presença e percepção de valor. Do Instagram ao site.
               </p>
 
               <div
