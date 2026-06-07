@@ -242,28 +242,11 @@ export default function Home() {
                     key={item.title}
                     style={{ display: "flex", alignItems: "center", gap: "12px" }}
                   >
-                    <div
-                      style={{
-                        width: "72px",
-                        height: "72px",
-                        minWidth: "72px",
-                        minHeight: "72px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: "rgba(255, 107, 0, 0.06)",
-                        border: "1px solid rgba(255, 107, 0, 0.25)",
-                        padding: "8px",
-                        flexShrink: 0,
-                        boxSizing: "border-box",
-                      }}
-                    >
-                      <img
-                        src={`/icons/icon-${item.icon}.svg`}
-                        alt={item.title}
-                        style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
-                      />
-                    </div>
+                    <img
+                      src={`/icons/icon-${item.icon}.svg`}
+                      alt={item.title}
+                      style={{ width: "56px", height: "56px", objectFit: "contain", display: "block", marginBottom: "1.25rem" }}
+                    />
                     <span
                       className="flex-shrink-0"
                       style={{
@@ -566,28 +549,11 @@ export default function Home() {
                   key={item.title}
                   className="p-6 md:p-8 border-r border-b border-[#1a1a1a] flex flex-col gap-3"
                 >
-                  <div
-                    style={{
-                      width: "80px",
-                      height: "80px",
-                      minWidth: "80px",
-                      minHeight: "80px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      background: "rgba(255, 107, 0, 0.06)",
-                      border: "1px solid rgba(255, 107, 0, 0.25)",
-                      padding: "10px",
-                      flexShrink: 0,
-                      boxSizing: "border-box",
-                    }}
-                  >
-                    <img
-                      src={`/icons/icon-${item.icon}.svg`}
-                      alt={item.title}
-                      style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
-                    />
-                  </div>
+                  <img
+                    src={`/icons/icon-${item.icon}.svg`}
+                    alt={item.title}
+                    style={{ width: "64px", height: "64px", objectFit: "contain", display: "block", marginBottom: "0.5rem" }}
+                  />
                   <div>
                     <h3
                       className="mb-2 text-white"
@@ -692,32 +658,12 @@ export default function Home() {
                     <div className="hidden md:block absolute top-0 right-0 bottom-0 w-px bg-[#1a1a1a] group-hover:bg-[#FF6B00] transition-colors duration-300" />
                   )}
 
-                  {/* Ícone 88x88 com container */}
-                  <div className="mb-4">
-                    <div
-                      className="opacity-70 group-hover:opacity-100 transition-opacity duration-300"
-                      style={{
-                        width: "88px",
-                        height: "88px",
-                        minWidth: "88px",
-                        minHeight: "88px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: "rgba(255, 107, 0, 0.06)",
-                        border: "1px solid rgba(255, 107, 0, 0.25)",
-                        padding: "10px",
-                        flexShrink: 0,
-                        boxSizing: "border-box",
-                      }}
-                    >
-                      <img
-                        src={`/icons/${item.icon}.svg`}
-                        alt={item.title}
-                        style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
-                      />
-                    </div>
-                  </div>
+                  <img
+                    src={`/icons/${item.icon}.svg`}
+                    alt={item.title}
+                    className="opacity-70 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{ width: "72px", height: "72px", objectFit: "contain", display: "block", marginBottom: "1.25rem" }}
+                  />
 
                   {/* Linha conectora — todas as colunas, gradiente invertido na última */}
                   <div

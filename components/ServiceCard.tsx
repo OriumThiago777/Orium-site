@@ -13,29 +13,12 @@ export default function ServiceCard({ title, description, index, icon }: Service
 
       <div className="flex-shrink-0 flex flex-col items-start gap-3 pt-1" style={{ width: "80px" }}>
         {icon && (
-          <div
+          <img
+            src={`/icons/icon-${icon}.svg`}
+            alt={title}
             className="opacity-60 group-hover:opacity-100 transition-opacity duration-300"
-            style={{
-              width: "72px",
-              height: "72px",
-              minWidth: "72px",
-              minHeight: "72px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "rgba(255, 107, 0, 0.06)",
-              border: "1px solid rgba(255, 107, 0, 0.25)",
-              padding: "8px",
-              flexShrink: 0,
-              boxSizing: "border-box",
-            }}
-          >
-            <img
-              src={`/icons/icon-${icon}.svg`}
-              alt={title}
-              style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
-            />
-          </div>
+            style={{ width: "56px", height: "56px", objectFit: "contain", display: "block" }}
+          />
         )}
         <div
           className="leading-none select-none opacity-[0.15] group-hover:opacity-100 transition-opacity duration-300"
