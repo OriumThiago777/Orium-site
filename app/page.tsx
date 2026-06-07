@@ -38,6 +38,12 @@ export default function Home() {
   const secondaryButton =
     "w-full sm:w-auto border border-[#333] text-white px-8 py-4 font-semibold transition-all duration-300 text-center hover:border-[#FF6B00] hover:text-[#FF6B00]";
 
+  const heroPrimaryButton =
+    "inline-flex items-center justify-center bg-[#FF6B00] text-black px-9 py-4 text-[0.9rem] font-semibold tracking-[0.05em] border-none transition-all duration-[250ms] ease-[ease] hover:bg-[#ff7d1a] hover:-translate-y-0.5 w-full sm:w-auto";
+
+  const heroSecondaryButton =
+    "inline-flex items-center justify-center bg-transparent text-white px-9 py-4 text-[0.9rem] font-medium tracking-[0.05em] border border-[#333] transition-all duration-[250ms] ease-[ease] hover:border-[#FF6B00] hover:text-[#FF6B00] w-full sm:w-auto";
+
   return (
     <div className="overflow-x-hidden">
       <Navbar />
@@ -55,12 +61,12 @@ export default function Home() {
           priority
         />
 
-        {/* Overlay: escuro denso à esquerda, alivia à direita */}
+        {/* Overlay com profundidade — escuro à esquerda, respiro à direita */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "linear-gradient(to right, rgba(8,8,8,0.95) 40%, rgba(8,8,8,0.4) 100%)",
+              "linear-gradient(to right, rgba(8,8,8,0.97) 0%, rgba(8,8,8,0.85) 45%, rgba(8,8,8,0.5) 100%)",
             zIndex: 1,
           }}
         />
@@ -74,17 +80,32 @@ export default function Home() {
           }}
         />
 
-        <div className="relative z-10 h-full flex items-center pt-20">
+        <div className="relative z-10 h-full flex items-center pt-[100px] md:pt-[120px]">
           <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 w-full">
             <div className="max-w-2xl">
-              <Eyebrow>Estruturação Digital</Eyebrow>
+              {/* Eyebrow refinado */}
+              <div className="flex items-center" style={{ gap: "1rem", marginBottom: "1.5rem" }}>
+                <div style={{ width: 40, height: 1, background: "#FF6B00", flexShrink: 0 }} />
+                <span
+                  style={{
+                    fontFamily: "Poppins, sans-serif",
+                    fontSize: "0.7rem",
+                    letterSpacing: "0.35em",
+                    color: "#FF6B00",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Estruturação Digital
+                </span>
+              </div>
 
               <h1
-                className="font-bold text-white mb-5 md:mb-6"
+                className="font-bold text-white text-[clamp(2rem,8vw,3rem)] md:text-[clamp(2.5rem,6vw,5rem)]"
                 style={{
-                  fontSize: "clamp(2rem, 7vw, 4.5rem)",
                   fontFamily: "'Anton', sans-serif",
                   lineHeight: 1.05,
+                  letterSpacing: "-0.01em",
+                  marginBottom: "2rem",
                 }}
               >
                 Seu negócio<br />
@@ -93,27 +114,30 @@ export default function Home() {
               </h1>
 
               <p
-                className="mb-8 md:mb-10 leading-[1.6]"
+                className="leading-[1.7] text-[0.95rem] md:text-[clamp(1rem,2vw,1.15rem)]"
                 style={{
                   fontFamily: "Poppins, sans-serif",
-                  fontSize: "clamp(0.875rem, 3.5vw, 1rem)",
-                  color: "#999",
-                  maxWidth: "min(500px, 100%)",
+                  color: "#b0b0b0",
+                  maxWidth: "540px",
+                  marginBottom: "3rem",
                 }}
               >
                 A ORIUM estrutura como você se apresenta — posicionamento,
                 presença e percepção de valor, do Instagram ao site.
               </p>
 
-              <div className="relative z-10 flex flex-col sm:flex-row gap-4">
+              <div
+                className="relative z-10 flex flex-col sm:flex-row sm:items-center"
+                style={{ gap: "1rem" }}
+              >
                 <CTALink
                   href={whatsappLink}
-                  className={primaryButton}
+                  className={heroPrimaryButton}
                   label="hero-falar-com-orium"
                 >
                   Falar com a ORIUM
                 </CTALink>
-                <a href="#projetos" className={secondaryButton}>
+                <a href="#projetos" className={heroSecondaryButton}>
                   Ver Projetos
                 </a>
               </div>

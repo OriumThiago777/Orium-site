@@ -83,6 +83,7 @@ Notion Databases:
 - Clientes ORIUM: 1cefcf2469ec44ec96930b4ce5437414
 - Atividades ORIUM: d1115c821e74492da16caae5f7611cff
 - Documentos Gerados: 37bf88b086fd49f1b1738095420c708d
+- Biblioteca ORIUM: 45ad5490-91a7-43ee-99a1-6d939d344d29
 - Briefings Pessoa: 43cb83171254494b9d41660c4cdd9a8e
 - Briefings Empresa: 89560b9f-c653-48f7-8f73-b13c00979d44
 
@@ -117,6 +118,7 @@ NÃO usar: useState(() => isAuthenticated()) — falha em SSR (localStorage indi
 ✅ /checklist — 4 etapas, 19 serviços, PDF só com entregues, integrado ao Notion.
 ✅ /clientes — CRM Kanban + Table, drag-and-drop, score de saúde, timeline de atividades, exportação CSV, progresso por cliente.
 ✅ /meus-documentos — BIBLIOTECA (renomeada visualmente, rota preservada). Histórico de documentos gerados.
+✅ /biblioteca — Biblioteca de Assets ORIUM. Grid de cards por segmento, filtros, modal de adição, integração Notion (NOTION_DB_BIBLIOTECA).
 
 ---
 
@@ -168,7 +170,8 @@ app/
     ├── clientes/[id]/progresso/route.ts
     ├── atividades/route.ts
     ├── clientes/export/route.ts
-    └── upload-pdf/route.ts
+    ├── upload-pdf/route.ts
+    └── biblioteca/route.ts
 
 lib/
 ├── auth.ts
@@ -208,11 +211,14 @@ Atualizar CLAUDE.md: ao fim de sessões que mudem arquitetura, rotas, padrões v
 
 ## LACUNAS CONHECIDAS (a resolver)
 
-- [ ] Bloco 3: conectar upload automático de PDF nos botões de geração de cada ferramenta (/relatorio, /raio-x, /proposta, /contrato, /checklist)
-- [ ] Bloco 4: redesign visual premium dos cards do CRM
+- [x] Bloco 3: upload automático de PDF em todas as ferramentas — concluído (05/06/2026)
+      Commits: 6220644 (raio-x, proposta, relatorio, checklist) + 8344d1c (briefing, contrato)
+      Padrão: savePdfToCloud() paralelo ao doc.save(), SaveToast com 3 estados, saveStatus state
+- [x] Bloco 4: redesign visual premium dos cards do CRM — concluído (05/06/2026)
+      Commit: 23bcbc4 — KanbanCard com avatar/iniciais, HealthBadge, barra de progresso melhorada, hover ORIUM, empty states por fase, filtro "Precisa de Atenção"
 - [ ] Validar upload de PDF para Google Drive em produção (Vercel)
 - [ ] Cadastrar clientes reais no CRM (Altemans, Prof. Marcelo, Ekipar)
-- [ ] CTA do site público — rastrear cliques e definir destino do "Falar agora"
+- [x] CTA do site público — rastreamento via CTALink (trackCTA + gtag) — commit 742e6b1
 - [x] Responsividade mobile do site público — concluída (05/06/2026)
 - [ ] ⚠️ Configurar todas as variáveis do .env.local no painel do Vercel (NOTION_TOKEN, RAIO_X_PASSWORD, GOOGLE_OAUTH_*, etc.) — sem isso as ferramentas falham em produção com "API token is invalid"
 
@@ -237,4 +243,77 @@ Estratégia, conteúdo e decisões: chat estratégico (claude.ai)
 
 ---
 
-Última atualização: 05/06/2026 (sessão 2)
+- [x] Padrão visual premium nos PDFs — proposta (hero.jpg cover + logo branca), relatório e checklist (capa programática) — commit 742e6b1
+
+Última atualização: 06/06/2026 (sessão 6)
+
+---
+
+## Skills Instaladas
+
+- frontend-design — diretrizes de UI/UX para componentes web
+- visual-polish — polimento visual e estética premium (customizada para ORIUM™)
+- ui-ux-pro-max — estilos, paletas, tipografia e diretrizes de UX
+
+---
+
+## Assets Visuais
+
+### Fotos — /public/fotos/
+
+Todas as fotos são PNG, estética dark premium com luz laranja
+#FF6B00. Geradas com IA (ChatGPT/Nano Banana).
+
+| Arquivo | Uso | Seção |
+|---|---|---|
+| hero2.png | Imagem principal do site, workspace com laptop e luz laranja | Hero |
+| estrategia.png | Geométrica com linhas laranja em fundo escuro | Seção Diferencial |
+| processo.png | Flat lay premium com notebook e objetos em mesa preta | Seção Processo |
+| cta.png | Abstrata com luz laranja, fundo escuro | Seção CTA final |
+| altemans.png | Interior de barbearia premium com cadeira e luz quente | Projeto Altemans |
+| marcelo.png | Ambiente acadêmico com livros e luz laranja de mesa | Projeto Prof. Marcelo |
+| og-image.png | Ícone circular laranja em fundo escuro | Open Graph / redes sociais |
+
+Ao usar fotos em novas seções:
+- Sempre aplique overlay rgba(8,8,8,0.75) a rgba(8,8,8,0.90)
+  sobre a imagem para garantir legibilidade do texto
+- Para fundos de seção, prefira background-image CSS
+  em vez de next/image
+- Para imagens de conteúdo (projetos, cards), use next/image
+  com object-fit: cover
+
+---
+
+### Ícones — /public/icons/
+
+Todos os ícones são SVG 64x64px, traço laranja #FF6B00,
+fundo transparente, estilo minimalista linear.
+
+| Arquivo | Descrição | Uso no site |
+|---|---|---|
+| icon-posicionamento.svg | Bússola minimalista | Diferencial — Posicionamento |
+| icon-percepcao.svg | Diamante geométrico | Diferencial — Percepção Premium |
+| icon-operacao.svg | Engrenagem 6 dentes | Diferencial — Operação Digital |
+| icon-crescimento.svg | Seta diagonal subindo | Diferencial — Crescimento Sustentável |
+| icon-branding.svg | Letra B em quadrado | Serviços — Branding |
+| icon-sites.svg | Janela de navegador | Serviços — Sites |
+| icon-automacao.svg | Dois nós conectados | Serviços — Automação |
+| icon-contato.svg | Balão de fala reto | Timeline — Primeiro contato |
+| icon-analise.svg | Lupa minimalista | Timeline — Analisamos presença |
+| icon-melhorias.svg | Lista com checkmark | Timeline — Indicamos melhorias |
+| icon-proposta.svg | Documento com assinatura | Timeline — Montamos proposta |
+| icon-presenca.svg | Olho minimalista | Diagnóstico — Presença Visual |
+| icon-comunicacao.svg | Ondas de sinal | Diagnóstico — Comunicação |
+| icon-estrutura.svg | Grade de pontos conectados | Diagnóstico — Estrutura Digital |
+| icon-proximos.svg | Seta em círculo | Diagnóstico — Próximos Passos |
+
+Ao usar ícones:
+- Tamanho inline (ao lado de texto): width={32} height={32}
+- Tamanho destaque (topo de card/coluna): width={48} height={48}
+- Tamanho timeline: width={64} height={64}
+- Sempre usar next/image com alt descritivo
+- Nunca aplicar filtro CSS de cor — os SVGs já são laranja #FF6B00
+
+---
+
+Última atualização: 06/06/2026
