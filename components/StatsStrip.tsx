@@ -20,12 +20,13 @@ export default function StatsStrip() {
               ${i < 3 ? "md:border-r md:border-r-[#1a1a1a]" : ""}
             `}
           >
-            <img
-              src={`/icons/${item.icon}.svg`}
-              alt={item.alt}
-              className="w-8 h-8 md:w-10 md:h-10 mb-3 md:mb-4 opacity-60 group-hover:opacity-100 transition-opacity duration-300"
-              style={{ objectFit: "contain", display: "block" }}
-            />
+            <div className="w-14 h-14 md:w-20 md:h-20 mb-3 md:mb-4 flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity duration-300">
+              <img
+                src={`/icons/${item.icon}.svg`}
+                alt={item.alt}
+                style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+              />
+            </div>
             <div
               className="leading-none opacity-80 group-hover:opacity-100 transition-opacity duration-300 select-none"
               style={{
