@@ -117,7 +117,7 @@ NÃO usar: useState(() => isAuthenticated()) — falha em SSR (localStorage indi
 ✅ /calendario — 4 etapas. Geração via API Anthropic (claude-sonnet-4-20250514). Cards com título, legenda, hashtags reais.
 ✅ /relatorio — 6 etapas, PDF premium, integrado ao Notion.
 ✅ /checklist — 4 etapas, 19 serviços, PDF só com entregues, integrado ao Notion.
-✅ /clientes — CRM Kanban + Table, drag-and-drop, score de saúde, timeline de atividades, exportação CSV, progresso por cliente.
+✅ /clientes — CRM Kanban + Table + Leads + Acessos, drag-and-drop, score de saúde, timeline de atividades, exportação CSV, progresso por cliente. Aba Leads consome NOTION_DB_LEADS (busca, filtros, status inline editável). Aba Acessos é placeholder ("EM BREVE — Google Analytics").
 ✅ /meus-documentos — BIBLIOTECA (renomeada visualmente, rota preservada). Histórico de documentos gerados.
 ✅ /biblioteca — Biblioteca de Assets ORIUM. Grid de cards por segmento, filtros, modal de adição, integração Notion (NOTION_DB_BIBLIOTECA).
 
@@ -246,6 +246,25 @@ Atualizar CLAUDE.md: ao fim de sessões que mudem arquitetura, rotas, padrões v
       @notionhq/client — pacote não está instalado). Botão mostra "Salvando..." durante
       o loading; falha no Notion não bloqueia o redirecionamento ao WhatsApp (try/catch).
       Variável NOTION_DB_LEADS adicionada ao .env.local — falta configurar no Vercel.
+- [x] Abas Leads e Acessos no /clientes — concluído (08/06/2026)
+      Commit: ea72501 — feat: aba Leads e Acessos no /clientes com integração Notion
+      vistaAtiva agora é 'kanban' | 'table' | 'leads' | 'acessos'; abas com ícone (👤 Leads, 📊 Acessos).
+      VistaLeads: header (título Anton + subtítulo + contador laranja), busca por nome/Instagram,
+      filtros de Status (Novo azul/Contatado amarelo/Em negociação laranja/Fechado verde/Perdido
+      vermelho — LEAD_STATUS_COR) e Segmento (cores extraídas do select do Notion via
+      NOTION_SELECT_COR), tabela (#0f0f0f/#1a1a1a, hover #111, Instagram→link instagram.com/handle,
+      Email→mailto:, Necessidade truncada 60 chars com title=tooltip, Status como <select> inline
+      que dispara PATCH /api/leads), empty state "Nenhum lead ainda...".
+      VistaAcessos: placeholder estático "EM BREVE — Integração com Google Analytics".
+      app/api/leads/route.ts ganhou GET (query NOTION_DB_LEADS ordenado por created_time desc,
+      filtros opcionais ?status= e ?segmento=, mapeia para {id, nome, segmento, segmentoCor,
+      instagram, email, necessidade, status, data}) e PATCH ({ pageId, status } → atualiza
+      propriedade Status no Notion). "Data" usa o created_time nativo da página (não há
+      propriedade Data customizada no database).
+      Testado ao vivo: lead real "Jaqueline" carregou com tag de segmento colorida, link de
+      Instagram, mailto, e troca de status via PATCH confirmada (200, Notion atualizado).
+      ⚠️ Database "Leads ORIUM" precisou ser compartilhado com a integração "ORIUM Briefing"
+      no Notion (•••→Connections) — sem isso a API retorna 404 object_not_found.
 - [ ] ⚠️ Configurar todas as variáveis do .env.local no painel do Vercel (NOTION_TOKEN, RAIO_X_PASSWORD, GOOGLE_OAUTH_*, etc.) — sem isso as ferramentas falham em produção com "API token is invalid"
 
 ---
@@ -271,7 +290,7 @@ Estratégia, conteúdo e decisões: chat estratégico (claude.ai)
 
 - [x] Padrão visual premium nos PDFs — proposta (hero.jpg cover + logo branca), relatório e checklist (capa programática) — commit 742e6b1
 
-Última atualização: 07/06/2026 (sessão 7)
+Última atualização: 08/06/2026 (sessão 8)
 
 ---
 
@@ -342,4 +361,4 @@ Ao usar ícones:
 
 ---
 
-Última atualização: 07/06/2026
+Última atualização: 08/06/2026
