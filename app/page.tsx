@@ -976,7 +976,7 @@ export default function Home() {
                 </a>
                 <button
                   onClick={() => setModalOpen(true)}
-                  className="text-left md:hover:text-orange-500 transition"
+                  className="text-center md:text-left md:hover:text-orange-500 transition"
                 >
                   WhatsApp
                 </button>
