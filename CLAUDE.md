@@ -335,7 +335,7 @@ Estratégia, conteúdo e decisões: chat estratégico (claude.ai)
 
 - [x] Padrão visual premium nos PDFs — proposta (hero.jpg cover + logo branca), relatório e checklist (capa programática) — commit 742e6b1
 
-Última atualização: 08/06/2026 (sessão 10)
+Última atualização: 08/06/2026 (sessão 11)
 
 ---
 
@@ -396,14 +396,37 @@ fundo transparente, estilo minimalista linear.
 | icon-comunicacao.svg | Ondas de sinal | Diagnóstico — Comunicação |
 | icon-estrutura.svg | Grade de pontos conectados | Diagnóstico — Estrutura Digital |
 | icon-proximos.svg | Seta em círculo | Diagnóstico — Próximos Passos |
+| icon-estrategia.svg | Peça de xadrez | Faixa de pilares — 01 Estratégia |
+| icon-percepcao-digital.svg | Olho com sinal | Faixa de pilares — 02 Percepção |
+| icon-conteudo.svg | Layout grid | Faixa de pilares — 03 Conteúdo |
+| icon-tecnologia.svg | Circuito/nós | Faixa de pilares — 04 Tecnologia |
 
 Ao usar ícones:
-- Tamanho inline (ao lado de texto): width={32} height={32}
-- Tamanho destaque (topo de card/coluna): width={48} height={48}
-- Tamanho timeline: width={64} height={64}
-- Sempre usar next/image com alt descritivo
-- Nunca aplicar filtro CSS de cor — os SVGs já são laranja #FF6B00
+- SEMPRE use `<img>` HTML nativo — nunca next/image para SVGs
+- O SVG tem viewBox com espaço interno — compensar com container
+  maior que o traço aparente
+- Tamanhos definitivos por contexto:
+
+  Faixa de pilares (StatsStrip):
+  - Container: 80x80px desktop, 56x56px mobile
+  - `<img>` width/height: 100% com objectFit: contain
+
+  Timeline / destaques grandes:
+  - Container: 80x80px
+  - `<img>`: 100% com objectFit: contain
+
+  Cards e seções (Diferencial, Diagnóstico):
+  - Container: 64x64px
+  - `<img>`: 100% com objectFit: contain
+
+  Inline (ao lado de texto, Serviços):
+  - Container: 56x56px
+  - `<img>`: 100% com objectFit: contain
+
+- Sempre use padding: 0 no container — deixe o SVG ocupar 100% do espaço
+- Cor já aplicada no SVG (#FF6B00) — nunca use filtro CSS de cor
+- Novos ícones adicionados ao projeto devem seguir esse padrão imediatamente
 
 ---
 
-Última atualização: 08/06/2026 (sessão 10)
+Última atualização: 08/06/2026 (sessão 11)
