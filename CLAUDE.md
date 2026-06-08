@@ -56,7 +56,7 @@ Sem campos manuais — tudo em tempo real consultando a DB Documentos Gerados.
 
 ## STACK TÉCNICO
 
-- Site público: oriumagencia.com.br — hero full-width com overlay, texto sobreposto, responsivo mobile/desktop
+- Site público: oriumagencia.com.br — hero full-width com overlay, texto sobreposto, responsivo mobile/desktop, modal de qualificação de leads (ContactModal) antes do WhatsApp
 - Stack: Next.js 16 + TypeScript + Tailwind CSS
 - Deploy: Vercel | Repo: GitHub (OriumThiago777/Orium-site)
 - Projeto local: C:\Users\Thiago\Desktop\Orium\Site\orium-site
@@ -82,6 +82,7 @@ Google Drive API (OAuth2)
 Notion Databases:
 - Clientes ORIUM: 1cefcf2469ec44ec96930b4ce5437414
 - Atividades ORIUM: d1115c821e74492da16caae5f7611cff
+- Leads ORIUM: 12720f37381c4f87b3abb1c922bd4755
 - Documentos Gerados: 37bf88b086fd49f1b1738095420c708d
 - Biblioteca ORIUM: 45ad5490-91a7-43ee-99a1-6d939d344d29
 - Briefings Pessoa: 43cb83171254494b9d41660c4cdd9a8e
@@ -157,8 +158,8 @@ Exemplos:
 ## ARQUITETURA
 
 app/
-├── page.tsx
-├── layout.tsx (sem FloatingWhatsApp)
+├── page.tsx (client component — modalOpen state + ContactModal)
+├── layout.tsx
 ├── hub/ ├── briefing/ ├── raio-x/ ├── proposta/ ├── contrato/ ├── calendario/
 ├── relatorio/ ├── checklist/ ├── clientes/ ├── meus-documentos/
 └── api/
@@ -219,7 +220,32 @@ Atualizar CLAUDE.md: ao fim de sessões que mudem arquitetura, rotas, padrões v
 - [ ] Validar upload de PDF para Google Drive em produção (Vercel)
 - [ ] Cadastrar clientes reais no CRM (Altemans, Prof. Marcelo, Ekipar)
 - [x] CTA do site público — rastreamento via CTALink (trackCTA + gtag) — commit 742e6b1
+      ⚠️ Componente CTALink ficou órfão (sem uso): os CTAs de WhatsApp agora abrem o
+      ContactModal em vez de navegar direto, então o tracking gtag deixou de disparar
+      nesses pontos. Se for necessário medir esses cliques, adicionar trackCTA/gtag
+      dentro do ContactModal (ex.: no momento do handleSubmit).
 - [x] Responsividade mobile do site público — concluída (05/06/2026)
+- [x] Hero do site público — título/subtítulo/botões redimensionados, travessão removido,
+      bug de botões cortados (overflow-hidden + altura fixa) corrigido, padding-top/bottom
+      ajustado — commit e6ac8e3 (07/06/2026)
+- [x] Modal de qualificação de leads (ContactModal) antes do WhatsApp — concluído (07/06/2026)
+      Commits: 91855dc (mensagem padrão unificada), 2bdb261 (componente + integração),
+      69d78bd (Poppins, campo email opcional, Navbar abrindo modal),
+      917a770 (lead salvo no Notion antes de abrir o WhatsApp)
+      Padrão: components/ContactModal.tsx — overlay + form (nome, segmento, instagram,
+      email opcional, necessidade) — monta mensagem e abre wa.me/5531999352065 no submit.
+      Todos os CTAs "Falar com a ORIUM/Falar agora/Solicitar diagnóstico/WhatsApp" do
+      site público agora abrem o modal via setModalOpen(true) em vez de navegar direto.
+      Comunicação cross-component (Navbar → page.tsx): CustomEvent 'openContactModal'
+      disparado via window.dispatchEvent e escutado em useEffect no Home.
+      components/FloatingWhatsApp.tsx removido (estava órfão — não importado em nenhum
+      lugar; o botão flutuante real era inline em page.tsx e agora abre o modal).
+      Persistência: handleSubmit agora é async — POST para /api/leads (app/api/leads/route.ts)
+      grava o lead no Notion (database "Leads ORIUM", id 12720f37381c4f87b3abb1c922bd4755)
+      via fetch direto + header NH (mesmo padrão de app/api/atividades/route.ts, NÃO
+      @notionhq/client — pacote não está instalado). Botão mostra "Salvando..." durante
+      o loading; falha no Notion não bloqueia o redirecionamento ao WhatsApp (try/catch).
+      Variável NOTION_DB_LEADS adicionada ao .env.local — falta configurar no Vercel.
 - [ ] ⚠️ Configurar todas as variáveis do .env.local no painel do Vercel (NOTION_TOKEN, RAIO_X_PASSWORD, GOOGLE_OAUTH_*, etc.) — sem isso as ferramentas falham em produção com "API token is invalid"
 
 ---
@@ -245,7 +271,7 @@ Estratégia, conteúdo e decisões: chat estratégico (claude.ai)
 
 - [x] Padrão visual premium nos PDFs — proposta (hero.jpg cover + logo branca), relatório e checklist (capa programática) — commit 742e6b1
 
-Última atualização: 06/06/2026 (sessão 6)
+Última atualização: 07/06/2026 (sessão 7)
 
 ---
 
@@ -316,4 +342,4 @@ Ao usar ícones:
 
 ---
 
-Última atualização: 06/06/2026
+Última atualização: 07/06/2026
