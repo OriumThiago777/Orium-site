@@ -18,6 +18,16 @@ const SEGMENTOS = [
   'Outro',
 ];
 
+const NECESSIDADES = [
+  'Melhorar minha presença no Instagram',
+  'Criar ou reformular meu site',
+  'Melhorar minha identidade visual',
+  'Organizar minha comunicação digital',
+  'Automatizar meu atendimento',
+  'Estruturar meu negócio do zero',
+  'Outro',
+];
+
 const labelStyle: CSSProperties = {
   display: 'block',
   fontSize: '0.75rem',
@@ -55,6 +65,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
   const [nome, setNome] = useState('');
   const [segmento, setSegmento] = useState('');
   const [necessidade, setNecessidade] = useState('');
+  const [necessidadeOutro, setNecessidadeOutro] = useState('');
   const [instagram, setInstagram] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -76,11 +87,13 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
     if (!nome || !segmento || !necessidade) return;
     setLoading(true);
 
+    const necessidadeFinal = necessidade === 'Outro' ? (necessidadeOutro || 'Outro') : necessidade;
+
     try {
       await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, segmento, instagram, email, necessidade }),
+        body: JSON.stringify({ nome, segmento, instagram, email, necessidade: necessidadeFinal }),
       });
     } catch (error) {
       console.error('Erro ao salvar lead:', error);
@@ -92,7 +105,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
 *Segmento:* ${segmento}
 *Instagram:* ${instagram || 'Não informado'}
 *Email:* ${email || 'Não informado'}
-*Necessidade:* ${necessidade}
+*Necessidade:* ${necessidadeFinal}
 
 Gostaria de saber mais sobre estruturação digital.`;
 
@@ -233,16 +246,36 @@ Gostaria de saber mais sobre estruturação digital.`;
 
         <div style={{ marginBottom: '1.25rem' }}>
           <label style={labelStyle}>PRINCIPAL NECESSIDADE</label>
-          <textarea
-            rows={3}
+          <select
             value={necessidade}
             onChange={(e) => setNecessidade(e.target.value)}
-            placeholder="Ex: Quero melhorar minha presença no Instagram e parecer mais profissional."
-            style={{ ...inputStyle, resize: 'none' }}
+            style={inputStyle}
             onFocus={focusOrange}
             onBlur={blurGray}
-          />
+          >
+            <option value="">Selecione uma opção</option>
+            {NECESSIDADES.map((opcao) => (
+              <option key={opcao} value={opcao}>
+                {opcao}
+              </option>
+            ))}
+          </select>
         </div>
+
+        {necessidade === 'Outro' && (
+          <div style={{ marginBottom: '1.25rem' }}>
+            <label style={labelStyle}>DESCREVA SUA NECESSIDADE</label>
+            <textarea
+              rows={3}
+              value={necessidadeOutro}
+              onChange={(e) => setNecessidadeOutro(e.target.value)}
+              placeholder="Conte um pouco mais..."
+              style={{ ...inputStyle, resize: 'none' }}
+              onFocus={focusOrange}
+              onBlur={blurGray}
+            />
+          </div>
+        )}
 
         <button
           onClick={handleSubmit}

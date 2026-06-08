@@ -95,7 +95,7 @@ export async function POST(request: Request) {
         properties: {
           'Título': { title: [{ text: { content: String(titulo || 'Sem título') } }] },
           'Cliente': { select: { name: String(cliente || 'Outro') } },
-          'Tipo': { select: { name: String(tipo || 'Post') } },
+          'Tipo': { select: { name: String(tipo || 'Post Feed') } },
           'Status': { select: { name: String(status || 'Planejado') } },
           'Data': { date: { start: String(data) } },
           'Descrição': { rich_text: [{ text: { content: String(descricao || '') } }] },

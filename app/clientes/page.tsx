@@ -1405,7 +1405,7 @@ const STATUS_COLORS: Record<string, string> = {
   'Cancelado': '#EF4444',
 }
 
-const TIPOS_CONTEUDO = ['Post', 'Carrossel', 'Reels', 'Stories', 'Vídeo', 'Outro']
+const TIPOS_CONTEUDO = ['Post Feed', 'Story', 'Reels', 'Tarefa Interna', 'Reunião', 'Entrega']
 const STATUS_CALENDARIO = Object.keys(STATUS_COLORS)
 const CLIENTES_CALENDARIO = Object.keys(CLIENT_COLORS)
 const DIAS_SEMANA = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB']

@@ -2,18 +2,22 @@ type ProcessStepProps = {
   number: string;
   title: string;
   description: string;
+  last?: boolean;
 };
 
-export default function ProcessStep({ number, title, description }: ProcessStepProps) {
+export default function ProcessStep({ number, title, description, last }: ProcessStepProps) {
   return (
-    <div className="group flex items-start border-l border-[#1a1a1a] pl-5 md:pl-8 py-5 md:py-6 hover:border-[#FF6B00] transition-all duration-300">
+    <div
+      className={`group flex items-start border-l border-[#1a1a1a] pl-5 md:pl-8 py-5 md:py-6 hover:border-[#FF6B00] transition-all duration-300${
+        last ? "" : " max-md:border-b max-md:pb-8"
+      }`}
+    >
       <div
-        className="flex-shrink-0 select-none pointer-events-none opacity-[0.12] group-hover:opacity-[0.30] transition-opacity duration-300 leading-none"
+        className="flex-shrink-0 select-none pointer-events-none opacity-[0.12] group-hover:opacity-[0.30] transition-opacity duration-300 leading-none w-[60px] md:w-[clamp(60px,12vw,80px)]"
         style={{
           fontFamily: "'Anton', sans-serif",
           fontSize: "clamp(3rem, 8vw, 5rem)",
           color: "#FF6B00",
-          width: "clamp(60px, 12vw, 80px)",
           lineHeight: 1,
         }}
       >

@@ -41,16 +41,16 @@ export default function Home() {
   }, []);
 
   const primaryButton =
-    "w-full sm:w-auto bg-[#FF6B00] text-black px-8 py-4 font-bold transition-all duration-300 text-center hover:bg-[#cc5500] tracking-[0.08em]";
+    "w-full md:w-auto bg-[#FF6B00] text-black px-8 py-4 font-bold transition-all duration-300 text-center hover:bg-[#cc5500] tracking-[0.08em]";
 
   const secondaryButton =
-    "w-full sm:w-auto border border-[#333] text-white px-8 py-4 font-semibold transition-all duration-300 text-center hover:border-[#FF6B00] hover:text-[#FF6B00]";
+    "w-full md:w-auto border border-[#333] text-white px-8 py-4 font-semibold transition-all duration-300 text-center hover:border-[#FF6B00] hover:text-[#FF6B00]";
 
   const heroPrimaryButton =
-    "inline-flex items-center justify-center bg-[#FF6B00] text-black px-[28px] py-[12px] text-[0.85rem] font-semibold tracking-[0.04em] border-none transition-all duration-[250ms] ease-[ease] hover:bg-[#ff7d1a] hover:-translate-y-0.5 w-full sm:w-auto";
+    "inline-flex items-center justify-center bg-[#FF6B00] text-black px-[28px] py-[12px] text-[0.85rem] font-semibold tracking-[0.04em] border-none transition-all duration-[250ms] ease-[ease] hover:bg-[#ff7d1a] hover:-translate-y-0.5 w-full md:w-auto";
 
   const heroSecondaryButton =
-    "inline-flex items-center justify-center bg-transparent text-white px-[28px] py-[12px] text-[0.85rem] font-medium tracking-[0.04em] border border-[#333] transition-all duration-[250ms] ease-[ease] hover:border-[#FF6B00] hover:text-[#FF6B00] w-full sm:w-auto";
+    "inline-flex items-center justify-center bg-transparent text-white px-[28px] py-[12px] text-[0.85rem] font-medium tracking-[0.04em] border border-[#333] transition-all duration-[250ms] ease-[ease] hover:border-[#FF6B00] hover:text-[#FF6B00] w-full md:w-auto";
 
   return (
     <div className="overflow-x-hidden">
@@ -88,8 +88,8 @@ export default function Home() {
           }}
         />
 
-        <div className="relative z-10 pt-[140px] pb-[100px]">
-          <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 w-full">
+        <div className="relative z-10 pt-[100px] md:pt-[140px] pb-[100px]">
+          <div className="max-w-7xl mx-auto px-5 md:px-8 lg:px-16 w-full">
             <div className="max-w-2xl">
               {/* Eyebrow refinado */}
               <div className="flex items-center" style={{ gap: "1rem", marginBottom: "1.5rem" }}>
@@ -108,10 +108,9 @@ export default function Home() {
               </div>
 
               <h1
-                className="font-bold text-white"
+                className="font-bold text-white text-[clamp(2rem,8vw,3rem)] md:text-[clamp(1.8rem,4vw,3.2rem)]"
                 style={{
                   fontFamily: "'Anton', sans-serif",
-                  fontSize: "clamp(1.8rem, 4vw, 3.2rem)",
                   lineHeight: 1.1,
                   letterSpacing: "-0.01em",
                   marginBottom: "2rem",
@@ -137,7 +136,7 @@ export default function Home() {
               </p>
 
               <div
-                className="relative z-10 flex flex-col sm:flex-row sm:items-center"
+                className="relative z-10 flex flex-col md:flex-row md:items-center"
                 style={{ gap: "1rem" }}
               >
                 <button onClick={() => setModalOpen(true)} className={heroPrimaryButton}>
@@ -160,7 +159,7 @@ export default function Home() {
           id="servicos"
           className="bg-[#080808] text-white py-16 md:py-24 lg:py-32 border-t border-[#1a1a1a] scroll-mt-24"
         >
-          <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
+          <div className="max-w-7xl mx-auto px-5 md:px-8 lg:px-16">
             <div className="max-w-[800px] mx-auto">
               <div className="mb-12 md:mb-16">
                 <Eyebrow>Serviços</Eyebrow>
@@ -211,7 +210,7 @@ export default function Home() {
         >
           <div className="absolute top-[-180px] left-[-160px] w-[360px] md:w-[420px] h-[360px] md:h-[420px] bg-orange-500/10 blur-[120px] rounded-full pointer-events-none" />
 
-          <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
+          <div className="relative z-10 max-w-7xl mx-auto px-5 md:px-8 lg:px-16">
 
             {/* Bloco superior: texto | imagem */}
             <div className="grid grid-cols-1 md:grid-cols-2 items-start" style={{ gap: "4rem" }}>
@@ -252,7 +251,7 @@ export default function Home() {
 
             {/* Bloco inferior: 4 cards horizontais */}
             <div
-              className="grid grid-cols-2 md:grid-cols-4"
+              className="grid grid-cols-1 md:grid-cols-4"
               style={{ marginTop: "4rem", gap: "1.5rem" }}
             >
               {[
@@ -323,7 +322,7 @@ export default function Home() {
       {/* ── PROCESSO ──────────────────────────────────────────────────────── */}
       <Reveal delay={0.2}>
         <section className="bg-[#080808] text-white py-16 md:py-24 lg:py-32 border-t border-[#1a1a1a]">
-          <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
+          <div className="max-w-7xl mx-auto px-5 md:px-8 lg:px-16">
             <div className="mb-12 md:mb-16 max-w-3xl">
               <Eyebrow>Processo</Eyebrow>
               <h2
@@ -362,6 +361,7 @@ export default function Home() {
                 number="4"
                 title="Tecnologia a serviço do negócio."
                 description="Automações, sites e sistemas que reduzem fricção operacional e aumentam capacidade de atendimento."
+                last
               />
             </div>
           </div>
@@ -376,7 +376,7 @@ export default function Home() {
         >
           <div className="absolute right-[-180px] top-[-220px] h-[380px] md:h-[460px] w-[380px] md:w-[460px] rounded-full bg-orange-500/10 blur-[130px] pointer-events-none" />
 
-          <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
+          <div className="relative z-10 max-w-7xl mx-auto px-5 md:px-8 lg:px-16">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-12 md:mb-16">
               <div>
                 <Eyebrow>Projetos</Eyebrow>
@@ -400,7 +400,7 @@ export default function Home() {
             <div className="flex flex-col border border-[#1a1a1a]">
               {/* Altemans — imagem esquerda | conteúdo direita */}
               <div className="group flex flex-col md:flex-row border-b border-[#1a1a1a] overflow-hidden transition-all duration-300">
-                <div className="relative w-full md:w-[45%] h-[200px] md:h-auto flex-shrink-0 overflow-hidden">
+                <div className="relative w-full md:w-[45%] h-[220px] md:h-auto flex-shrink-0 overflow-hidden">
                   <Image
                     src="/fotos/altemans.png"
                     alt="Projeto Altemans Barbearia"
@@ -452,7 +452,7 @@ export default function Home() {
                       ))}
                     </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex flex-col md:flex-row gap-3">
                     <a
                       href="https://www.instagram.com/altemansbarbearia/"
                       target="_blank"
@@ -470,7 +470,7 @@ export default function Home() {
 
               {/* Prof. Marcelo — conteúdo esquerda | imagem direita */}
               <div className="group flex flex-col md:flex-row-reverse overflow-hidden transition-all duration-300">
-                <div className="relative w-full md:w-[45%] h-[200px] md:h-auto flex-shrink-0 overflow-hidden">
+                <div className="relative w-full md:w-[45%] h-[220px] md:h-auto flex-shrink-0 overflow-hidden">
                   <Image
                     src="/fotos/marcelo.png"
                     alt="Projeto Prof. Marcelo Félix"
@@ -522,7 +522,7 @@ export default function Home() {
                       ))}
                     </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex flex-col md:flex-row gap-3">
                     <a
                       href="https://www.instagram.com/prof.marcelofelix/"
                       target="_blank"
@@ -550,7 +550,7 @@ export default function Home() {
         >
           <div className="absolute left-[-160px] bottom-[-200px] h-[360px] md:h-[420px] w-[360px] md:w-[420px] rounded-full bg-orange-500/10 blur-[120px] pointer-events-none" />
 
-          <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
+          <div className="relative z-10 max-w-7xl mx-auto px-5 md:px-8 lg:px-16">
             <div className="max-w-3xl mb-12 md:mb-16">
               <Eyebrow>DIAGNÓSTICO DIGITAL</Eyebrow>
               <h2
@@ -613,7 +613,7 @@ export default function Home() {
       {/* ── COMO FUNCIONA ─────────────────────────────────────────────────── */}
       <Reveal delay={0.4}>
         <section className="relative overflow-hidden bg-[#0a0a0a] text-white border-t border-[#1a1a1a] py-16 md:py-24 lg:py-32">
-          <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
+          <div className="relative z-10 max-w-7xl mx-auto px-5 md:px-8 lg:px-16">
             {/* Header centralizado */}
             <div className="max-w-3xl mx-auto text-center mb-16">
               <div className="flex items-center justify-center gap-3 mb-5">
@@ -731,7 +731,7 @@ export default function Home() {
                   {/* Descrição */}
                   <p
                     className="text-[#999] leading-[1.6]"
-                    style={{ fontFamily: "Poppins, sans-serif", fontSize: "0.85rem" }}
+                    style={{ fontFamily: "Poppins, sans-serif", fontSize: "0.875rem" }}
                   >
                     {item.text}
                   </p>
@@ -745,7 +745,7 @@ export default function Home() {
       {/* ── DÚVIDAS ───────────────────────────────────────────────────────── */}
       <Reveal delay={0.43}>
         <section className="bg-[#080808] text-white py-16 md:py-20 border-t border-[#1a1a1a]">
-          <div className="max-w-4xl mx-auto px-4 md:px-8 lg:px-16">
+          <div className="max-w-4xl mx-auto px-5 md:px-8 lg:px-16">
             <div className="max-w-3xl mb-10 md:mb-12">
               <Eyebrow>DÚVIDAS FREQUENTES</Eyebrow>
               <h2
@@ -822,7 +822,7 @@ export default function Home() {
             style={{ zIndex: 1 }}
           />
 
-          <div className="relative z-10 max-w-5xl mx-auto px-4 md:px-8 lg:px-16 text-center">
+          <div className="relative z-10 max-w-5xl mx-auto px-5 md:px-8 lg:px-16 text-center">
             <div className="flex items-center justify-center gap-4 mb-6">
               <div style={{ width: 40, height: 1, background: "#FF6B00", flexShrink: 0 }} />
               <span
@@ -840,9 +840,8 @@ export default function Home() {
             </div>
 
             <h2
-              className="font-bold leading-tight mb-6"
+              className="font-bold leading-tight mb-6 text-[clamp(1.75rem,6vw,3.5rem)] md:text-[clamp(1.75rem,6vw,4.5rem)]"
               style={{
-                fontSize: "clamp(1.75rem, 6vw, 4.5rem)",
                 fontFamily: "'Anton', sans-serif",
               }}
             >
@@ -860,7 +859,7 @@ export default function Home() {
               Estruturamos sua presença digital de ponta a ponta para atrair os
               clientes certos, comunicar melhor e vender com consistência.
             </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <div className="flex flex-col md:flex-row justify-center gap-4">
               <button onClick={() => setModalOpen(true)} className={primaryButton}>
                 Falar no WhatsApp
               </button>
@@ -902,8 +901,8 @@ export default function Home() {
         className="bg-[#080808] py-12 md:py-14"
         style={{ borderTop: "1px solid #1a1a1a" }}
       >
-        <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 text-center md:text-left">
+        <div className="max-w-7xl mx-auto px-5 md:px-8 lg:px-16">
+          <div className="flex flex-col md:grid md:grid-cols-3 gap-8 text-center md:text-left">
             <div>
               <div className="mb-4">
                 <Image
