@@ -72,9 +72,19 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
 
   const disabled = !nome || !segmento || !necessidade;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!nome || !segmento || !necessidade) return;
     setLoading(true);
+
+    try {
+      await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, segmento, instagram, email, necessidade }),
+      });
+    } catch (error) {
+      console.error('Erro ao salvar lead:', error);
+    }
 
     const mensagem = `Olá! Vim pelo site da ORIUM.
 
@@ -259,7 +269,7 @@ Gostaria de saber mais sobre estruturação digital.`;
             if (!disabled && !loading) e.currentTarget.style.background = '#FF6B00';
           }}
         >
-          Continuar no WhatsApp →
+          {loading ? 'Salvando...' : 'Continuar no WhatsApp →'}
         </button>
 
         <p style={{ fontSize: '0.75rem', color: '#444', textAlign: 'center', marginTop: '1rem', fontFamily: 'Poppins' }}>
