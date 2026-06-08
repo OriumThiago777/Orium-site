@@ -224,7 +224,16 @@ Atualizar CLAUDE.md: ao fim de sessões que mudem arquitetura, rotas, padrões v
       ContactModal em vez de navegar direto, então o tracking gtag deixou de disparar
       nesses pontos. Se for necessário medir esses cliques, adicionar trackCTA/gtag
       dentro do ContactModal (ex.: no momento do handleSubmit).
-- [x] Responsividade mobile do site público — concluída (05/06/2026)
+- [x] Responsividade mobile do site público — concluída e validada visualmente (08/06/2026)
+      Commits: 8493120 (feat: select necessidade + responsividade mobile completa) +
+               5e129f6 (fix: alinhamento centralizado do link WhatsApp no footer mobile)
+      Mudanças principais em app/page.tsx: breakpoints sm:→md: em botões/grids, padding px-5,
+      tipografia fluida clamp() via Tailwind arbitrary values, DIFERENCIAL 4 cards grid→1 coluna,
+      footer flex-col centralizado, Etapa 4 sem border-bottom sobrando (prop last no ProcessStep).
+      Em components/ServiceCard.tsx: ícone w-12 h-12 md:w-[78px] md:h-[78px].
+      Em components/ProcessStep.tsx: prop last?, border-bottom max-md: apenas entre etapas.
+      Bug encontrado via teste Playwright mobile (375px): botão WhatsApp no footer tinha text-left
+      fixo — corrigido para text-center md:text-left. Sem overflow horizontal (docWidth === winWidth).
 - [x] Hero do site público — título/subtítulo/botões redimensionados, travessão removido,
       bug de botões cortados (overflow-hidden + altura fixa) corrigido, padding-top/bottom
       ajustado — commit e6ac8e3 (07/06/2026)
@@ -233,7 +242,11 @@ Atualizar CLAUDE.md: ao fim de sessões que mudem arquitetura, rotas, padrões v
       69d78bd (Poppins, campo email opcional, Navbar abrindo modal),
       917a770 (lead salvo no Notion antes de abrir o WhatsApp)
       Padrão: components/ContactModal.tsx — overlay + form (nome, segmento, instagram,
-      email opcional, necessidade) — monta mensagem e abre wa.me/5531999352065 no submit.
+      email opcional, necessidade como select) — monta mensagem e abre wa.me/5531999352065 no submit.
+      Campo "necessidade": select com 7 opções (última "Outro"); se "Outro" selecionado, exibe
+      textarea "DESCREVA SUA NECESSIDADE". Valor final computado como necessidadeFinal e usado
+      identicamente no payload do /api/leads e na mensagem do WhatsApp. Commits desta sessão:
+      8493120 — select + responsividade. NOTION_DB_LEADS salva o valor final (nunca "Outro" isolado).
       Todos os CTAs "Falar com a ORIUM/Falar agora/Solicitar diagnóstico/WhatsApp" do
       site público agora abrem o modal via setModalOpen(true) em vez de navegar direto.
       Comunicação cross-component (Navbar → page.tsx): CustomEvent 'openContactModal'
@@ -294,6 +307,9 @@ Atualizar CLAUDE.md: ao fim de sessões que mudem arquitetura, rotas, padrões v
       hoje destacado em laranja) e modal "NOVO ITEM" renderizam sem erros de console.
       Variável NOTION_DB_CALENDARIO=078ecd0389b848d0b34ac00d3648c871 adicionada ao
       .env.local — falta configurar no Vercel.
+      ⚠️ TIPOS_CONTEUDO no modal do /clientes deve ser ['Post Feed','Story','Reels',
+      'Tarefa Interna','Reunião','Entrega'] — corrigido em 08/06/2026 para bater com o
+      schema real da DB Notion (commit 8493120). Fallback da API também atualizado para 'Post Feed'.
 - [ ] ⚠️ Configurar todas as variáveis do .env.local no painel do Vercel (NOTION_TOKEN, RAIO_X_PASSWORD, GOOGLE_OAUTH_*, etc.) — sem isso as ferramentas falham em produção com "API token is invalid"
 
 ---
@@ -319,7 +335,7 @@ Estratégia, conteúdo e decisões: chat estratégico (claude.ai)
 
 - [x] Padrão visual premium nos PDFs — proposta (hero.jpg cover + logo branca), relatório e checklist (capa programática) — commit 742e6b1
 
-Última atualização: 08/06/2026 (sessão 9)
+Última atualização: 08/06/2026 (sessão 10)
 
 ---
 
@@ -390,4 +406,4 @@ Ao usar ícones:
 
 ---
 
-Última atualização: 08/06/2026
+Última atualização: 08/06/2026 (sessão 10)
