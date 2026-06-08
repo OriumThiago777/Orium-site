@@ -117,7 +117,7 @@ NÃO usar: useState(() => isAuthenticated()) — falha em SSR (localStorage indi
 ✅ /calendario — 4 etapas. Geração via API Anthropic (claude-sonnet-4-20250514). Cards com título, legenda, hashtags reais.
 ✅ /relatorio — 6 etapas, PDF premium, integrado ao Notion.
 ✅ /checklist — 4 etapas, 19 serviços, PDF só com entregues, integrado ao Notion.
-✅ /clientes — CRM Kanban + Table + Leads + Acessos, drag-and-drop, score de saúde, timeline de atividades, exportação CSV, progresso por cliente. Aba Leads consome NOTION_DB_LEADS (busca, filtros, status inline editável). Aba Acessos é placeholder ("EM BREVE — Google Analytics").
+✅ /clientes — CRM Kanban + Table + Leads + Acessos + Calendário, drag-and-drop, score de saúde, timeline de atividades, exportação CSV, progresso por cliente. Aba Leads consome NOTION_DB_LEADS (busca, filtros, status inline editável). Aba Acessos é placeholder ("EM BREVE — Google Analytics"). Aba Calendário consome NOTION_DB_CALENDARIO (visão mensal/semanal, filtros por cliente/tipo/status, modal de criação/edição com CRUD completo via Notion).
 ✅ /meus-documentos — BIBLIOTECA (renomeada visualmente, rota preservada). Histórico de documentos gerados.
 ✅ /biblioteca — Biblioteca de Assets ORIUM. Grid de cards por segmento, filtros, modal de adição, integração Notion (NOTION_DB_BIBLIOTECA).
 
@@ -265,6 +265,35 @@ Atualizar CLAUDE.md: ao fim de sessões que mudem arquitetura, rotas, padrões v
       Instagram, mailto, e troca de status via PATCH confirmada (200, Notion atualizado).
       ⚠️ Database "Leads ORIUM" precisou ser compartilhado com a integração "ORIUM Briefing"
       no Notion (•••→Connections) — sem isso a API retorna 404 object_not_found.
+- [x] Aba Calendário no /clientes — concluído (08/06/2026)
+      Commit: 4d864e3 — feat: aba Calendário no /clientes com visão mensal e semanal
+      vistaAtiva agora é 'kanban' | 'table' | 'leads' | 'acessos' | 'calendario'; nova aba "📅 CALENDÁRIO".
+      ⚠️ app/api/calendario/route.ts JÁ EXISTIA (gerador de calendário com IA, /calendario,
+      exporta só POST). Para não sobrescrevê-lo, a rota CRUD do CRM foi criada em
+      app/api/clientes/calendario/route.ts (mesmo padrão de namespacing de
+      clientes/[id]/progresso e clientes/export) — exporta GET/POST/PATCH/DELETE contra
+      NOTION_DB_CALENDARIO via fetch direto + header NH.
+      GET aceita ?mes=YYYY-MM (filtra por propriedade Data com on_or_after/on_or_before,
+      sorts ascending) e mapeia para {id, titulo, cliente, tipo, status, data, descricao,
+      legenda}. POST cria página (Título/Cliente/Tipo/Status/Data/Descrição/Legenda).
+      PATCH aceita atualização parcial via {pageId, ...campos opcionais}. DELETE (?id=)
+      arquiva a página (archived: true — soft delete).
+      VistaCalendario: header (título Anton + subtítulo + botão "+ NOVO ITEM" laranja),
+      navegação (‹ › Hoje, toggle Mês|Semana, título "Junho 2026" ou "07 – 13 Jun 2026"
+      via tituloNavegacaoCalendario), filtros com bullet colorido por Cliente/Tipo/Status
+      (FiltroComCor), grade mensal (42 células via gerarGradeMensal/startOfWeek, pills
+      com cor do cliente a 0.15 opacidade + borda esquerda 3px, máx. 3 visíveis + "+N mais",
+      dia atual com círculo laranja, dias fora do mês a 0.3 opacidade), visão semanal
+      (gerarSemana, 7 colunas com cards título+tipo+badge de status).
+      CLIENT_COLORS (Altemans laranja/Marcelo azul/Ekipar verde/ORIUM Interno cinza/Outro
+      cinza-claro) e STATUS_COLORS (Planejado/Produzindo/Aprovado/Publicado/Cancelado).
+      ModalItemCalendario: criação/edição com inputs estilo ContactModal (bg #080808,
+      border #222, focus #FF6B00, sem border-radius, Poppins), botões Salvar (POST/PATCH)
+      /Excluir (DELETE com confirm())/Cancelar.
+      Testado ao vivo via Playwright: visão mensal, semanal (header "07 – 13 Jun 2026",
+      hoje destacado em laranja) e modal "NOVO ITEM" renderizam sem erros de console.
+      Variável NOTION_DB_CALENDARIO=078ecd0389b848d0b34ac00d3648c871 adicionada ao
+      .env.local — falta configurar no Vercel.
 - [ ] ⚠️ Configurar todas as variáveis do .env.local no painel do Vercel (NOTION_TOKEN, RAIO_X_PASSWORD, GOOGLE_OAUTH_*, etc.) — sem isso as ferramentas falham em produção com "API token is invalid"
 
 ---
@@ -290,7 +319,7 @@ Estratégia, conteúdo e decisões: chat estratégico (claude.ai)
 
 - [x] Padrão visual premium nos PDFs — proposta (hero.jpg cover + logo branca), relatório e checklist (capa programática) — commit 742e6b1
 
-Última atualização: 08/06/2026 (sessão 8)
+Última atualização: 08/06/2026 (sessão 9)
 
 ---
 
