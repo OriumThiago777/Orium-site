@@ -1,14 +1,14 @@
 export default function StatsStrip() {
   const items = [
-    { num: "01", text: "Estratégia antes da execução" },
-    { num: "02", text: "Presença digital com percepção" },
-    { num: "03", text: "Branding, conteúdo e estrutura" },
-    { num: "04", text: "Tecnologia aplicada ao negócio" },
+    { num: "01", text: "Estratégia antes da execução", icon: "icon-estrategia", alt: "Estratégia" },
+    { num: "02", text: "Presença digital com percepção", icon: "icon-percepcao-digital", alt: "Percepção digital" },
+    { num: "03", text: "Branding, conteúdo e estrutura", icon: "icon-conteudo", alt: "Conteúdo" },
+    { num: "04", text: "Tecnologia aplicada ao negócio", icon: "icon-tecnologia", alt: "Tecnologia" },
   ];
 
   return (
     <section
-      className="py-12 md:py-16 border-t border-[#1a1a1a]"
+      className="py-12 border-t border-[#1a1a1a]"
       style={{ background: "#0d0d0d" }}
     >
       <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-0 px-4 md:px-0">
@@ -20,6 +20,12 @@ export default function StatsStrip() {
               ${i < 3 ? "md:border-r md:border-r-[#1a1a1a]" : ""}
             `}
           >
+            <img
+              src={`/icons/${item.icon}.svg`}
+              alt={item.alt}
+              className="w-8 h-8 md:w-10 md:h-10 mb-3 md:mb-4 opacity-60 group-hover:opacity-100 transition-opacity duration-300"
+              style={{ objectFit: "contain", display: "block" }}
+            />
             <div
               className="leading-none opacity-80 group-hover:opacity-100 transition-opacity duration-300 select-none"
               style={{
