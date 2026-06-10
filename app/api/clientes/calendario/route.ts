@@ -18,6 +18,14 @@ type CalendarioItem = {
   data: string
   descricao: string
   legenda: string
+  participantes: string
+  pauta: string
+  linkReuniao: string
+  duracaoReuniao: string
+  tipoGravacao: string
+  roteiroGravacao: string
+  localGravacao: string
+  equipamentoGravacao: string
 }
 
 type NotionCalendarioPage = {
@@ -72,6 +80,14 @@ export async function GET(request: Request) {
       data: page.properties['Data']?.date?.start || '',
       descricao: page.properties['Descrição']?.rich_text?.[0]?.plain_text || '',
       legenda: page.properties['Legenda']?.rich_text?.[0]?.plain_text || '',
+      participantes: page.properties['Participantes']?.rich_text?.[0]?.plain_text || '',
+      pauta: page.properties['Pauta']?.rich_text?.[0]?.plain_text || '',
+      linkReuniao: page.properties['Link Reunião']?.rich_text?.[0]?.plain_text || '',
+      duracaoReuniao: page.properties['Duração Reunião']?.rich_text?.[0]?.plain_text || '',
+      tipoGravacao: page.properties['Tipo Gravação']?.rich_text?.[0]?.plain_text || '',
+      roteiroGravacao: page.properties['Roteiro Gravação']?.rich_text?.[0]?.plain_text || '',
+      localGravacao: page.properties['Local Gravação']?.rich_text?.[0]?.plain_text || '',
+      equipamentoGravacao: page.properties['Equipamento Gravação']?.rich_text?.[0]?.plain_text || '',
     }))
 
     return NextResponse.json({ items })
@@ -83,7 +99,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { titulo, cliente, tipo, status, data, descricao, legenda } = await request.json()
+    const {
+      titulo, cliente, tipo, status, data, descricao, legenda,
+      participantes, pauta, linkReuniao, duracaoReuniao,
+      tipoGravacao, roteiroGravacao, localGravacao, equipamentoGravacao,
+    } = await request.json()
 
     if (!DB_CALENDARIO) return NextResponse.json({ success: true })
 
@@ -100,6 +120,14 @@ export async function POST(request: Request) {
           'Data': { date: { start: String(data) } },
           'Descrição': { rich_text: [{ text: { content: String(descricao || '') } }] },
           'Legenda': { rich_text: [{ text: { content: String(legenda || '') } }] },
+          'Participantes': { rich_text: [{ text: { content: String(participantes || '') } }] },
+          'Pauta': { rich_text: [{ text: { content: String(pauta || '') } }] },
+          'Link Reunião': { rich_text: [{ text: { content: String(linkReuniao || '') } }] },
+          'Duração Reunião': { rich_text: [{ text: { content: String(duracaoReuniao || '') } }] },
+          'Tipo Gravação': { rich_text: [{ text: { content: String(tipoGravacao || '') } }] },
+          'Roteiro Gravação': { rich_text: [{ text: { content: String(roteiroGravacao || '') } }] },
+          'Local Gravação': { rich_text: [{ text: { content: String(localGravacao || '') } }] },
+          'Equipamento Gravação': { rich_text: [{ text: { content: String(equipamentoGravacao || '') } }] },
         },
       }),
     })
@@ -119,7 +147,11 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const { pageId, titulo, cliente, tipo, status, data, descricao, legenda } = await request.json()
+    const {
+      pageId, titulo, cliente, tipo, status, data, descricao, legenda,
+      participantes, pauta, linkReuniao, duracaoReuniao,
+      tipoGravacao, roteiroGravacao, localGravacao, equipamentoGravacao,
+    } = await request.json()
     if (!pageId) return NextResponse.json({ success: false }, { status: 400 })
 
     const properties: Record<string, unknown> = {}
@@ -130,6 +162,14 @@ export async function PATCH(request: Request) {
     if (data !== undefined) properties['Data'] = { date: { start: String(data) } }
     if (descricao !== undefined) properties['Descrição'] = { rich_text: [{ text: { content: String(descricao) } }] }
     if (legenda !== undefined) properties['Legenda'] = { rich_text: [{ text: { content: String(legenda) } }] }
+    if (participantes !== undefined) properties['Participantes'] = { rich_text: [{ text: { content: String(participantes) } }] }
+    if (pauta !== undefined) properties['Pauta'] = { rich_text: [{ text: { content: String(pauta) } }] }
+    if (linkReuniao !== undefined) properties['Link Reunião'] = { rich_text: [{ text: { content: String(linkReuniao) } }] }
+    if (duracaoReuniao !== undefined) properties['Duração Reunião'] = { rich_text: [{ text: { content: String(duracaoReuniao) } }] }
+    if (tipoGravacao !== undefined) properties['Tipo Gravação'] = { rich_text: [{ text: { content: String(tipoGravacao) } }] }
+    if (roteiroGravacao !== undefined) properties['Roteiro Gravação'] = { rich_text: [{ text: { content: String(roteiroGravacao) } }] }
+    if (localGravacao !== undefined) properties['Local Gravação'] = { rich_text: [{ text: { content: String(localGravacao) } }] }
+    if (equipamentoGravacao !== undefined) properties['Equipamento Gravação'] = { rich_text: [{ text: { content: String(equipamentoGravacao) } }] }
 
     const res = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
       method: 'PATCH',

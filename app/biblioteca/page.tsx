@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { isAuthenticated, saveAuth } from '@/lib/auth'
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -449,7 +450,9 @@ export default function BibliotecaPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.25rem' }}>
-              <Image src="/lgbranca.png" alt="ORIUM" width={100} height={32} style={{ objectFit: 'contain' }} />
+              <Link href="/" className="inline-block cursor-pointer transition-opacity hover:opacity-80">
+                <Image src="/lgbranca.png" alt="ORIUM" width={100} height={32} style={{ objectFit: 'contain' }} />
+              </Link>
               <a href="/hub" style={{ color: '#555', fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', textDecoration: 'none', transition: 'color 0.15s' }}
                 onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00' }}
                 onMouseLeave={e => { e.currentTarget.style.color = '#555' }}>

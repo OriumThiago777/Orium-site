@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, type CSSProperties } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { isAuthenticated, saveAuth } from '@/lib/auth'
 import {
   DndContext,
@@ -50,6 +51,7 @@ type ProgressoData = {
 }
 
 const FASES: { nome: string; cor: string }[] = [
+  { nome: 'Prospecção', cor: '#6B7280' },
   { nome: 'Diagnóstico', cor: '#FF6B00' },
   { nome: 'Estruturação Inicial', cor: '#3B82F6' },
   { nome: 'Conteúdo e Comunicação', cor: '#8B5CF6' },
@@ -73,6 +75,7 @@ const HEALTH_COR: Record<string, string> = {
 }
 
 const FASE_AVATAR_BG: Record<string, string> = {
+  'Prospecção': '#2a2a2a',
   'Diagnóstico': '#1a3a2a',
   'Estruturação Inicial': '#1a2a3a',
   'Conteúdo e Comunicação': '#2a1a3a',
@@ -82,6 +85,7 @@ const FASE_AVATAR_BG: Record<string, string> = {
 }
 
 const FASE_EMPTY_MSG: Record<string, string> = {
+  'Prospecção': 'Nenhum cliente em prospecção',
   'Diagnóstico': 'Nenhum cliente em diagnóstico ainda',
   'Estruturação Inicial': 'Nenhum cliente em estruturação',
   'Conteúdo e Comunicação': 'Nenhum conteúdo ativo',
@@ -1352,31 +1356,6 @@ function VistaLeads() {
   )
 }
 
-// ─── Acessos (placeholder) ───────────────────────────────────────────────────
-function VistaAcessos() {
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '6rem 2rem',
-      color: '#333',
-      textAlign: 'center'
-    }}>
-      <p style={{ fontSize: '3rem', marginBottom: '1rem' }}>📊</p>
-      <p style={{ fontFamily: 'Anton', fontSize: '1.2rem',
-        color: '#444', marginBottom: '0.5rem' }}>
-        EM BREVE
-      </p>
-      <p style={{ fontFamily: 'Poppins', fontSize: '0.85rem',
-        color: '#333' }}>
-        Integração com Google Analytics em desenvolvimento.
-      </p>
-    </div>
-  )
-}
-
 // ─── Calendário ──────────────────────────────────────────────────────────────
 type CalendarioItem = {
   id: string
@@ -1387,6 +1366,14 @@ type CalendarioItem = {
   data: string
   descricao: string
   legenda: string
+  participantes: string
+  pauta: string
+  linkReuniao: string
+  duracaoReuniao: string
+  tipoGravacao: string
+  roteiroGravacao: string
+  localGravacao: string
+  equipamentoGravacao: string
 }
 
 const CLIENT_COLORS: Record<string, string> = {
@@ -1405,7 +1392,9 @@ const STATUS_COLORS: Record<string, string> = {
   'Cancelado': '#EF4444',
 }
 
-const TIPOS_CONTEUDO = ['Post Feed', 'Story', 'Reels', 'Tarefa Interna', 'Reunião', 'Entrega']
+const TIPOS_CONTEUDO = ['Post Feed', 'Story', 'Reels', 'Tarefa Interna', 'Reunião', 'Gravação', 'Entrega']
+const DURACOES_REUNIAO = ['30 min', '1 hora', '1h30', '2 horas']
+const TIPOS_CONTEUDO_GRAVACAO = ['Reel', 'Vídeo longo', 'Stories', 'Bastidores']
 const STATUS_CALENDARIO = Object.keys(STATUS_COLORS)
 const CLIENTES_CALENDARIO = Object.keys(CLIENT_COLORS)
 const DIAS_SEMANA = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB']
@@ -1476,6 +1465,14 @@ function ModalItemCalendario({ item, dataInicial, onClose, onSaved }: {
   const [data, setData] = useState(item?.data ?? dataInicial)
   const [descricao, setDescricao] = useState(item?.descricao ?? '')
   const [legenda, setLegenda] = useState(item?.legenda ?? '')
+  const [participantes, setParticipantes] = useState(item?.participantes ?? '')
+  const [pauta, setPauta] = useState(item?.pauta ?? '')
+  const [linkReuniao, setLinkReuniao] = useState(item?.linkReuniao ?? '')
+  const [duracaoReuniao, setDuracaoReuniao] = useState(item?.duracaoReuniao ?? DURACOES_REUNIAO[0])
+  const [tipoGravacao, setTipoGravacao] = useState(item?.tipoGravacao ?? TIPOS_CONTEUDO_GRAVACAO[0])
+  const [roteiroGravacao, setRoteiroGravacao] = useState(item?.roteiroGravacao ?? '')
+  const [localGravacao, setLocalGravacao] = useState(item?.localGravacao ?? '')
+  const [equipamentoGravacao, setEquipamentoGravacao] = useState(item?.equipamentoGravacao ?? '')
   const [salvando, setSalvando] = useState(false)
   const [excluindo, setExcluindo] = useState(false)
 
@@ -1496,7 +1493,11 @@ function ModalItemCalendario({ item, dataInicial, onClose, onSaved }: {
     if (!titulo.trim() || !data) return
     setSalvando(true)
     try {
-      const payload = { titulo, cliente, tipo, status, data, descricao, legenda }
+      const payload = {
+        titulo, cliente, tipo, status, data, descricao, legenda,
+        participantes, pauta, linkReuniao, duracaoReuniao,
+        tipoGravacao, roteiroGravacao, localGravacao, equipamentoGravacao,
+      }
       const res = await fetch('/api/clientes/calendario', {
         method: item ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1583,6 +1584,62 @@ function ModalItemCalendario({ item, dataInicial, onClose, onSaved }: {
           <textarea value={legenda} onChange={e => setLegenda(e.target.value)} rows={3} placeholder="Texto de publicação"
             style={{ ...inputStyle, resize: 'vertical' }} onFocus={focusOrange} onBlur={blurGray} />
         </div>
+
+        {tipo === 'Reunião' && (
+          <>
+            <div style={{ marginBottom: '1.1rem' }}>
+              <label style={labelStyle}>Participantes</label>
+              <input value={participantes} onChange={e => setParticipantes(e.target.value)} placeholder="Nomes dos participantes"
+                style={inputStyle} onFocus={focusOrange} onBlur={blurGray} />
+            </div>
+            <div style={{ marginBottom: '1.1rem' }}>
+              <label style={labelStyle}>Pauta</label>
+              <textarea value={pauta} onChange={e => setPauta(e.target.value)} rows={3} placeholder="Assuntos a tratar na reunião"
+                style={{ ...inputStyle, resize: 'vertical' }} onFocus={focusOrange} onBlur={blurGray} />
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{ flex: 1 }}>
+                <label style={labelStyle}>Link da reunião</label>
+                <input value={linkReuniao} onChange={e => setLinkReuniao(e.target.value)} placeholder="Google Meet, Zoom..."
+                  style={inputStyle} onFocus={focusOrange} onBlur={blurGray} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={labelStyle}>Duração estimada</label>
+                <select value={duracaoReuniao} onChange={e => setDuracaoReuniao(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }} onFocus={focusOrange} onBlur={blurGray}>
+                  {DURACOES_REUNIAO.map(d => <option key={d} value={d} style={{ background: '#0f0f0f' }}>{d}</option>)}
+                </select>
+              </div>
+            </div>
+          </>
+        )}
+
+        {tipo === 'Gravação' && (
+          <>
+            <div style={{ marginBottom: '1.1rem' }}>
+              <label style={labelStyle}>Tipo de conteúdo</label>
+              <select value={tipoGravacao} onChange={e => setTipoGravacao(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }} onFocus={focusOrange} onBlur={blurGray}>
+                {TIPOS_CONTEUDO_GRAVACAO.map(t => <option key={t} value={t} style={{ background: '#0f0f0f' }}>{t}</option>)}
+              </select>
+            </div>
+            <div style={{ marginBottom: '1.1rem' }}>
+              <label style={labelStyle}>Roteiro / Descrição</label>
+              <textarea value={roteiroGravacao} onChange={e => setRoteiroGravacao(e.target.value)} rows={3} placeholder="Roteiro ou descrição da gravação"
+                style={{ ...inputStyle, resize: 'vertical' }} onFocus={focusOrange} onBlur={blurGray} />
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{ flex: 1 }}>
+                <label style={labelStyle}>Local de gravação</label>
+                <input value={localGravacao} onChange={e => setLocalGravacao(e.target.value)} placeholder="Onde será gravado"
+                  style={inputStyle} onFocus={focusOrange} onBlur={blurGray} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={labelStyle}>Equipamento necessário</label>
+                <input value={equipamentoGravacao} onChange={e => setEquipamentoGravacao(e.target.value)} placeholder="Opcional"
+                  style={inputStyle} onFocus={focusOrange} onBlur={blurGray} />
+              </div>
+            </div>
+          </>
+        )}
 
         <div style={{ display: 'flex', justifyContent: item ? 'space-between' : 'flex-end', gap: '0.75rem', flexWrap: 'wrap' }}>
           {item && (
@@ -2003,7 +2060,7 @@ export default function ClientesPage() {
   const [authChecked, setAuthChecked] = useState(false)
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [loading, setLoading] = useState(false)
-  const [vistaAtiva, setVistaAtiva] = useState<'kanban' | 'table' | 'leads' | 'acessos' | 'calendario'>('kanban')
+  const [vistaAtiva, setVistaAtiva] = useState<'kanban' | 'table' | 'leads' | 'calendario'>('kanban')
   const [modalNovo, setModalNovo] = useState(false)
   const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(null)
   const [busca, setBusca] = useState('')
@@ -2129,7 +2186,9 @@ export default function ClientesPage() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <Image src="/lglaranja.png" alt="ORIUM" width={100} height={32} style={{ objectFit: 'contain', display: 'block', marginBottom: '1.25rem' }} />
+            <Link href="/" className="inline-block cursor-pointer transition-opacity hover:opacity-80">
+              <Image src="/lglaranja.png" alt="ORIUM" width={100} height={32} style={{ objectFit: 'contain', display: 'block', marginBottom: '1.25rem' }} />
+            </Link>
             <p style={{ color: '#FF6B00', fontSize: '0.68rem', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: '0.375rem' }}>GESTÃO</p>
             <h1 style={{ fontFamily: 'Anton, sans-serif', fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#fff', letterSpacing: '0.03em', lineHeight: 0.95, marginBottom: '0.375rem' }}>CLIENTES</h1>
             <p style={{ color: '#777', fontSize: '0.875rem' }}>Gestão de clientes ativos e fases</p>
@@ -2185,10 +2244,9 @@ export default function ClientesPage() {
         {/* Abas de vista */}
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
           {([
-            { key: 'kanban' as const, label: 'KANBAN', icon: null as string | null },
-            { key: 'table' as const, label: 'TABLE', icon: null as string | null },
+            { key: 'kanban' as const, label: 'QUADROS', icon: null as string | null },
+            { key: 'table' as const, label: 'TABELA', icon: null as string | null },
             { key: 'leads' as const, label: 'LEADS', icon: '👤' },
-            { key: 'acessos' as const, label: 'ACESSOS', icon: '📊' },
             { key: 'calendario' as const, label: 'CALENDÁRIO', icon: '📅' },
           ]).map(v => (
             <button key={v.key} onClick={() => setVistaAtiva(v.key)}
@@ -2230,8 +2288,6 @@ export default function ClientesPage() {
         {/* Conteúdo */}
         {vistaAtiva === 'leads' ? (
           <VistaLeads />
-        ) : vistaAtiva === 'acessos' ? (
-          <VistaAcessos />
         ) : vistaAtiva === 'calendario' ? (
           <VistaCalendario />
         ) : loading ? (

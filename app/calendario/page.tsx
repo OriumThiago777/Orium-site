@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { saveAuth, isAuthenticated, clearAuth } from '@/lib/auth';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -648,7 +649,9 @@ export default function CalendarioPage() {
           {/* ZONA 1 — Logo */}
           {!sidebarCollapsed ? (
             <div style={{ padding: '1.5rem 1.75rem', borderBottom: '1px solid #0f0f0f', flexShrink: 0 }}>
-              <Image src="/lglaranja.png" alt="ORIUM" width={90} height={28} style={{ objectFit: 'contain' }} />
+              <Link href="/" className="inline-block cursor-pointer transition-opacity hover:opacity-80">
+                <Image src="/lglaranja.png" alt="ORIUM" width={90} height={28} style={{ objectFit: 'contain' }} />
+              </Link>
               <p style={{ color: '#444444', fontSize: '0.62rem', letterSpacing: '0.2em', textTransform: 'uppercase', fontFamily: 'Poppins, sans-serif', marginTop: '0.5rem', marginBottom: 0 }}>CALENDÁRIO DE CONTEÚDO</p>
             </div>
           ) : (
