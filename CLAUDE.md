@@ -117,7 +117,7 @@ NÃO usar: useState(() => isAuthenticated()) — falha em SSR (localStorage indi
 ✅ /calendario — 4 etapas. Geração via API Anthropic (claude-sonnet-4-20250514). Cards com título, legenda, hashtags reais.
 ✅ /relatorio — 6 etapas, PDF premium, integrado ao Notion.
 ✅ /checklist — 4 etapas, 19 serviços, PDF só com entregues, integrado ao Notion.
-✅ /clientes — CRM Kanban + Table + Leads + Acessos + Calendário, drag-and-drop, score de saúde, timeline de atividades, exportação CSV, progresso por cliente. Aba Leads consome NOTION_DB_LEADS (busca, filtros, status inline editável). Aba Acessos é placeholder ("EM BREVE — Google Analytics"). Aba Calendário consome NOTION_DB_CALENDARIO (visão mensal/semanal, filtros por cliente/tipo/status, modal de criação/edição com CRUD completo via Notion).
+✅ /clientes — CRM Quadros (Kanban) + Tabela + Leads + Calendário, drag-and-drop, score de saúde, timeline de atividades, exportação CSV, progresso por cliente. Abas renomeadas: "QUADROS"/"TABELA" (eram "KANBAN"/"TABLE"). Aba Acessos removida (10/06/2026). Aba Leads consome NOTION_DB_LEADS (busca, filtros, status inline editável). Aba Calendário consome NOTION_DB_CALENDARIO (visão mensal/semanal, filtros por cliente/tipo/status, modal de criação/edição com CRUD completo via Notion).
 ✅ /meus-documentos — BIBLIOTECA (renomeada visualmente, rota preservada). Histórico de documentos gerados.
 ✅ /biblioteca — Biblioteca de Assets ORIUM. Grid de cards por segmento, filtros, modal de adição, integração Notion (NOTION_DB_BIBLIOTECA).
 
@@ -311,6 +311,33 @@ Atualizar CLAUDE.md: ao fim de sessões que mudem arquitetura, rotas, padrões v
       'Tarefa Interna','Reunião','Entrega'] — corrigido em 08/06/2026 para bater com o
       schema real da DB Notion (commit 8493120). Fallback da API também atualizado para 'Post Feed'.
 - [ ] ⚠️ Configurar todas as variáveis do .env.local no painel do Vercel (NOTION_TOKEN, RAIO_X_PASSWORD, GOOGLE_OAUTH_*, etc.) — sem isso as ferramentas falham em produção com "API token is invalid"
+- [x] Sessão 12 (10/06/2026):
+      1. Abas /clientes renomeadas: 'KANBAN'→'QUADROS', 'TABLE'→'TABELA' (vistaAtiva inalterado).
+      2. Nova coluna Kanban 'Prospecção' (cor #6B7280, FASES[0], antes de 'Diagnóstico') —
+         label e valor interno são ambos 'Prospecção' (mesmo padrão das demais fases, que
+         já são salvas com nome acentuado na propriedade "Fase" do Notion). Adicionada também
+         a FASE_AVATAR_BG e FASE_EMPTY_MSG. Não conta nas 7 etapas de progresso (lógica de
+         /api/clientes/[id]/progresso é independente de FASES).
+         ⚠️ Adicionar a opção "Prospecção" ao select "Fase" da DB "Clientes ORIUM" no Notion
+         (não foi criada automaticamente).
+      3. ModalItemCalendario (aba Calendário em /clientes): novo tipo 'Gravação' em
+         TIPOS_CONTEUDO, e campos condicionais por tipo —
+         'Reunião': Participantes, Pauta, Link da reunião, Duração estimada (select 30 min/
+         1 hora/1h30/2 horas);
+         'Gravação': Tipo de conteúdo (Reel/Vídeo longo/Stories/Bastidores), Roteiro/Descrição,
+         Local de gravação, Equipamento necessário (opcional).
+         CalendarioItem ganhou os campos participantes/pauta/linkReuniao/duracaoReuniao/
+         tipoGravacao/roteiroGravacao/localGravacao/equipamentoGravacao (todos rich_text).
+         As 8 propriedades correspondentes ('Participantes','Pauta','Link Reunião',
+         'Duração Reunião','Tipo Gravação','Roteiro Gravação','Local Gravação',
+         'Equipamento Gravação') foram criadas via API diretamente na DB NOTION_DB_CALENDARIO —
+         GET/POST/PATCH em app/api/clientes/calendario/route.ts atualizados.
+      4. Logo ORIUM no header de todas as ferramentas internas (briefing, raio-x, proposta,
+         contrato, calendario, relatorio, checklist, clientes, biblioteca) agora é um
+         <Link href="/"> com className "inline-block cursor-pointer transition-opacity
+         hover:opacity-80" — leva de volta ao menu principal (hub público "/", não /hub).
+      5. Aba "Acessos" removida de /clientes (tab, VistaAcessos e tipo de vistaAtiva).
+      Commit: 0b2ecb3.
 
 ---
 
