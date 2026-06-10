@@ -27,7 +27,7 @@ const projetos = [
     descricao:
       "Posicionamento profissional e construção de autoridade digital para especialista em urgência e emergência. Desenvolvimento da identidade de comunicação, estruturação da presença digital e criação de canais de captação para cursos e formações.",
     tags: ["Posicionamento", "Autoridade Digital", "Estratégia de Conteúdo"],
-    instagram: null,
+    instagram: "https://www.instagram.com/prof.marcelofelix",
   },
   {
     nome: "Ogarete Restaurante Árabe",
