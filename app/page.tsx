@@ -12,6 +12,65 @@ import Image from "next/image";
 const GRAIN =
   "data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E";
 
+const projetos = [
+  {
+    nome: "Altemans Barbearia",
+    ramo: "Beleza & Estética",
+    descricao:
+      "Gestão estratégica completa da presença digital, incluindo planejamento mensal de conteúdo, produção de posts, stories e vídeos. Trabalho contínuo de fortalecimento da identidade da marca e comunicação alinhada ao posicionamento da barbearia.",
+    tags: ["Social Media", "Produção de Conteúdo", "Planejamento Mensal"],
+    instagram: "https://www.instagram.com/altemansbarbearia",
+  },
+  {
+    nome: "Prof. Marcelo Félix",
+    ramo: "Educação",
+    descricao:
+      "Posicionamento profissional e construção de autoridade digital para especialista em urgência e emergência. Desenvolvimento da identidade de comunicação, estruturação da presença digital e criação de canais de captação para cursos e formações.",
+    tags: ["Posicionamento", "Autoridade Digital", "Estratégia de Conteúdo"],
+    instagram: null,
+  },
+  {
+    nome: "Ogarete Restaurante Árabe",
+    ramo: "Alimentação",
+    descricao:
+      "Reestruturação completa da presença digital com reconstrução do Instagram e desenvolvimento de identidade visual exclusiva. Gestão integral da operação digital, incluindo captação de fotos e vídeos, criação de conteúdo e planejamento contínuo. Resultado: posicionamento mais profissional e comunicação consistente.",
+    tags: ["Social Media", "Identidade Visual", "Direção Criativa", "Gestão Completa"],
+    instagram: "https://www.instagram.com/ogarete.culinariaarabe",
+  },
+  {
+    nome: "Forno House",
+    ramo: "Alimentação",
+    descricao:
+      "Gestão estratégica da presença digital com foco no fortalecimento da marca e valorização dos produtos. Desenvolvimento contínuo de identidade visual, direção criativa e planejamento de conteúdo alinhado ao posicionamento da empresa. Resultado: presença mais consistente e maior conexão com o público.",
+    tags: ["Social Media", "Identidade Visual", "Direção Criativa", "Produção de Conteúdo"],
+    instagram: "https://www.instagram.com/fornohouse",
+  },
+  {
+    nome: "Boizão BBQ",
+    ramo: "Alimentação",
+    descricao:
+      "Reestruturação completa da presença digital com reformulação estratégica do Instagram, identidade visual e planejamento de conteúdo. Gestão integral do perfil, incluindo captação, produção, direção criativa e acompanhamento contínuo. Resultado: presença digital mais forte e comunicação estratégica voltada para crescimento.",
+    tags: ["Social Media", "Identidade Visual", "Direção Criativa", "Gestão Completa"],
+    instagram: "https://www.instagram.com/boizaobarbque",
+  },
+  {
+    nome: "Actos Espaço Terapêutico",
+    ramo: "Saúde & Bem-estar",
+    descricao:
+      "Desenvolvimento completo da presença digital do zero, desde a criação estratégica do Instagram até a construção da identidade visual e posicionamento de comunicação. Definição da linguagem da marca, organização do perfil e planejamento de conteúdo alinhados aos valores da Actos. Resultado: presença digital sólida, profissional e acolhedora.",
+    tags: ["Branding", "Social Media", "Direção Criativa", "Gestão Completa"],
+    instagram: "https://www.instagram.com/actosespacoterapeutico",
+  },
+  {
+    nome: "Campanhas Políticas — Itabirito/MG",
+    ramo: "Marketing Político",
+    descricao:
+      "Desenvolvimento e execução de estratégias completas de comunicação para quatro campanhas eleitorais em Itabirito/MG — três para vereador e uma majoritária para prefeito. Identidade visual, marketing digital, produção audiovisual e materiais gráficos. Resultado: dois candidatos ao cargo de vereador eleitos.",
+    tags: ["Marketing Político", "Estratégia Eleitoral", "Produção Audiovisual", "Comunicação Integrada"],
+    instagram: null,
+  },
+];
+
 function Eyebrow({ children }: { children: string }) {
   return (
     <div className="flex items-center gap-3 mb-5">
@@ -387,156 +446,123 @@ export default function Home() {
                     fontFamily: "'Anton', sans-serif",
                   }}
                 >
-                  Projetos reais com foco em percepção, autoridade e geração de
-                  demanda.
+                  Projetos
                 </h2>
               </div>
               <p className="text-zinc-400 max-w-md leading-[1.6] text-[0.95rem]">
-                Cada projeto mostra como a ORIUM transforma presença digital em
-                posicionamento claro e resultado comercial.
+                Marcas que estruturamos, posicionamos e fazemos crescer.
               </p>
             </div>
 
-            <div className="flex flex-col border border-[#1a1a1a]">
-              {/* Altemans — imagem esquerda | conteúdo direita */}
-              <div className="group flex flex-col md:flex-row border-b border-[#1a1a1a] overflow-hidden transition-all duration-300">
-                <div className="relative w-full md:w-[45%] h-[220px] md:h-auto flex-shrink-0 overflow-hidden">
-                  <Image
-                    src="/fotos/altemans.png"
-                    alt="Projeto Altemans Barbearia"
-                    fill
-                    className="object-cover scale-100 group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-black/50 group-hover:bg-black/25 transition-all duration-500" />
-                </div>
-                <div className="flex-1 p-7 md:p-10 bg-[#080808] flex flex-col justify-between gap-7">
+            <div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+              style={{ gap: "20px" }}
+            >
+              {projetos.map((projeto) => (
+                <div
+                  key={projeto.nome}
+                  data-ramo={projeto.ramo}
+                  className="flex flex-col justify-between transition-shadow duration-300 hover:shadow-[0_0_0_1px_rgba(255,107,0,0.2)]"
+                  style={{
+                    background: "#111111",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: "12px",
+                    padding: "28px",
+                  }}
+                >
                   <div>
                     <span
-                      className="inline-block mb-5 px-3 py-1 text-[0.7rem] tracking-[0.15em] uppercase"
+                      className="inline-block px-3 py-1 uppercase"
                       style={{
-                        border: "1px solid #FF6B00",
+                        background: "rgba(255,107,0,0.1)",
                         color: "#FF6B00",
+                        fontSize: "11px",
+                        letterSpacing: "0.08em",
                         fontFamily: "Poppins, sans-serif",
+                        borderRadius: "999px",
                       }}
                     >
-                      Barbearia
+                      {projeto.ramo}
                     </span>
                     <h3
-                      className="mb-4 text-white"
+                      className="text-white"
                       style={{
                         fontFamily: "'Anton', sans-serif",
-                        fontSize: "clamp(1.4rem, 3vw, 2rem)",
-                        lineHeight: 1.1,
+                        fontSize: "20px",
+                        marginTop: "12px",
+                        lineHeight: 1.2,
                       }}
                     >
-                      Altemans Barbearia
+                      {projeto.nome}
                     </h3>
-                    <p className="text-[#999] leading-[1.7] mb-6 text-[0.95rem]">
-                      Reestruturação completa da presença digital: identidade
-                      visual, perfil do Instagram, destaques, comunicação e
-                      planejamento mensal de conteúdo. Resultado: presença mais
-                      profissional, comunicação clara e consistência na publicação.
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {["Social Media", "Direção Visual", "Conteúdo"].map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-3 py-1 text-[0.7rem] text-[#999]"
-                          style={{
-                            background: "#111",
-                            fontFamily: "Poppins, sans-serif",
-                          }}
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex flex-col md:flex-row gap-3">
-                    <a
-                      href="https://www.instagram.com/altemansbarbearia/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={secondaryButton}
+                    <p
+                      className="line-clamp-3"
+                      style={{
+                        fontFamily: "Poppins, sans-serif",
+                        fontSize: "13px",
+                        color: "#999999",
+                        marginTop: "8px",
+                        lineHeight: 1.6,
+                      }}
                     >
-                      Ver Instagram
-                    </a>
-                    <button onClick={() => setModalOpen(true)} className={primaryButton}>
-                      Quero algo parecido
-                    </button>
+                      {projeto.descricao}
+                    </p>
                   </div>
-                </div>
-              </div>
 
-              {/* Prof. Marcelo — conteúdo esquerda | imagem direita */}
-              <div className="group flex flex-col md:flex-row-reverse overflow-hidden transition-all duration-300">
-                <div className="relative w-full md:w-[45%] h-[220px] md:h-auto flex-shrink-0 overflow-hidden">
-                  <Image
-                    src="/fotos/marcelo.png"
-                    alt="Projeto Prof. Marcelo Félix"
-                    fill
-                    className="object-cover scale-100 group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-black/50 group-hover:bg-black/25 transition-all duration-500" />
-                </div>
-                <div className="flex-1 p-7 md:p-10 bg-[#080808] flex flex-col justify-between gap-7 border-t md:border-t-0 border-[#1a1a1a]">
-                  <div>
-                    <span
-                      className="inline-block mb-5 px-3 py-1 text-[0.7rem] tracking-[0.15em] uppercase"
-                      style={{
-                        border: "1px solid #FF6B00",
-                        color: "#FF6B00",
-                        fontFamily: "Poppins, sans-serif",
-                      }}
-                    >
-                      Saúde e educação
-                    </span>
-                    <h3
-                      className="mb-4 text-white"
-                      style={{
-                        fontFamily: "'Anton', sans-serif",
-                        fontSize: "clamp(1.4rem, 3vw, 2rem)",
-                        lineHeight: 1.1,
-                      }}
-                    >
-                      Prof. Marcelo Félix
-                    </h3>
-                    <p className="text-[#999] leading-[1.7] mb-6 text-[0.95rem]">
-                      Posicionamento digital para autoridade profissional na área
-                      de saúde e educação. Organização de perfil, identidade
-                      visual, linguagem e comunicação para cursos, palestras e
-                      treinamentos.
-                    </p>
+                  <div
+                    style={{
+                      marginTop: "auto",
+                      paddingTop: "16px",
+                      borderTop: "1px solid rgba(255,255,255,0.04)",
+                    }}
+                  >
                     <div className="flex flex-wrap gap-2">
-                      {["Branding", "Autoridade", "Posicionamento"].map((tag) => (
+                      {projeto.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="px-3 py-1 text-[0.7rem] text-[#999]"
+                          className="px-3 py-1"
                           style={{
-                            background: "#111",
+                            background: "rgba(255,255,255,0.05)",
+                            color: "#666666",
+                            fontSize: "11px",
                             fontFamily: "Poppins, sans-serif",
+                            borderRadius: "999px",
                           }}
                         >
                           {tag}
                         </span>
                       ))}
                     </div>
-                  </div>
-                  <div className="flex flex-col md:flex-row gap-3">
-                    <a
-                      href="https://www.instagram.com/prof.marcelofelix/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={secondaryButton}
-                    >
-                      Ver Instagram
-                    </a>
-                    <button onClick={() => setModalOpen(true)} className={primaryButton}>
-                      Quero algo parecido
-                    </button>
+                    {projeto.instagram !== null && (
+                      <a
+                        href={projeto.instagram}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2"
+                        style={{
+                          marginTop: "10px",
+                          color: "#FF6B00",
+                          fontSize: "12px",
+                          fontFamily: "Poppins, sans-serif",
+                        }}
+                      >
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <rect x="2" y="2" width="20" height="20" rx="5" stroke="#FF6B00" strokeWidth="2" />
+                          <circle cx="12" cy="12" r="4" stroke="#FF6B00" strokeWidth="2" />
+                          <circle cx="17.5" cy="6.5" r="1.2" fill="#FF6B00" />
+                        </svg>
+                        Ver perfil
+                      </a>
+                    )}
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </section>
