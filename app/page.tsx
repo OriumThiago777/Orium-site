@@ -17,7 +17,7 @@ const projetos = [
     nome: "Altemans Barbearia",
     ramo: "Beleza & Estética",
     descricao:
-      "Gestão estratégica completa da presença digital, incluindo planejamento mensal de conteúdo, produção de posts, stories e vídeos. Trabalho contínuo de fortalecimento da identidade da marca e comunicação alinhada ao posicionamento da barbearia.",
+      "Gestão mensal completa da presença digital. Planejamento de conteúdo, produção de posts, stories e vídeos com identidade consistente e comunicação alinhada ao posicionamento da marca.",
     tags: ["Social Media", "Produção de Conteúdo", "Planejamento Mensal"],
     instagram: "https://www.instagram.com/altemansbarbearia",
   },
@@ -25,7 +25,7 @@ const projetos = [
     nome: "Prof. Marcelo Félix",
     ramo: "Educação",
     descricao:
-      "Posicionamento profissional e construção de autoridade digital para especialista em urgência e emergência. Desenvolvimento da identidade de comunicação, estruturação da presença digital e criação de canais de captação para cursos e formações.",
+      "Posicionamento profissional e autoridade digital para especialista em urgência e emergência. Identidade de comunicação estruturada e canais de captação para cursos e formações.",
     tags: ["Posicionamento", "Autoridade Digital", "Estratégia de Conteúdo"],
     instagram: "https://www.instagram.com/prof.marcelofelix",
   },
@@ -33,7 +33,7 @@ const projetos = [
     nome: "Ogarete Restaurante Árabe",
     ramo: "Alimentação",
     descricao:
-      "Reestruturação completa da presença digital com reconstrução do Instagram e desenvolvimento de identidade visual exclusiva. Gestão integral da operação digital, incluindo captação de fotos e vídeos, criação de conteúdo e planejamento contínuo. Resultado: posicionamento mais profissional e comunicação consistente.",
+      "Reestruturação completa da presença digital. Identidade visual exclusiva, reconstrução do Instagram e gestão integral — captação, conteúdo, publicação e planejamento contínuo.",
     tags: ["Social Media", "Identidade Visual", "Direção Criativa", "Gestão Completa"],
     instagram: "https://www.instagram.com/ogarete.culinariaarabe",
   },
@@ -41,7 +41,7 @@ const projetos = [
     nome: "Forno House",
     ramo: "Alimentação",
     descricao:
-      "Gestão estratégica da presença digital com foco no fortalecimento da marca e valorização dos produtos. Desenvolvimento contínuo de identidade visual, direção criativa e planejamento de conteúdo alinhado ao posicionamento da empresa. Resultado: presença mais consistente e maior conexão com o público.",
+      "Fortalecimento de marca e valorização de produtos via presença digital estratégica. Identidade visual, direção criativa e gestão contínua com comunicação alinhada ao posicionamento.",
     tags: ["Social Media", "Identidade Visual", "Direção Criativa", "Produção de Conteúdo"],
     instagram: "https://www.instagram.com/fornohouse",
   },
@@ -49,7 +49,7 @@ const projetos = [
     nome: "Boizão BBQ",
     ramo: "Alimentação",
     descricao:
-      "Reestruturação completa da presença digital com reformulação estratégica do Instagram, identidade visual e planejamento de conteúdo. Gestão integral do perfil, incluindo captação, produção, direção criativa e acompanhamento contínuo. Resultado: presença digital mais forte e comunicação estratégica voltada para crescimento.",
+      "Reformulação estratégica da presença digital. Nova identidade visual, planejamento de conteúdo e gestão completa do perfil — captação, produção e direção criativa contínua.",
     tags: ["Social Media", "Identidade Visual", "Direção Criativa", "Gestão Completa"],
     instagram: "https://www.instagram.com/boizaobarbque",
   },
@@ -57,7 +57,7 @@ const projetos = [
     nome: "Actos Espaço Terapêutico",
     ramo: "Saúde & Bem-estar",
     descricao:
-      "Desenvolvimento completo da presença digital do zero, desde a criação estratégica do Instagram até a construção da identidade visual e posicionamento de comunicação. Definição da linguagem da marca, organização do perfil e planejamento de conteúdo alinhados aos valores da Actos. Resultado: presença digital sólida, profissional e acolhedora.",
+      "Presença digital construída do zero. Identidade visual, linguagem de marca, organização do perfil e planejamento de conteúdo alinhados aos valores e ao propósito da Actos.",
     tags: ["Branding", "Social Media", "Direção Criativa", "Gestão Completa"],
     instagram: "https://www.instagram.com/actosespacoterapeutico",
   },
@@ -65,7 +65,7 @@ const projetos = [
     nome: "Campanhas Políticas — Itabirito/MG",
     ramo: "Marketing Político",
     descricao:
-      "Desenvolvimento e execução de estratégias completas de comunicação para quatro campanhas eleitorais em Itabirito/MG — três para vereador e uma majoritária para prefeito. Identidade visual, marketing digital, produção audiovisual e materiais gráficos. Resultado: dois candidatos ao cargo de vereador eleitos.",
+      "Quatro campanhas eleitorais gerenciadas de ponta a ponta — identidade visual, marketing digital, produção audiovisual e materiais gráficos. Dois candidatos a vereador eleitos.",
     tags: ["Marketing Político", "Estratégia Eleitoral", "Produção Audiovisual", "Comunicação Integrada"],
     instagram: null,
   },
@@ -496,7 +496,6 @@ export default function Home() {
                       {projeto.nome}
                     </h3>
                     <p
-                      className="line-clamp-3"
                       style={{
                         fontFamily: "Poppins, sans-serif",
                         fontSize: "13px",
