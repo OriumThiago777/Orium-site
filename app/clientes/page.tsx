@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef, type CSSProperties } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { isAuthenticated, saveAuth, authHeaders } from '@/lib/auth'
+import { getToolUrl } from '@/lib/tool-links'
 import {
   DndContext,
   DragEndEvent,
@@ -411,6 +413,8 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loa
   }, [progresso, cliente.id, cliente.nome])
 
   const progressoEfetivo = progresso ?? progressoLocal
+  const router = useRouter()
+  const primeiraEtapaPendente = progressoEfetivo?.etapas.find(e => !e.concluida)?.nome ?? null
 
   useEffect(() => {
     setLoadingDocs(true)
@@ -560,6 +564,15 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loa
                                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
                                 → Drive
                               </a>
+                            )}
+                            {!etapa.concluida && etapa.nome === primeiraEtapaPendente && (
+                              <button
+                                onClick={() => router.push(getToolUrl(etapa.nome, cliente.nome))}
+                                style={{ background: 'transparent', border: 'none', color: '#FF6B00', fontFamily: 'Anton, sans-serif', fontSize: '0.72rem', letterSpacing: '0.15em', cursor: 'pointer', padding: '2px 4px', transition: 'opacity 0.15s' }}
+                                onMouseEnter={e => { e.currentTarget.style.opacity = '0.75' }}
+                                onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}>
+                                GERAR →
+                              </button>
                             )}
                           </div>
                         ))}

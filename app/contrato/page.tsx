@@ -455,7 +455,16 @@ function ContratoPage() {
     if (contentRef.current) contentRef.current.scrollTop = 0;
   }, [etapa]);
   const [erros, setErros] = useState<string[]>([]);
-  const [form, setForm] = useState<FormState>(estadoInicial());
+  const searchParams = useSearchParams();
+  const docParam = searchParams.get('doc');
+  const clienteParam = searchParams.get('cliente');
+  const segmentoParam = searchParams.get('segmento');
+  const [form, setForm] = useState<FormState>(() => {
+    const inicial = estadoInicial();
+    if (clienteParam) inicial.cliente.empresa = clienteParam;
+    if (segmentoParam) inicial.cliente.segmento = segmentoParam;
+    return inicial;
+  });
   const [gruposAbertos, setGruposAbertos] = useState<Record<string, boolean>>({
     'BRANDING E IDENTIDADE': true, 'PRESENÇA DIGITAL': false, 'DESENVOLVIMENTO E TECNOLOGIA': false,
   });
@@ -464,8 +473,6 @@ function ContratoPage() {
   const [savedMsg, setSavedMsg] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [gerando, setGerando] = useState(false);
-  const searchParams = useSearchParams();
-  const docParam = searchParams.get('doc');
 
   useEffect(() => {
     if (!autenticado || !docParam) return;

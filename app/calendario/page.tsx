@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { saveAuth, isAuthenticated, clearAuth, authHeaders } from '@/lib/auth';
@@ -100,7 +101,7 @@ function toggleBtn(active: boolean): React.CSSProperties {
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
-export default function CalendarioPage() {
+function CalendarioPage() {
   const [autenticado, setAutenticado] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [senha, setSenha] = useState('');
@@ -115,10 +116,14 @@ export default function CalendarioPage() {
     if (contentRef.current) contentRef.current.scrollTop = 0;
   }, [step]);
 
+  const searchParams = useSearchParams();
+  const clienteParam = searchParams.get('cliente');
+  const segmentoParam = searchParams.get('segmento');
+
   const [form, setForm] = useState<Record<string, string>>({
-    nomeCliente: '',
+    nomeCliente: clienteParam || '',
     instagram: '',
-    segmento: '',
+    segmento: segmentoParam || '',
     mes: '',
     objetivo: '',
     tomVoz: '',
@@ -865,5 +870,13 @@ function PostCard({ post }: { post: Post }) {
         {post.hashtags}
       </p>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense>
+      <CalendarioPage />
+    </Suspense>
   );
 }
