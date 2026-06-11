@@ -34,7 +34,8 @@ export async function GET(request: Request) {
       headers: NH,
       body: JSON.stringify({
         filter: { property: 'Cliente', rich_text: { equals: nome } },
-        page_size: 20,
+        sorts: [{ property: 'Data de Geração', direction: 'descending' }],
+        page_size: 100,
       }),
     })
 
@@ -49,8 +50,10 @@ export async function GET(request: Request) {
     const docMap = new Map<string, string | null>()
     for (const doc of docs) {
       const tipo = doc.properties.Tipo?.select?.name
-      if (tipo && !docMap.has(tipo)) {
-        docMap.set(tipo, doc.properties['Link Drive']?.url ?? null)
+      if (!tipo) continue
+      const link = doc.properties['Link Drive']?.url ?? null
+      if (!docMap.has(tipo) || (docMap.get(tipo) === null && link)) {
+        docMap.set(tipo, link)
       }
     }
 

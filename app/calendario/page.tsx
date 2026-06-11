@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { saveAuth, isAuthenticated, clearAuth } from '@/lib/auth';
+import { saveAuth, isAuthenticated, clearAuth, authHeaders } from '@/lib/auth';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -134,6 +134,7 @@ export default function CalendarioPage() {
   const [loadingTextIndex, setLoadingTextIndex] = useState(0);
   const [calendario, setCalendario] = useState<Calendario | null>(null);
   const [erroGeracao, setErroGeracao] = useState('');
+  const [documentoId, setDocumentoId] = useState('');
   const [copiado, setCopiado] = useState(false);
 
   // Checar auth no client
@@ -225,13 +226,25 @@ export default function CalendarioPage() {
         setErroGeracao(data.error);
       } else {
         setCalendario(data);
+        const docId = documentoId || crypto.randomUUID();
+        fetch('/api/documentos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify({
+            id: docId,
+            tipo: 'Calendário',
+            nome: `Calendário — ${form.nomeCliente} — ${form.mes}`,
+            cliente: form.nomeCliente,
+            dados: { form, formatos: multi.formatos || [], temas: multi.temas || [], calendario: data },
+          }),
+        }).then(() => setDocumentoId(docId)).catch(console.error);
       }
     } catch {
       setErroGeracao('Erro ao gerar calendário. Tente novamente.');
     } finally {
       setGerando(false);
     }
-  }, [form, multi]);
+  }, [form, multi, documentoId]);
 
   useEffect(() => {
     if (step === 3 && !calendario && !gerando) {
