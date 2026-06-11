@@ -10,6 +10,7 @@ import { useDraft } from '@/lib/draft';
 import SaveToast from '@/components/SaveToast';
 import DraftBanner from '@/components/DraftBanner';
 import ClienteSelector from '@/components/ClienteSelector';
+import ImportarBriefing, { BriefingImportado } from '@/components/ImportarBriefing';
 
 const DIMENSOES = [
   'Primeira Impressão',
@@ -458,6 +459,16 @@ function RaioXPage() {
   const onB = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => { e.target.style.borderColor = '#1e1e1e'; };
   const LB: React.CSSProperties = { display: 'block', color: '#444', fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '0.5rem', fontFamily: 'Poppins, sans-serif' };
 
+  // Só preenche campos vazios — o que o usuário já digitou é preservado
+  function importarBriefing(d: BriefingImportado): boolean {
+    const preservado = !!form.segmentoCliente.trim() && !!d.segmento.trim();
+    setForm(p => ({
+      ...p,
+      segmentoCliente: p.segmentoCliente.trim() ? p.segmentoCliente : d.segmento.slice(0, 40),
+    }));
+    return preservado;
+  }
+
   function renderContent() {
     // Step 0 — Informações
     if (step === 0) {
@@ -493,6 +504,7 @@ function RaioXPage() {
             <div>
               <label style={LB}>Nome do Cliente</label>
               <ClienteSelector value={form.nomeCliente} onChange={nome => setForm(p => ({ ...p, nomeCliente: nome }))} placeholder="Ex: Restaurante do João" />
+              <ImportarBriefing cliente={form.nomeCliente} onImport={importarBriefing} />
             </div>
             <div>
               <label style={LB}>Segmento</label>

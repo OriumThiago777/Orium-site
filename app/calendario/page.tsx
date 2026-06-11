@@ -8,6 +8,7 @@ import { saveAuth, isAuthenticated, clearAuth, authHeaders } from '@/lib/auth';
 import { useDraft } from '@/lib/draft';
 import DraftBanner from '@/components/DraftBanner';
 import ClienteSelector from '@/components/ClienteSelector';
+import ImportarBriefing, { BriefingImportado } from '@/components/ImportarBriefing';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -389,6 +390,27 @@ function CalendarioPage() {
     return true;
   }
 
+  // Só preenche campos vazios — o que o usuário já digitou é preservado
+  function importarBriefing(d: BriefingImportado): boolean {
+    const importaveis: Array<[campo: string, valor: string]> = [
+      ['segmento', d.segmento],
+      ['instagram', d.instagram],
+      ['publico', d.publicoAlvo],
+    ];
+    let preservado = false;
+    for (const [campo, valor] of importaveis) {
+      if (valor.trim() && form[campo]?.trim()) preservado = true;
+    }
+    setForm(prev => {
+      const next = { ...prev };
+      for (const [campo, valor] of importaveis) {
+        if (valor.trim() && !prev[campo]?.trim()) next[campo] = valor;
+      }
+      return next;
+    });
+    return preservado;
+  }
+
   // ─── Conteúdo de cada step ────────────────────────────────────────────────
 
   function renderStep() {
@@ -401,6 +423,7 @@ function CalendarioPage() {
               onChange={nome => set('nomeCliente', nome)}
               placeholder="Nome do cliente"
             />
+            <ImportarBriefing cliente={form.nomeCliente} onImport={importarBriefing} />
           </Field>
           <Field label="Instagram do cliente">
             <input

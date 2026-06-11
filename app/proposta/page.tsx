@@ -10,6 +10,7 @@ import { useDraft } from '@/lib/draft';
 import SaveToast from '@/components/SaveToast';
 import DraftBanner from '@/components/DraftBanner';
 import ClienteSelector from '@/components/ClienteSelector';
+import ImportarBriefing, { BriefingImportado } from '@/components/ImportarBriefing';
 
 // ── Serviços pré-definidos ────────────────────────────────────────────────────
 
@@ -520,6 +521,16 @@ function PropostaPage() {
   const inputClass = "w-full bg-zinc-900 border border-zinc-800 rounded-xl text-white px-4 py-3 focus:outline-none focus:border-orange-500 transition placeholder:text-zinc-600 text-sm";
   const labelClass = "block text-zinc-400 text-[10px] font-semibold uppercase tracking-widest mb-2";
 
+  // Só preenche campos vazios — o que o usuário já digitou é preservado
+  function importarBriefing(d: BriefingImportado): boolean {
+    const preservado = !!form.segmento.trim() && !!d.segmento.trim();
+    setForm(p => ({
+      ...p,
+      segmento: p.segmento.trim() ? p.segmento : d.segmento,
+    }));
+    return preservado;
+  }
+
   function renderContent() {
     // Step 0 — Dados do Cliente
     if (step === 0) {
@@ -530,6 +541,7 @@ function PropostaPage() {
               <div>
                 <label className={labelClass}>Nome do Cliente</label>
                 <ClienteSelector value={form.nomeCliente} onChange={nome => setForm(p => ({ ...p, nomeCliente: nome }))} placeholder="Ex: CORTEX Consultoria" />
+                <ImportarBriefing cliente={form.nomeCliente} onImport={importarBriefing} />
               </div>
               <div>
                 <label className={labelClass}>Segmento</label>
