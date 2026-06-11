@@ -6,7 +6,9 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { isAuthenticated, saveAuth } from '@/lib/auth'
 import { savePdfToCloud } from '@/lib/upload-helper'
+import { useDraft } from '@/lib/draft'
 import SaveToast from '@/components/SaveToast'
+import DraftBanner from '@/components/DraftBanner'
 
 type FormData = {
   cliente: string
@@ -74,6 +76,13 @@ function RelatorioPage() {
   const [exportando, setExportando] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle')
   const previewRef = useRef<HTMLDivElement>(null)
+
+  const { draft, retomar, descartar, concluir } = useDraft(
+    'relatorio',
+    { step, form, listas },
+    d => { setForm(d.form); setListas(d.listas); setStep(d.step) },
+    autenticado,
+  )
 
   const setF = (key: keyof FormData, value: string) =>
     setForm(prev => ({ ...prev, [key]: value }))
@@ -606,6 +615,7 @@ function RelatorioPage() {
       savePdfToCloud(pdfBlob, form.cliente, 'Relatório', arquivo)
         .then(result => { setSaveStatus(result.success ? 'success' : 'error'); setTimeout(() => setSaveStatus('idle'), 4000) })
         .catch(() => { setSaveStatus('error'); setTimeout(() => setSaveStatus('idle'), 4000) })
+      concluir()
     } catch (err) {
       console.error('Erro ao gerar PDF:', err)
       alert('Erro ao gerar PDF. Tente novamente.')
@@ -765,6 +775,7 @@ function RelatorioPage() {
           </div>
         )}
       </div>
+      {draft && <DraftBanner savedAt={draft.savedAt} onRetomar={retomar} onDescartar={descartar} />}
       {saveStatus !== 'idle' && <SaveToast status={saveStatus} />}
     </div>
   )

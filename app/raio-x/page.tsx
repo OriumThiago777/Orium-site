@@ -6,7 +6,9 @@ import NextImage from 'next/image';
 import Link from 'next/link';
 import { isAuthenticated, saveAuth, authHeaders } from '@/lib/auth';
 import { savePdfToCloud } from '@/lib/upload-helper';
+import { useDraft } from '@/lib/draft';
 import SaveToast from '@/components/SaveToast';
+import DraftBanner from '@/components/DraftBanner';
 
 const DIMENSOES = [
   'Primeira Impressão',
@@ -140,6 +142,13 @@ function RaioXPage() {
     investimento: '',
     proximosPassos: '',
   });
+
+  const { draft, retomar, descartar, concluir } = useDraft(
+    'raio-x',
+    { step, form },
+    d => { setForm(d.form); setStep(d.step); },
+    autenticado && !docParam,
+  );
 
   async function handleSenha(e: React.FormEvent) {
     e.preventDefault();
@@ -386,6 +395,7 @@ function RaioXPage() {
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ id: docId, tipo: 'Raio-X', nome: form.nomeCliente || 'Documento sem nome', cliente: form.nomeCliente, dados: form }),
       }).then(() => { setDocumentoId(docId); setSavedMsg('Salvo em Documentos'); setTimeout(() => setSavedMsg(''), 3000); }).catch(console.error);
+      concluir();
 
     } catch (err) {
       console.error('Erro ao gerar PDF:', err);
@@ -712,6 +722,7 @@ function RaioXPage() {
           {savedMsg}
         </div>
       )}
+      {draft && <DraftBanner savedAt={draft.savedAt} onRetomar={retomar} onDescartar={descartar} />}
       {saveStatus !== 'idle' && <SaveToast status={saveStatus} />}
     </div>
   );

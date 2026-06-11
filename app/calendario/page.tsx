@@ -4,6 +4,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { saveAuth, isAuthenticated, clearAuth, authHeaders } from '@/lib/auth';
+import { useDraft } from '@/lib/draft';
+import DraftBanner from '@/components/DraftBanner';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -137,6 +139,15 @@ export default function CalendarioPage() {
   const [documentoId, setDocumentoId] = useState('');
   const [copiado, setCopiado] = useState(false);
 
+  // Rascunho: restaura no máximo até o step 2 — entrar direto no step 3
+  // dispararia a geração via IA automaticamente
+  const { draft, retomar, descartar, concluir } = useDraft(
+    'calendario',
+    { step, form, multi },
+    d => { setForm(d.form); setMulti(d.multi); setStep(Math.min(d.step, 2)); },
+    autenticado,
+  );
+
   // Checar auth no client
   useEffect(() => {
     setAutenticado(isAuthenticated());
@@ -238,6 +249,7 @@ export default function CalendarioPage() {
             dados: { form, formatos: multi.formatos || [], temas: multi.temas || [], calendario: data },
           }),
         }).then(() => setDocumentoId(docId)).catch(console.error);
+        concluir();
       }
     } catch {
       setErroGeracao('Erro ao gerar calendário. Tente novamente.');
@@ -642,6 +654,7 @@ export default function CalendarioPage() {
   return (
     <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', fontFamily: 'Poppins, sans-serif', display: 'flex' }}>
       {bgImage}
+      {draft && <DraftBanner savedAt={draft.savedAt} onRetomar={retomar} onDescartar={descartar} />}
 
       {/* Sidebar */}
       <div style={{ position: 'relative', width: sidebarCollapsed ? '60px' : '260px', flexShrink: 0, height: '100%', zIndex: 10, transition: 'width 0.3s ease' }}>

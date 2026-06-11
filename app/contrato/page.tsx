@@ -6,7 +6,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { isAuthenticated, saveAuth, authHeaders } from '@/lib/auth';
 import { savePdfToCloud } from '@/lib/upload-helper';
+import { useDraft } from '@/lib/draft';
 import SaveToast from '@/components/SaveToast';
+import DraftBanner from '@/components/DraftBanner';
 
 const FA = 'Anton, sans-serif';
 const FP = 'Poppins, sans-serif';
@@ -472,6 +474,13 @@ function ContratoPage() {
       .catch(console.error);
   }, [autenticado, docParam]);
 
+  const { draft, retomar, descartar, concluir } = useDraft(
+    'contrato',
+    { etapa, form },
+    d => { setForm(d.form); setEtapa(d.etapa); },
+    autenticado && !docParam,
+  );
+
   async function handleSenha(e: React.FormEvent) {
     e.preventDefault();
     setCarregando(true); setErroSenha(false);
@@ -524,7 +533,7 @@ function ContratoPage() {
   }
 
   function limpar() {
-    if (window.confirm('Limpar todo o formulário? Esta ação não pode ser desfeita.')) { setForm(estadoInicial()); setEtapa(0); setErros([]); }
+    if (window.confirm('Limpar todo o formulário? Esta ação não pode ser desfeita.')) { setForm(estadoInicial()); setEtapa(0); setErros([]); descartar(); }
   }
 
   async function gerarContratoPDF() {
@@ -611,6 +620,7 @@ function ContratoPage() {
       savePdfToCloud(pdfBlob, clientName, 'Contrato', arquivo)
         .then(result => { setSaveStatus(result.success ? 'success' : 'error'); setTimeout(() => setSaveStatus('idle'), 4000); })
         .catch(() => { setSaveStatus('error'); setTimeout(() => setSaveStatus('idle'), 4000); });
+      concluir();
 
     } catch (err) {
       console.error('Erro ao gerar PDF do contrato:', err);
@@ -1070,6 +1080,7 @@ function ContratoPage() {
           {savedMsg}
         </div>
       )}
+      {draft && <DraftBanner savedAt={draft.savedAt} onRetomar={retomar} onDescartar={descartar} />}
       {saveStatus !== 'idle' && <SaveToast status={saveStatus} />}
     </div>
   );

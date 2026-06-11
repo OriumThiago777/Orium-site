@@ -4,7 +4,9 @@ import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { savePdfToCloud } from '@/lib/upload-helper'
+import { useDraft } from '@/lib/draft'
 import SaveToast from '@/components/SaveToast'
+import DraftBanner from '@/components/DraftBanner'
 
 type Tipo = 'pessoa' | 'empresa' | null
 
@@ -22,6 +24,13 @@ export default function BriefingPage() {
   const [enviando, setEnviando] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle')
+
+  const { draft, retomar, descartar, concluir } = useDraft(
+    'briefing',
+    { tipo, step, form, multi },
+    d => { setTipo(d.tipo); setStep(d.step); setForm(d.form); setMulti(d.multi) },
+    !enviado,
+  )
 
   const set = (name: string, value: string) =>
     setForm(prev => ({ ...prev, [name]: value }))
@@ -273,6 +282,7 @@ export default function BriefingPage() {
         body: JSON.stringify({ tipo, ...form, ...multiAsString }),
       })
       setEnviado(true)
+      concluir()
 
       // PDF em background — não bloqueia a tela de sucesso
       const allData = { ...form, ...multiAsString }
@@ -335,6 +345,7 @@ export default function BriefingPage() {
     return (
       <div style={{ ...pageStyle, alignItems: 'flex-start', overflowY: 'auto' }}>
         {bgImage}
+        {draft && <DraftBanner savedAt={draft.savedAt} onRetomar={retomar} onDescartar={descartar} />}
         <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '860px', margin: '0 auto', padding: '5rem 3rem' }}>
           <div style={{ marginBottom: '5rem' }}>
             <Image src="/lglaranja.png" alt="ORIUM" width={120} height={40} style={{ objectFit: 'contain' }} />
@@ -371,6 +382,7 @@ export default function BriefingPage() {
   return (
     <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', fontFamily: 'Poppins, sans-serif', display: 'flex' }}>
       {bgImage}
+      {draft && <DraftBanner savedAt={draft.savedAt} onRetomar={retomar} onDescartar={descartar} />}
 
       {/* Sidebar */}
       <div style={{ position: 'relative', width: sidebarCollapsed ? '60px' : '260px', flexShrink: 0, height: '100%', zIndex: 10, transition: 'width 0.3s ease' }}>

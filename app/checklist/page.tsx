@@ -6,7 +6,9 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { isAuthenticated, saveAuth, authHeaders } from '@/lib/auth'
 import { savePdfToCloud } from '@/lib/upload-helper'
+import { useDraft } from '@/lib/draft'
 import SaveToast from '@/components/SaveToast'
+import DraftBanner from '@/components/DraftBanner'
 
 type ChecklistItem = {
   id: string
@@ -103,6 +105,13 @@ function ChecklistContent() {
   const [items, setItems] = useState<ChecklistItem[]>(buildItems)
   const [salvando, setSalvando] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle')
+
+  const { draft, retomar, descartar, concluir } = useDraft(
+    'checklist',
+    { step, cliente, periodo, responsavel, observacoes, items },
+    d => { setCliente(d.cliente); setPeriodo(d.periodo); setResponsavel(d.responsavel); setObservacoes(d.observacoes); setItems(d.items); setStep(d.step) },
+    autenticado,
+  )
 
   const itensMarcados = items.filter(i => i.incluido)
   const totalMarcados = itensMarcados.length
@@ -337,6 +346,7 @@ function ChecklistContent() {
       })
 
       setStep(3)
+      concluir()
     } catch (err) {
       console.error('Erro ao gerar checklist:', err)
       alert('Erro ao gerar PDF. Tente novamente.')
@@ -682,6 +692,7 @@ function ChecklistContent() {
 
         </div>
       </div>
+      {draft && <DraftBanner savedAt={draft.savedAt} onRetomar={retomar} onDescartar={descartar} />}
       {saveStatus !== 'idle' && <SaveToast status={saveStatus} />}
     </div>
   )
