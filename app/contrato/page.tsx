@@ -9,6 +9,7 @@ import { savePdfToCloud } from '@/lib/upload-helper';
 import { useDraft } from '@/lib/draft';
 import SaveToast from '@/components/SaveToast';
 import DraftBanner from '@/components/DraftBanner';
+import ClienteSelector from '@/components/ClienteSelector';
 
 const FA = 'Anton, sans-serif';
 const FP = 'Poppins, sans-serif';
@@ -794,8 +795,7 @@ function ContratoPage() {
               <SecLabel>Cliente</SecLabel>
               <Grid2>
                 <Field label="Nome da empresa / cliente *">
-                  <input maxLength={80} value={form.cliente.empresa} onChange={e => setCliente('empresa', e.target.value)} onFocus={onF} onBlur={onB} placeholder="Empresa ou nome" style={{ ...BI, borderColor: erros.includes('empresa') ? '#ef4444' : '#1e1e1e' }} />
-                  <CharCounter value={form.cliente.empresa} max={80} />
+                  <ClienteSelector value={form.cliente.empresa} onChange={nome => setCliente('empresa', nome)} placeholder="Empresa ou nome" />
                   {erros.includes('empresa') && <ErrMsg>Campo obrigatório</ErrMsg>}
                 </Field>
                 <Field label="Responsável pelo cliente *">

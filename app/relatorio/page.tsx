@@ -9,6 +9,7 @@ import { savePdfToCloud } from '@/lib/upload-helper'
 import { useDraft } from '@/lib/draft'
 import SaveToast from '@/components/SaveToast'
 import DraftBanner from '@/components/DraftBanner'
+import ClienteSelector from '@/components/ClienteSelector'
 
 type FormData = {
   cliente: string
@@ -169,8 +170,7 @@ function RelatorioPage() {
       <div style={wrap}>
         <div style={fieldWrap}>
           <label style={labelStyle}>Nome do cliente</label>
-          <input style={inputStyle} value={form.cliente} onChange={e => setF('cliente', e.target.value)} placeholder="Ex: Altemans Barbearia"
-            onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+          <ClienteSelector value={form.cliente} onChange={nome => setF('cliente', nome)} placeholder="Ex: Altemans Barbearia" />
         </div>
         <div style={fieldWrap}>
           <label style={labelStyle}>Período</label>

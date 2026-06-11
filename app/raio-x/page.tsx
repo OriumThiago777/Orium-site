@@ -9,6 +9,7 @@ import { savePdfToCloud } from '@/lib/upload-helper';
 import { useDraft } from '@/lib/draft';
 import SaveToast from '@/components/SaveToast';
 import DraftBanner from '@/components/DraftBanner';
+import ClienteSelector from '@/components/ClienteSelector';
 
 const DIMENSOES = [
   'Primeira Impressão',
@@ -491,8 +492,7 @@ function RaioXPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
             <div>
               <label style={LB}>Nome do Cliente</label>
-              <input type="text" maxLength={50} placeholder="Ex: Restaurante do João" value={form.nomeCliente} onChange={e => setForm(p => ({ ...p, nomeCliente: e.target.value }))} onFocus={onF} onBlur={onB} style={IS} />
-              <CharCounter value={form.nomeCliente} max={50} />
+              <ClienteSelector value={form.nomeCliente} onChange={nome => setForm(p => ({ ...p, nomeCliente: nome }))} placeholder="Ex: Restaurante do João" />
             </div>
             <div>
               <label style={LB}>Segmento</label>

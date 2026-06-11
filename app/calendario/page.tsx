@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { saveAuth, isAuthenticated, clearAuth, authHeaders } from '@/lib/auth';
 import { useDraft } from '@/lib/draft';
 import DraftBanner from '@/components/DraftBanner';
+import ClienteSelector from '@/components/ClienteSelector';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -390,14 +391,10 @@ export default function CalendarioPage() {
       return (
         <div style={{ maxWidth: '680px', display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
           <Field label="Nome do cliente *">
-            <input
-              type="text"
-              placeholder="Nome do cliente"
+            <ClienteSelector
               value={form.nomeCliente}
-              onChange={e => set('nomeCliente', e.target.value)}
-              style={INPUT_STYLE}
-              onFocus={e => e.target.style.borderColor = '#FF6B00'}
-              onBlur={e => e.target.style.borderColor = '#1e1e1e'}
+              onChange={nome => set('nomeCliente', nome)}
+              placeholder="Nome do cliente"
             />
           </Field>
           <Field label="Instagram do cliente">

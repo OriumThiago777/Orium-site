@@ -9,6 +9,7 @@ import { savePdfToCloud } from '@/lib/upload-helper';
 import { useDraft } from '@/lib/draft';
 import SaveToast from '@/components/SaveToast';
 import DraftBanner from '@/components/DraftBanner';
+import ClienteSelector from '@/components/ClienteSelector';
 
 // ── Serviços pré-definidos ────────────────────────────────────────────────────
 
@@ -528,8 +529,7 @@ function PropostaPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>Nome do Cliente</label>
-                <input type="text" maxLength={40} placeholder="Ex: CORTEX Consultoria" value={form.nomeCliente} onChange={e => setForm(p => ({ ...p, nomeCliente: e.target.value }))} className={inputClass} />
-                <CharCounter value={form.nomeCliente} max={40} />
+                <ClienteSelector value={form.nomeCliente} onChange={nome => setForm(p => ({ ...p, nomeCliente: nome }))} placeholder="Ex: CORTEX Consultoria" />
               </div>
               <div>
                 <label className={labelClass}>Segmento</label>

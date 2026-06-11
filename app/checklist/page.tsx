@@ -9,6 +9,7 @@ import { savePdfToCloud } from '@/lib/upload-helper'
 import { useDraft } from '@/lib/draft'
 import SaveToast from '@/components/SaveToast'
 import DraftBanner from '@/components/DraftBanner'
+import ClienteSelector from '@/components/ClienteSelector'
 
 type ChecklistItem = {
   id: string
@@ -362,9 +363,7 @@ function ChecklistContent() {
         <div style={{ maxWidth: '560px', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <div>
             <label style={labelStyle}>Nome do cliente *</label>
-            <input style={inputStyle} value={cliente} onChange={e => setCliente(e.target.value)}
-              placeholder="Ex: Altemans Barbearia"
-              onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#333'} />
+            <ClienteSelector value={cliente} onChange={setCliente} placeholder="Ex: Altemans Barbearia" />
           </div>
           <div>
             <label style={labelStyle}>Período de referência</label>
