@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { verificarToken, respostaNaoAutorizada } from '@/lib/api-auth'
 
 const NOTION_TOKEN = process.env.NOTION_TOKEN
 const DB_CALENDARIO = process.env.NOTION_DB_CALENDARIO
@@ -45,6 +46,7 @@ function ultimoDiaDoMes(mes: string): string {
 }
 
 export async function GET(request: Request) {
+  if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
     const { searchParams } = new URL(request.url)
     const mes = searchParams.get('mes')
@@ -98,6 +100,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
     const {
       titulo, cliente, tipo, status, data, descricao, legenda,
@@ -146,6 +149,7 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
     const {
       pageId, titulo, cliente, tipo, status, data, descricao, legenda,
@@ -190,6 +194,7 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')

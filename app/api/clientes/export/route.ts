@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { verificarToken, respostaNaoAutorizada } from '@/lib/api-auth';
 
 const NOTION_TOKEN = process.env.NOTION_TOKEN;
 const DATABASE_ID = process.env.NOTION_DB_CLIENTES;
@@ -36,7 +37,8 @@ function csvField(value: string): string {
   return value;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
     const res = await fetch(`https://api.notion.com/v1/databases/${DATABASE_ID}/query`, {
       method: 'POST',

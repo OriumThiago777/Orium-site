@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import NextImage from 'next/image';
-import { isAuthenticated, saveAuth } from '@/lib/auth';
+import { isAuthenticated, saveAuth, authHeaders } from '@/lib/auth';
 
 interface Documento {
   id: string;
@@ -52,7 +52,7 @@ export default function MeusDocumentosPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ senha }),
       });
-      if (res.ok) { saveAuth(); setAutenticado(true); }
+      if (res.ok) { saveAuth(senha); setAutenticado(true); }
       else setErroSenha(true);
     } catch { setErroSenha(true); }
     finally { setCarregando(false); }
@@ -61,7 +61,7 @@ export default function MeusDocumentosPage() {
   async function carregarDocs() {
     setLoadingDocs(true);
     try {
-      const res = await fetch('/api/documentos');
+      const res = await fetch('/api/documentos', { headers: authHeaders() });
       if (res.ok) setDocs(await res.json());
     } catch (e) { console.error(e); }
     finally { setLoadingDocs(false); }
@@ -80,7 +80,7 @@ export default function MeusDocumentosPage() {
     if (!confirm('Excluir este documento? Esta ação não pode ser desfeita.')) return;
     setExcluindo(id);
     try {
-      await fetch(`/api/documentos?id=${id}`, { method: 'DELETE' });
+      await fetch(`/api/documentos?id=${id}`, { method: 'DELETE', headers: authHeaders() });
       setDocs(prev => prev.filter(d => d.id !== id));
     } catch (e) { console.error(e); }
     finally { setExcluindo(null); }

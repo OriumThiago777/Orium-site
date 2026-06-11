@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { verificarToken, respostaNaoAutorizada } from '@/lib/api-auth';
 
 const NOTION_TOKEN = process.env.NOTION_TOKEN;
 const DB_ID = process.env.NOTION_DB_DOCUMENTOS;
@@ -37,6 +38,7 @@ async function findPage(id: string): Promise<{ pageId: string } | null> {
 }
 
 export async function GET(request: Request) {
+  if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -96,6 +98,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
     const { id, tipo, nome, cliente, dados } = await request.json();
     if (!id || !tipo || !dados) {
@@ -157,7 +160,10 @@ export async function POST(request: Request) {
       if (tipoAtividade) {
         fetch(`${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/api/atividades`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.RAIO_X_PASSWORD}`,
+          },
           body: JSON.stringify({
             clienteId: '',
             clienteNome: cliente,
@@ -175,6 +181,7 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

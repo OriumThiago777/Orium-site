@@ -183,7 +183,7 @@ export default function CalendarioPage() {
         body: JSON.stringify({ senha }),
       });
       if (res.ok) {
-        saveAuth();
+        saveAuth(senha);
         setAutenticado(true);
       } else {
         setErroSenha(true);

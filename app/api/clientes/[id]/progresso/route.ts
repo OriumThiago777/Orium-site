@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { verificarToken, respostaNaoAutorizada } from '@/lib/api-auth'
 
 const NOTION_TOKEN = process.env.NOTION_TOKEN
 const DB_ID = process.env.NOTION_DB_DOCUMENTOS
@@ -22,6 +23,7 @@ type EtapaDoc = {
 }
 
 export async function GET(request: Request) {
+  if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
     const { searchParams } = new URL(request.url)
     const nome = searchParams.get('nome')

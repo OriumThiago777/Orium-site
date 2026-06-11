@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { verificarToken, respostaNaoAutorizada } from '@/lib/api-auth';
 
 const NOTION_TOKEN = process.env.NOTION_TOKEN;
 const DATABASE_ID = process.env.NOTION_DB_CLIENTES;
@@ -12,7 +13,10 @@ const NH = {
 const registrarAtividade = (body: object) => {
   fetch(`${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/api/atividades`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.RAIO_X_PASSWORD}`,
+    },
     body: JSON.stringify(body),
   }).catch(() => {})
 }
@@ -132,7 +136,8 @@ function buildProperties(body: Record<string, unknown>) {
   return props;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
     const res = await fetch(`https://api.notion.com/v1/databases/${DATABASE_ID}/query`, {
       method: 'POST',
@@ -157,6 +162,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
     const body = await request.json() as Record<string, unknown>;
     const erroValidacao = validarClientePayload(body);
@@ -195,6 +201,7 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -235,6 +242,7 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

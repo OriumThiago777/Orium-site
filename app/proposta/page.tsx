@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import NextImage from 'next/image';
 import Link from 'next/link';
-import { isAuthenticated, saveAuth } from '@/lib/auth';
+import { isAuthenticated, saveAuth, authHeaders } from '@/lib/auth';
 import { savePdfToCloud } from '@/lib/upload-helper';
 import SaveToast from '@/components/SaveToast';
 
@@ -147,7 +147,7 @@ function PropostaPage() {
 
   useEffect(() => {
     if (!autenticado || !docParam) return;
-    fetch(`/api/documentos?id=${docParam}`)
+    fetch(`/api/documentos?id=${docParam}`, { headers: authHeaders() })
       .then(r => r.json())
       .then(data => { if (data.dados) { setForm(data.dados); setDocumentoId(docParam); } })
       .catch(console.error);
@@ -182,7 +182,7 @@ function PropostaPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ senha }),
       });
-      if (res.ok) { saveAuth(); setAutenticado(true); }
+      if (res.ok) { saveAuth(senha); setAutenticado(true); }
       else setErroSenha(true);
     } catch {
       setErroSenha(true);
@@ -451,7 +451,7 @@ function PropostaPage() {
       const docId = documentoId || crypto.randomUUID();
       fetch('/api/documentos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ id: docId, tipo: 'Proposta', nome: form.nomeCliente || 'Documento sem nome', cliente: form.nomeCliente, dados: form }),
       }).then(() => { setDocumentoId(docId); setSavedMsg('Salvo em Documentos'); setTimeout(() => setSavedMsg(''), 3000); }).catch(console.error);
 

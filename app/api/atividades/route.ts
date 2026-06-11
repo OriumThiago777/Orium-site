@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { verificarToken, respostaNaoAutorizada } from '@/lib/api-auth'
 
 const NOTION_TOKEN = process.env.NOTION_TOKEN
 const DB_ATIVIDADES = process.env.NOTION_DB_ATIVIDADES
@@ -31,6 +32,7 @@ type NotionAtividadePage = {
 }
 
 export async function GET(request: Request) {
+  if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
     const { searchParams } = new URL(request.url)
     const clienteId = searchParams.get('clienteId')
@@ -69,6 +71,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
     const body = await request.json()
     const { clienteId, clienteNome, tipo, descricao } = body

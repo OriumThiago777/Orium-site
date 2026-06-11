@@ -102,7 +102,7 @@ export default function HubPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ senha }),
       });
-      if (res.ok) { saveAuth(); setAutenticado(true); }
+      if (res.ok) { saveAuth(senha); setAutenticado(true); }
       else setErroSenha(true);
     } catch {
       setErroSenha(true);

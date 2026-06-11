@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, type CSSProperties } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { isAuthenticated, saveAuth } from '@/lib/auth'
+import { isAuthenticated, saveAuth, authHeaders } from '@/lib/auth'
 import {
   DndContext,
   DragEndEvent,
@@ -286,7 +286,7 @@ function ModalNovoCliente({ onClose, onCreated }: { onClose: () => void; onCreat
     try {
       const res = await fetch('/api/clientes', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(form),
       })
       const data = await res.json()
@@ -403,7 +403,7 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loa
   useEffect(() => {
     if (progresso !== null) return
     setLoadingProgressoLocal(true)
-    fetch(`/api/clientes/${encodeURIComponent(cliente.id)}/progresso?nome=${encodeURIComponent(cliente.nome)}`)
+    fetch(`/api/clientes/${encodeURIComponent(cliente.id)}/progresso?nome=${encodeURIComponent(cliente.nome)}`, { headers: authHeaders() })
       .then(r => r.json())
       .then((data: ProgressoData) => setProgressoLocal(data))
       .catch(() => {})
@@ -414,7 +414,7 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loa
 
   useEffect(() => {
     setLoadingDocs(true)
-    fetch('/api/documentos')
+    fetch('/api/documentos', { headers: authHeaders() })
       .then(r => r.json())
       .then(d => {
         if (Array.isArray(d)) {
@@ -435,7 +435,7 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loa
     try {
       const res = await fetch(`/api/clientes?id=${cliente.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(form),
       })
       const data = await res.json()
@@ -451,7 +451,7 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loa
   async function handleDelete() {
     setDeleting(true)
     try {
-      const res = await fetch(`/api/clientes?id=${cliente.id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/clientes?id=${cliente.id}`, { method: 'DELETE', headers: authHeaders() })
       if (res.ok) { onDeleted(cliente.id); onClose() }
     } finally {
       setDeleting(false)
@@ -467,7 +467,7 @@ function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loa
     setNovaNota('')
     fetch(`/api/clientes?id=${cliente.id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ notas: novasNotas }),
     }).catch(console.error)
   }
@@ -831,7 +831,7 @@ function KanbanCard({ cliente, faseCor, faseNome, progresso, onProgressoLoaded, 
   useEffect(() => {
     if (progresso !== null) { setLoadingProgresso(false); return }
     setLoadingProgresso(true)
-    fetch(`/api/clientes/${encodeURIComponent(cliente.id)}/progresso?nome=${encodeURIComponent(cliente.nome)}`)
+    fetch(`/api/clientes/${encodeURIComponent(cliente.id)}/progresso?nome=${encodeURIComponent(cliente.nome)}`, { headers: authHeaders() })
       .then(r => r.json())
       .then((data: ProgressoData) => {
         onProgressoLoaded(cliente.id, data)
@@ -1204,7 +1204,7 @@ function VistaLeads() {
 
   useEffect(() => {
     setLoading(true)
-    fetch('/api/leads')
+    fetch('/api/leads', { headers: authHeaders() })
       .then(r => r.json())
       .then(d => setLeads(d.leads ?? []))
       .catch(() => setLeads([]))
@@ -1217,7 +1217,7 @@ function VistaLeads() {
     try {
       const res = await fetch('/api/leads', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ pageId: id, status }),
       })
       if (!res.ok) throw new Error('Falha ao atualizar status')
@@ -1500,7 +1500,7 @@ function ModalItemCalendario({ item, dataInicial, onClose, onSaved }: {
       }
       const res = await fetch('/api/clientes/calendario', {
         method: item ? 'PATCH' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(item ? { pageId: item.id, ...payload } : payload),
       })
       if (!res.ok) throw new Error('Falha ao salvar item')
@@ -1518,7 +1518,7 @@ function ModalItemCalendario({ item, dataInicial, onClose, onSaved }: {
     if (!confirm('Excluir este item do calendário?')) return
     setExcluindo(true)
     try {
-      const res = await fetch(`/api/clientes/calendario?id=${item.id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/clientes/calendario?id=${item.id}`, { method: 'DELETE', headers: authHeaders() })
       if (!res.ok) throw new Error('Falha ao excluir item')
       onSaved()
       onClose()
@@ -1694,7 +1694,7 @@ function VistaCalendario() {
   function carregarItens() {
     setLoading(true)
     const mesParam = `${ano}-${String(mes + 1).padStart(2, '0')}`
-    fetch(`/api/clientes/calendario?mes=${mesParam}`)
+    fetch(`/api/clientes/calendario?mes=${mesParam}`, { headers: authHeaders() })
       .then(r => r.json())
       .then(d => setItems(d.items ?? []))
       .catch(() => setItems([]))
@@ -1889,7 +1889,7 @@ function Dashboard({ clientes, onFiltrarEntregas }: { clientes: Cliente[]; onFil
   const [totalDocs, setTotalDocs] = useState<number | null>(null)
 
   useEffect(() => {
-    fetch('/api/documentos')
+    fetch('/api/documentos', { headers: authHeaders() })
       .then(r => r.json())
       .then(d => setTotalDocs(Array.isArray(d) ? d.length : 0))
       .catch(() => setTotalDocs(0))
@@ -2018,10 +2018,10 @@ function TelaSenha({ onAuth }: { onAuth: () => void }) {
     try {
       const res = await fetch('/api/raio-x/auth', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ senha }),
       })
-      if (res.ok) { saveAuth(); onAuth() }
+      if (res.ok) { saveAuth(senha); onAuth() }
       else setErro(true)
     } catch { setErro(true) }
     finally { setLoading(false) }
@@ -2089,7 +2089,7 @@ export default function ClientesPage() {
   useEffect(() => {
     if (!autenticado) return
     setLoading(true)
-    fetch('/api/clientes')
+    fetch('/api/clientes', { headers: authHeaders() })
       .then(r => r.json())
       .then(d => setClientes(d.clientes ?? []))
       .finally(() => setLoading(false))
@@ -2099,7 +2099,7 @@ export default function ClientesPage() {
     if (!clienteSelecionado) return
     setAtividadesExpandidas(false)
     setLoadingAtividades(true)
-    fetch(`/api/atividades?clienteId=${clienteSelecionado.id}`)
+    fetch(`/api/atividades?clienteId=${clienteSelecionado.id}`, { headers: authHeaders() })
       .then(r => r.json())
       .then(d => setAtividades(d.atividades || []))
       .catch(() => setAtividades([]))
@@ -2122,7 +2122,7 @@ export default function ClientesPage() {
     try {
       const res = await fetch(`/api/clientes?id=${encodeURIComponent(clienteId)}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ faseAtual: novaFase, clienteNome: cliente.nome }),
       })
       if (!res.ok) {
@@ -2146,7 +2146,7 @@ export default function ClientesPage() {
   async function handleExportarCSV() {
     setExportando(true)
     try {
-      const res = await fetch('/api/clientes/export')
+      const res = await fetch('/api/clientes/export', { headers: authHeaders() })
       if (!res.ok) throw new Error('Falha na exportação')
       const blob = await res.blob()
       const url = URL.createObjectURL(new Blob([blob], { type: 'text/csv' }))

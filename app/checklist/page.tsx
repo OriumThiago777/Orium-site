@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, Suspense } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { isAuthenticated, saveAuth } from '@/lib/auth'
+import { isAuthenticated, saveAuth, authHeaders } from '@/lib/auth'
 import { savePdfToCloud } from '@/lib/upload-helper'
 import SaveToast from '@/components/SaveToast'
 
@@ -143,7 +143,7 @@ function ChecklistContent() {
             setCarregando(true); setErroSenha(false)
             try {
               const res = await fetch('/api/raio-x/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senha }) })
-              if (res.ok) { saveAuth(); setAutenticado(true) }
+              if (res.ok) { saveAuth(senha); setAutenticado(true) }
               else setErroSenha(true)
             } catch { setErroSenha(true) }
             finally { setCarregando(false) }
@@ -320,7 +320,7 @@ function ChecklistContent() {
       const docId = `checklist-${Date.now()}`
       await fetch('/api/documentos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({
           id: docId,
           tipo: 'Checklist',

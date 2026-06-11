@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { verificarToken, respostaNaoAutorizada } from '@/lib/api-auth'
 
 const NOTION_TOKEN = process.env.NOTION_TOKEN
 const DB_LEADS = process.env.NOTION_DB_LEADS
@@ -33,6 +34,7 @@ type NotionLeadPage = {
 }
 
 export async function GET(request: Request) {
+  if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
@@ -78,6 +80,7 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
     const { pageId, status } = await request.json()
     if (!pageId || !status) return NextResponse.json({ success: false }, { status: 400 })

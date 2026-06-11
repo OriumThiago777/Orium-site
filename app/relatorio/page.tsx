@@ -113,7 +113,7 @@ function RelatorioPage() {
             setCarregando(true); setErroSenha(false)
             try {
               const res = await fetch('/api/raio-x/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senha }) })
-              if (res.ok) { saveAuth(); setAutenticado(true) }
+              if (res.ok) { saveAuth(senha); setAutenticado(true) }
               else setErroSenha(true)
             } catch { setErroSenha(true) }
             finally { setCarregando(false) }
