@@ -2084,6 +2084,10 @@ export default function ClientesPage() {
   useEffect(() => {
     setAutenticado(isAuthenticated())
     setAuthChecked(true)
+    const vista = new URLSearchParams(window.location.search).get('vista')
+    if (vista === 'kanban' || vista === 'table' || vista === 'leads' || vista === 'calendario') {
+      setVistaAtiva(vista)
+    }
   }, [])
 
   useEffect(() => {

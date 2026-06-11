@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { isAuthenticated, saveAuth } from '@/lib/auth';
+import HubStatusPanel from '@/components/HubStatusPanel';
 
 const FERRAMENTAS = [
   {
@@ -205,6 +206,9 @@ export default function HubPage() {
             Acesse, gerencie e execute. Tudo em um lugar.
           </p>
         </div>
+
+        {/* Painel operacional */}
+        <HubStatusPanel />
 
         {/* Grid de cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
