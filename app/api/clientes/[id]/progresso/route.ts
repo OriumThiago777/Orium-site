@@ -1,14 +1,8 @@
 import { NextResponse } from 'next/server'
 import { verificarToken, respostaNaoAutorizada } from '@/lib/api-auth'
+import { notionQuery, NotionError } from '@/lib/notion'
 
-const NOTION_TOKEN = process.env.NOTION_TOKEN
 const DB_ID = process.env.NOTION_DB_DOCUMENTOS
-
-const NH = {
-  'Authorization': `Bearer ${NOTION_TOKEN}`,
-  'Content-Type': 'application/json',
-  'Notion-Version': '2022-06-28',
-}
 
 const ETAPAS = [
   'Raio-X', 'Briefing', 'Proposta', 'Contrato',
@@ -31,22 +25,20 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Parâmetro nome obrigatório' }, { status: 400 })
     }
 
-    const res = await fetch(`https://api.notion.com/v1/databases/${DB_ID}/query`, {
-      method: 'POST',
-      headers: NH,
-      body: JSON.stringify({
+    let data
+    try {
+      data = await notionQuery(DB_ID!, {
         filter: { property: 'Cliente', rich_text: { equals: nome } },
         sorts: [{ property: 'Data de Geração', direction: 'descending' }],
         page_size: 100,
-      }),
-    })
-
-    if (!res.ok) {
-      console.error('Notion progresso error:', await res.json())
-      return NextResponse.json({ error: 'Erro ao buscar documentos' }, { status: 500 })
+      })
+    } catch (err) {
+      if (err instanceof NotionError) {
+        console.error('Notion progresso error:', err.message)
+        return NextResponse.json({ error: 'Erro ao buscar documentos' }, { status: 500 })
+      }
+      throw err
     }
-
-    const data = await res.json()
     const docs = (data.results ?? []) as EtapaDoc[]
 
     const docMap = new Map<string, string | null>()

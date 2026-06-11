@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
 import { Readable } from 'stream'
+import { notionQuery, notionCreate, notionPatch } from '@/lib/notion'
 
 export async function POST(req: NextRequest) {
   const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID
@@ -53,17 +54,9 @@ export async function POST(req: NextRequest) {
       const notionToken = process.env.NOTION_TOKEN
       const notionDb = process.env.NOTION_DB_DOCUMENTOS
       if (notionToken && notionDb) {
-        const NH = {
-          'Authorization': `Bearer ${notionToken}`,
-          'Content-Type': 'application/json',
-          'Notion-Version': '2022-06-28',
-        }
-
         const buscarRegistro = async (): Promise<string | null> => {
-          const res = await fetch(`https://api.notion.com/v1/databases/${notionDb}/query`, {
-            method: 'POST',
-            headers: NH,
-            body: JSON.stringify({
+          try {
+            const data = await notionQuery(notionDb, {
               filter: {
                 and: [
                   { property: 'Cliente', rich_text: { equals: clientName } },
@@ -72,11 +65,11 @@ export async function POST(req: NextRequest) {
               },
               sorts: [{ property: 'Data de Geração', direction: 'descending' }],
               page_size: 1,
-            }),
-          })
-          if (!res.ok) return null
-          const data = await res.json()
-          return data.results?.[0]?.id ?? null
+            })
+            return data.results?.[0]?.id ?? null
+          } catch {
+            return null
+          }
         }
 
         // O registro é criado por /api/documentos em paralelo ao upload — espera
@@ -88,34 +81,21 @@ export async function POST(req: NextRequest) {
           pageId = await buscarRegistro()
         }
 
-        let notionRes: Response
         if (pageId) {
-          notionRes = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-            method: 'PATCH',
-            headers: NH,
-            body: JSON.stringify({ properties: { 'Link Drive': { url: fileUrl } } }),
-          })
+          await notionPatch(pageId, { properties: { 'Link Drive': { url: fileUrl } } })
         } else {
           // Fallback: ferramenta não registrou em /api/documentos (ex.: Briefing, Relatório)
-          notionRes = await fetch('https://api.notion.com/v1/pages', {
-            method: 'POST',
-            headers: NH,
-            body: JSON.stringify({
-              parent: { database_id: notionDb },
-              properties: {
-                'Nome': { title: [{ text: { content: `${docType} — ${clientName}` } }] },
-                'Tipo': { select: { name: docType } },
-                'Cliente': { rich_text: [{ text: { content: clientName } }] },
-                'Data de Geração': { date: { start: new Date().toISOString() } },
-                'ID Documento': { rich_text: [{ text: { content: crypto.randomUUID() } }] },
-                'Link Drive': { url: fileUrl },
-              },
-            }),
+          await notionCreate({
+            parent: { database_id: notionDb },
+            properties: {
+              'Nome': { title: [{ text: { content: `${docType} — ${clientName}` } }] },
+              'Tipo': { select: { name: docType } },
+              'Cliente': { rich_text: [{ text: { content: clientName } }] },
+              'Data de Geração': { date: { start: new Date().toISOString() } },
+              'ID Documento': { rich_text: [{ text: { content: crypto.randomUUID() } }] },
+              'Link Drive': { url: fileUrl },
+            },
           })
-        }
-        if (!notionRes.ok) {
-          const body = await notionRes.json()
-          console.error('Notion registration failed:', notionRes.status, JSON.stringify(body))
         }
       }
     } catch (notionErr) {

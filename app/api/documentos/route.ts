@@ -1,14 +1,8 @@
 import { NextResponse } from 'next/server';
 import { verificarToken, respostaNaoAutorizada } from '@/lib/api-auth';
+import { notionQuery, notionCreate, notionPatch, notionGetPage } from '@/lib/notion';
 
-const NOTION_TOKEN = process.env.NOTION_TOKEN;
 const DB_ID = process.env.NOTION_DB_DOCUMENTOS;
-
-const NH = {
-  'Authorization': `Bearer ${NOTION_TOKEN}`,
-  'Content-Type': 'application/json',
-  'Notion-Version': '2022-06-28',
-};
 
 function toChunks(text: string) {
   const result = [];
@@ -23,18 +17,16 @@ function fromChunks(richText: Array<{ plain_text?: string; text?: { content: str
 }
 
 async function findPage(id: string): Promise<{ pageId: string } | null> {
-  const res = await fetch(`https://api.notion.com/v1/databases/${DB_ID}/query`, {
-    method: 'POST',
-    headers: NH,
-    body: JSON.stringify({
+  try {
+    const data = await notionQuery(DB_ID!, {
       filter: { property: 'ID Documento', rich_text: { equals: id } },
       page_size: 1,
-    }),
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
-  if (!data.results?.length) return null;
-  return { pageId: data.results[0].id };
+    });
+    if (!data.results?.length) return null;
+    return { pageId: data.results[0].id };
+  } catch {
+    return null;
+  }
 }
 
 export async function GET(request: Request) {
@@ -47,10 +39,12 @@ export async function GET(request: Request) {
       const found = await findPage(id);
       if (!found) return NextResponse.json({ error: 'Documento não encontrado' }, { status: 404 });
 
-      const res = await fetch(`https://api.notion.com/v1/pages/${found.pageId}`, { headers: NH });
-      if (!res.ok) return NextResponse.json({ error: 'Erro ao buscar documento' }, { status: 500 });
-
-      const page = await res.json();
+      let page;
+      try {
+        page = await notionGetPage(found.pageId);
+      } catch {
+        return NextResponse.json({ error: 'Erro ao buscar documento' }, { status: 500 });
+      }
       const p = page.properties;
       const jsonStr = fromChunks(p['Dados JSON']?.rich_text ?? []);
 
@@ -66,17 +60,15 @@ export async function GET(request: Request) {
       });
     }
 
-    const res = await fetch(`https://api.notion.com/v1/databases/${DB_ID}/query`, {
-      method: 'POST',
-      headers: NH,
-      body: JSON.stringify({
+    let data;
+    try {
+      data = await notionQuery(DB_ID!, {
         sorts: [{ property: 'Data de Geração', direction: 'descending' }],
         page_size: 100,
-      }),
-    });
-    if (!res.ok) return NextResponse.json({ error: 'Erro ao listar documentos' }, { status: 500 });
-
-    const data = await res.json();
+      });
+    } catch {
+      return NextResponse.json({ error: 'Erro ao listar documentos' }, { status: 500 });
+    }
     const docs = (data.results ?? []).map((page: { id: string; properties: Record<string, { title?: Array<{plain_text: string}>; select?: {name: string}; rich_text?: Array<{plain_text?: string; text?: {content: string}}>; date?: {start: string} }> }) => {
       const p = page.properties;
       return {
@@ -110,29 +102,24 @@ export async function POST(request: Request) {
     const existing = await findPage(id);
 
     if (existing) {
-      const res = await fetch(`https://api.notion.com/v1/pages/${existing.pageId}`, {
-        method: 'PATCH',
-        headers: NH,
-        body: JSON.stringify({
+      try {
+        await notionPatch(existing.pageId, {
           properties: {
             'Nome': { title: [{ text: { content: (nome || 'Documento sem nome').slice(0, 2000) } }] },
             'Cliente': { rich_text: [{ text: { content: (cliente || '').slice(0, 2000) } }] },
             'Data de Edição': { date: { start: now } },
             'Dados JSON': { rich_text: toChunks(jsonStr) },
           },
-        }),
-      });
-      if (!res.ok) {
-        console.error('Notion PATCH error:', await res.json());
+        });
+      } catch (err) {
+        console.error('Notion PATCH error:', err);
         return NextResponse.json({ error: 'Erro ao atualizar' }, { status: 500 });
       }
       return NextResponse.json({ success: true, id });
     }
 
-    const res = await fetch('https://api.notion.com/v1/pages', {
-      method: 'POST',
-      headers: NH,
-      body: JSON.stringify({
+    try {
+      await notionCreate({
         parent: { database_id: DB_ID },
         properties: {
           'Nome': { title: [{ text: { content: (nome || 'Documento sem nome').slice(0, 2000) } }] },
@@ -142,10 +129,9 @@ export async function POST(request: Request) {
           'ID Documento': { rich_text: [{ text: { content: id } }] },
           'Dados JSON': { rich_text: toChunks(jsonStr) },
         },
-      }),
-    });
-    if (!res.ok) {
-      console.error('Notion POST error:', await res.json());
+      });
+    } catch (err) {
+      console.error('Notion POST error:', err);
       return NextResponse.json({ error: 'Erro ao criar' }, { status: 500 });
     }
     if (cliente) {
@@ -190,12 +176,11 @@ export async function DELETE(request: Request) {
     const found = await findPage(id);
     if (!found) return NextResponse.json({ error: 'Não encontrado' }, { status: 404 });
 
-    const res = await fetch(`https://api.notion.com/v1/pages/${found.pageId}`, {
-      method: 'PATCH',
-      headers: NH,
-      body: JSON.stringify({ archived: true }),
-    });
-    if (!res.ok) return NextResponse.json({ error: 'Erro ao arquivar' }, { status: 500 });
+    try {
+      await notionPatch(found.pageId, { archived: true });
+    } catch {
+      return NextResponse.json({ error: 'Erro ao arquivar' }, { status: 500 });
+    }
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('DELETE /api/documentos:', err);

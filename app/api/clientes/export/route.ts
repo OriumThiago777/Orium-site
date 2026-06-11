@@ -1,14 +1,8 @@
 import { NextResponse } from 'next/server';
 import { verificarToken, respostaNaoAutorizada } from '@/lib/api-auth';
+import { notionQuery, NotionError } from '@/lib/notion';
 
-const NOTION_TOKEN = process.env.NOTION_TOKEN;
 const DATABASE_ID = process.env.NOTION_DB_CLIENTES;
-
-const NH = {
-  'Authorization': `Bearer ${NOTION_TOKEN}`,
-  'Content-Type': 'application/json',
-  'Notion-Version': '2022-06-28',
-};
 
 type NotionPage = {
   id: string;
@@ -40,22 +34,19 @@ function csvField(value: string): string {
 export async function GET(request: Request) {
   if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
-    const res = await fetch(`https://api.notion.com/v1/databases/${DATABASE_ID}/query`, {
-      method: 'POST',
-      headers: NH,
-      body: JSON.stringify({
+    let data;
+    try {
+      data = await notionQuery(DATABASE_ID!, {
         sorts: [{ property: 'Data de Início', direction: 'descending' }],
         page_size: 100,
-      }),
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      console.error('Notion export error:', err);
-      return NextResponse.json({ error: 'Erro ao buscar clientes' }, { status: 500 });
+      });
+    } catch (err) {
+      if (err instanceof NotionError) {
+        console.error('Notion export error:', err.message);
+        return NextResponse.json({ error: 'Erro ao buscar clientes' }, { status: 500 });
+      }
+      throw err;
     }
-
-    const data = await res.json();
     const pages: NotionPage[] = data.results ?? [];
 
     const headers = [

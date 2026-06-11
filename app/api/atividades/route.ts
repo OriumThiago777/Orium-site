@@ -1,14 +1,8 @@
 import { NextResponse } from 'next/server'
 import { verificarToken, respostaNaoAutorizada } from '@/lib/api-auth'
+import { notionQuery, notionCreate } from '@/lib/notion'
 
-const NOTION_TOKEN = process.env.NOTION_TOKEN
 const DB_ATIVIDADES = process.env.NOTION_DB_ATIVIDADES
-
-const NH = {
-  'Authorization': `Bearer ${NOTION_TOKEN}`,
-  'Content-Type': 'application/json',
-  'Notion-Version': '2022-06-28',
-}
 
 type Atividade = {
   id: string
@@ -46,14 +40,7 @@ export async function GET(request: Request) {
       body.filter = { property: 'Cliente ID', rich_text: { equals: clienteId } }
     }
 
-    const res = await fetch(`https://api.notion.com/v1/databases/${DB_ATIVIDADES}/query`, {
-      method: 'POST',
-      headers: NH,
-      body: JSON.stringify(body),
-    })
-    if (!res.ok) return NextResponse.json({ atividades: [] })
-
-    const data = await res.json()
+    const data = await notionQuery(DB_ATIVIDADES, body)
     const atividades: Atividade[] = (data.results ?? []).map((page: NotionAtividadePage) => ({
       id: page.id,
       clienteId: page.properties['Cliente ID']?.rich_text?.[0]?.plain_text || '',
@@ -80,10 +67,8 @@ export async function POST(request: Request) {
 
     const data = new Date().toISOString()
 
-    const res = await fetch('https://api.notion.com/v1/pages', {
-      method: 'POST',
-      headers: NH,
-      body: JSON.stringify({
+    try {
+      await notionCreate({
         parent: { database_id: DB_ATIVIDADES },
         properties: {
           'Cliente Nome': { title: [{ text: { content: String(clienteNome || '') } }] },
@@ -92,10 +77,9 @@ export async function POST(request: Request) {
           'Descrição': { rich_text: [{ text: { content: String(descricao || '') } }] },
           'Data': { date: { start: data } },
         },
-      }),
-    })
-    if (!res.ok) {
-      console.error('Notion POST atividade error:', await res.json())
+      })
+    } catch (err) {
+      console.error('Notion POST atividade error:', err)
     }
     return NextResponse.json({ success: true })
   } catch (err) {

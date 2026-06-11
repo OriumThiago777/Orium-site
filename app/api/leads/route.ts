@@ -1,14 +1,8 @@
 import { NextResponse } from 'next/server'
 import { verificarToken, respostaNaoAutorizada } from '@/lib/api-auth'
+import { notionQuery, notionCreate, notionPatch } from '@/lib/notion'
 
-const NOTION_TOKEN = process.env.NOTION_TOKEN
 const DB_LEADS = process.env.NOTION_DB_LEADS
-
-const NH = {
-  'Authorization': `Bearer ${NOTION_TOKEN}`,
-  'Content-Type': 'application/json',
-  'Notion-Version': '2022-06-28',
-}
 
 type Lead = {
   id: string
@@ -52,14 +46,7 @@ export async function GET(request: Request) {
     if (filters.length === 1) body.filter = filters[0]
     else if (filters.length > 1) body.filter = { and: filters }
 
-    const res = await fetch(`https://api.notion.com/v1/databases/${DB_LEADS}/query`, {
-      method: 'POST',
-      headers: NH,
-      body: JSON.stringify(body),
-    })
-    if (!res.ok) return NextResponse.json({ leads: [] })
-
-    const data = await res.json()
+    const data = await notionQuery(DB_LEADS, body)
     const leads: Lead[] = (data.results ?? []).map((page: NotionLeadPage) => ({
       id: page.id,
       nome: page.properties['Nome']?.title?.[0]?.plain_text || '',
@@ -85,20 +72,11 @@ export async function PATCH(request: Request) {
     const { pageId, status } = await request.json()
     if (!pageId || !status) return NextResponse.json({ success: false }, { status: 400 })
 
-    const res = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-      method: 'PATCH',
-      headers: NH,
-      body: JSON.stringify({
-        properties: {
-          'Status': { select: { name: String(status) } },
-        },
-      }),
+    await notionPatch(pageId, {
+      properties: {
+        'Status': { select: { name: String(status) } },
+      },
     })
-
-    if (!res.ok) {
-      console.error('Notion PATCH lead error:', await res.json())
-      return NextResponse.json({ success: false }, { status: 500 })
-    }
 
     return NextResponse.json({ success: true })
   } catch (err) {
@@ -113,27 +91,18 @@ export async function POST(request: Request) {
 
     if (!DB_LEADS) return NextResponse.json({ success: true })
 
-    const res = await fetch('https://api.notion.com/v1/pages', {
-      method: 'POST',
-      headers: NH,
-      body: JSON.stringify({
-        parent: { database_id: DB_LEADS },
-        properties: {
-          'Nome': { title: [{ text: { content: String(nome || 'Sem nome') } }] },
-          'Segmento': { select: { name: String(segmento || 'Outro') } },
-          'Instagram': { rich_text: [{ text: { content: String(instagram || '') } }] },
-          'Email': { email: email || null },
-          'Necessidade': { rich_text: [{ text: { content: String(necessidade || '') } }] },
-          'Status': { select: { name: 'Novo' } },
-          'Origem': { select: { name: 'Site' } },
-        },
-      }),
+    await notionCreate({
+      parent: { database_id: DB_LEADS },
+      properties: {
+        'Nome': { title: [{ text: { content: String(nome || 'Sem nome') } }] },
+        'Segmento': { select: { name: String(segmento || 'Outro') } },
+        'Instagram': { rich_text: [{ text: { content: String(instagram || '') } }] },
+        'Email': { email: email || null },
+        'Necessidade': { rich_text: [{ text: { content: String(necessidade || '') } }] },
+        'Status': { select: { name: 'Novo' } },
+        'Origem': { select: { name: 'Site' } },
+      },
     })
-
-    if (!res.ok) {
-      console.error('Notion POST lead error:', await res.json())
-      return NextResponse.json({ success: false }, { status: 500 })
-    }
 
     return NextResponse.json({ success: true })
   } catch (err) {

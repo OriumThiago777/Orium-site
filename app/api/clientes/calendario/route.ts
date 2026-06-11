@@ -1,14 +1,8 @@
 import { NextResponse } from 'next/server'
 import { verificarToken, respostaNaoAutorizada } from '@/lib/api-auth'
+import { notionQuery, notionCreate, notionPatch } from '@/lib/notion'
 
-const NOTION_TOKEN = process.env.NOTION_TOKEN
 const DB_CALENDARIO = process.env.NOTION_DB_CALENDARIO
-
-const NH = {
-  'Authorization': `Bearer ${NOTION_TOKEN}`,
-  'Content-Type': 'application/json',
-  'Notion-Version': '2022-06-28',
-}
 
 type CalendarioItem = {
   id: string
@@ -65,14 +59,7 @@ export async function GET(request: Request) {
       }
     }
 
-    const res = await fetch(`https://api.notion.com/v1/databases/${DB_CALENDARIO}/query`, {
-      method: 'POST',
-      headers: NH,
-      body: JSON.stringify(body),
-    })
-    if (!res.ok) return NextResponse.json({ items: [] })
-
-    const data = await res.json()
+    const data = await notionQuery(DB_CALENDARIO, body)
     const items: CalendarioItem[] = (data.results ?? []).map((page: NotionCalendarioPage) => ({
       id: page.id,
       titulo: page.properties['Título']?.title?.[0]?.plain_text || '',
@@ -110,10 +97,7 @@ export async function POST(request: Request) {
 
     if (!DB_CALENDARIO) return NextResponse.json({ success: true })
 
-    const res = await fetch('https://api.notion.com/v1/pages', {
-      method: 'POST',
-      headers: NH,
-      body: JSON.stringify({
+    const created = await notionCreate({
         parent: { database_id: DB_CALENDARIO },
         properties: {
           'Título': { title: [{ text: { content: String(titulo || 'Sem título') } }] },
@@ -132,15 +116,8 @@ export async function POST(request: Request) {
           'Local Gravação': { rich_text: [{ text: { content: String(localGravacao || '') } }] },
           'Equipamento Gravação': { rich_text: [{ text: { content: String(equipamentoGravacao || '') } }] },
         },
-      }),
-    })
+      })
 
-    if (!res.ok) {
-      console.error('Notion POST calendario error:', await res.json())
-      return NextResponse.json({ success: false }, { status: 500 })
-    }
-
-    const created = await res.json()
     return NextResponse.json({ success: true, id: created.id })
   } catch (err) {
     console.error('POST /api/clientes/calendario:', err)
@@ -175,16 +152,7 @@ export async function PATCH(request: Request) {
     if (localGravacao !== undefined) properties['Local Gravação'] = { rich_text: [{ text: { content: String(localGravacao) } }] }
     if (equipamentoGravacao !== undefined) properties['Equipamento Gravação'] = { rich_text: [{ text: { content: String(equipamentoGravacao) } }] }
 
-    const res = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-      method: 'PATCH',
-      headers: NH,
-      body: JSON.stringify({ properties }),
-    })
-
-    if (!res.ok) {
-      console.error('Notion PATCH calendario error:', await res.json())
-      return NextResponse.json({ success: false }, { status: 500 })
-    }
+    await notionPatch(pageId, { properties })
 
     return NextResponse.json({ success: true })
   } catch (err) {
@@ -200,16 +168,7 @@ export async function DELETE(request: Request) {
     const id = searchParams.get('id')
     if (!id) return NextResponse.json({ success: false }, { status: 400 })
 
-    const res = await fetch(`https://api.notion.com/v1/pages/${id}`, {
-      method: 'PATCH',
-      headers: NH,
-      body: JSON.stringify({ archived: true }),
-    })
-
-    if (!res.ok) {
-      console.error('Notion DELETE (archive) calendario error:', await res.json())
-      return NextResponse.json({ success: false }, { status: 500 })
-    }
+    await notionPatch(id, { archived: true })
 
     return NextResponse.json({ success: true })
   } catch (err) {

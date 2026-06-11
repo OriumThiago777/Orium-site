@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
+import { notionCreate } from '@/lib/notion'
 
-const NOTION_TOKEN = process.env.NOTION_TOKEN
 const NOTION_DB_PESSOA = process.env.NOTION_DB_PESSOA
 const NOTION_DB_EMPRESA = process.env.NOTION_DB_EMPRESA
 
@@ -34,21 +34,12 @@ export async function POST(request: Request) {
     date: { start: new Date().toISOString().split('T')[0] }
   }
 
-  const response = await fetch('https://api.notion.com/v1/pages', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${NOTION_TOKEN}`,
-      'Content-Type': 'application/json',
-      'Notion-Version': '2022-06-28',
-    },
-    body: JSON.stringify({
+  try {
+    await notionCreate({
       parent: { database_id: databaseId },
       properties,
-    }),
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
+    })
+  } catch (error) {
     console.error('Notion error:', error)
     return NextResponse.json({ error: 'Erro ao salvar no Notion' }, { status: 500 })
   }

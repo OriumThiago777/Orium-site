@@ -1,15 +1,9 @@
 import { NextResponse } from 'next/server'
 import { verificarToken, respostaNaoAutorizada } from '@/lib/api-auth'
+import { notionQuery } from '@/lib/notion'
 
-const NOTION_TOKEN = process.env.NOTION_TOKEN
 const DB_PESSOA = process.env.NOTION_DB_PESSOA
 const DB_EMPRESA = process.env.NOTION_DB_EMPRESA
-
-const NH = {
-  'Authorization': `Bearer ${NOTION_TOKEN}`,
-  'Content-Type': 'application/json',
-  'Notion-Version': '2022-06-28',
-}
 
 type NotionPage = {
   id: string
@@ -26,21 +20,17 @@ const rt = (p: NotionPage, prop: string) =>
 
 async function buscarMaisRecente(dbId: string | undefined, tituloProp: string, cliente: string): Promise<NotionPage | null> {
   if (!dbId) return null
-  const res = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
-    method: 'POST',
-    headers: NH,
-    body: JSON.stringify({
+  try {
+    const data = await notionQuery(dbId, {
       filter: { property: tituloProp, title: { contains: cliente } },
       sorts: [{ timestamp: 'created_time', direction: 'descending' }],
       page_size: 1,
-    }),
-  })
-  if (!res.ok) {
-    console.error(`Notion briefing/buscar error (${res.status})`)
+    })
+    return data.results?.[0] ?? null
+  } catch (err) {
+    console.error('Notion briefing/buscar error:', err)
     return null
   }
-  const data = await res.json()
-  return data.results?.[0] ?? null
 }
 
 export async function GET(request: Request) {

@@ -1,14 +1,8 @@
 import { NextResponse } from 'next/server';
 import { verificarToken, respostaNaoAutorizada } from '@/lib/api-auth';
+import { notionQuery, notionCreate, notionPatch, NotionError } from '@/lib/notion';
 
-const NOTION_TOKEN = process.env.NOTION_TOKEN;
 const DATABASE_ID = process.env.NOTION_DB_CLIENTES;
-
-const NH = {
-  'Authorization': `Bearer ${NOTION_TOKEN}`,
-  'Content-Type': 'application/json',
-  'Notion-Version': '2022-06-28',
-};
 
 const registrarAtividade = (body: object) => {
   fetch(`${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/api/atividades`, {
@@ -51,16 +45,8 @@ function sanitizeErrorMessage(message: string) {
     .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '[id]');
 }
 
-async function getNotionError(res: Response) {
-  try {
-    const err = await res.json();
-    const message = typeof err?.message === 'string'
-      ? sanitizeErrorMessage(err.message)
-      : 'Erro retornado pelo Notion';
-    return { status: res.status, code: err?.code, message };
-  } catch {
-    return { status: res.status, code: 'unknown_error', message: 'Erro retornado pelo Notion' };
-  }
+function notionErrorDetail(err: NotionError) {
+  return { status: err.status, code: err.code ?? 'unknown_error', message: sanitizeErrorMessage(err.message) };
 }
 
 function validarClientePayload(body: Record<string, unknown>) {
@@ -139,23 +125,18 @@ function buildProperties(body: Record<string, unknown>) {
 export async function GET(request: Request) {
   if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
-    const res = await fetch(`https://api.notion.com/v1/databases/${DATABASE_ID}/query`, {
-      method: 'POST',
-      headers: NH,
-      body: JSON.stringify({
-        sorts: [{ property: 'Data de Início', direction: 'descending' }],
-        page_size: 100,
-      }),
+    const data = await notionQuery(DATABASE_ID!, {
+      sorts: [{ property: 'Data de Início', direction: 'descending' }],
+      page_size: 100,
     });
-    if (!res.ok) {
-      const err = await getNotionError(res);
-      console.error('Notion GET clientes error:', err);
-      return NextResponse.json({ error: 'Erro ao listar clientes', detail: err.message }, { status: 500 });
-    }
-    const data = await res.json();
     const clientes = (data.results ?? []).map((page: NotionPage) => extractCliente(page));
     return NextResponse.json({ clientes });
   } catch (err) {
+    if (err instanceof NotionError) {
+      const detail = notionErrorDetail(err);
+      console.error('Notion GET clientes error:', detail);
+      return NextResponse.json({ error: 'Erro ao listar clientes', detail: detail.message }, { status: 500 });
+    }
     console.error('GET /api/clientes:', err);
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
   }
@@ -172,20 +153,10 @@ export async function POST(request: Request) {
 
     const props = buildProperties(body);
 
-    const res = await fetch('https://api.notion.com/v1/pages', {
-      method: 'POST',
-      headers: NH,
-      body: JSON.stringify({
-        parent: { database_id: DATABASE_ID },
-        properties: props,
-      }),
-    });
-    if (!res.ok) {
-      const err = await getNotionError(res);
-      console.error('Notion POST clientes error:', err);
-      return NextResponse.json({ error: 'Erro ao criar cliente no Notion', detail: err.message }, { status: 500 });
-    }
-    const page = await res.json() as NotionPage;
+    const page = await notionCreate({
+      parent: { database_id: DATABASE_ID },
+      properties: props,
+    }) as NotionPage;
     const clienteCriado = extractCliente(page);
     registrarAtividade({
       clienteId: clienteCriado.id,
@@ -195,6 +166,11 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(clienteCriado);
   } catch (err) {
+    if (err instanceof NotionError) {
+      const detail = notionErrorDetail(err);
+      console.error('Notion POST clientes error:', detail);
+      return NextResponse.json({ error: 'Erro ao criar cliente no Notion', detail: detail.message }, { status: 500 });
+    }
     console.error('POST /api/clientes:', err);
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
   }
@@ -215,17 +191,7 @@ export async function PATCH(request: Request) {
 
     const props = buildProperties(body);
 
-    const res = await fetch(`https://api.notion.com/v1/pages/${id}`, {
-      method: 'PATCH',
-      headers: NH,
-      body: JSON.stringify({ properties: props }),
-    });
-    if (!res.ok) {
-      const err = await getNotionError(res);
-      console.error('Notion PATCH clientes error:', err);
-      return NextResponse.json({ error: 'Erro ao atualizar cliente no Notion', detail: err.message }, { status: 500 });
-    }
-    const page = await res.json() as NotionPage;
+    const page = await notionPatch(id, { properties: props }) as NotionPage;
     if (body.faseAtual !== undefined) {
       registrarAtividade({
         clienteId: id,
@@ -236,6 +202,11 @@ export async function PATCH(request: Request) {
     }
     return NextResponse.json(extractCliente(page));
   } catch (err) {
+    if (err instanceof NotionError) {
+      const detail = notionErrorDetail(err);
+      console.error('Notion PATCH clientes error:', detail);
+      return NextResponse.json({ error: 'Erro ao atualizar cliente no Notion', detail: detail.message }, { status: 500 });
+    }
     console.error('PATCH /api/clientes:', err);
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
   }
@@ -248,18 +219,14 @@ export async function DELETE(request: Request) {
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ error: 'ID obrigatório' }, { status: 400 });
 
-    const res = await fetch(`https://api.notion.com/v1/pages/${id}`, {
-      method: 'PATCH',
-      headers: NH,
-      body: JSON.stringify({ archived: true }),
-    });
-    if (!res.ok) {
-      const err = await getNotionError(res);
-      console.error('Notion DELETE clientes error:', err);
-      return NextResponse.json({ error: 'Erro ao arquivar cliente no Notion', detail: err.message }, { status: 500 });
-    }
+    await notionPatch(id, { archived: true });
     return NextResponse.json({ success: true });
   } catch (err) {
+    if (err instanceof NotionError) {
+      const detail = notionErrorDetail(err);
+      console.error('Notion DELETE clientes error:', detail);
+      return NextResponse.json({ error: 'Erro ao arquivar cliente no Notion', detail: detail.message }, { status: 500 });
+    }
     console.error('DELETE /api/clientes:', err);
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
   }

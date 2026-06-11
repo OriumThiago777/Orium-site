@@ -1,17 +1,11 @@
 import { NextResponse } from 'next/server'
 import { verificarToken, respostaNaoAutorizada } from '@/lib/api-auth'
+import { notionQuery } from '@/lib/notion'
 
-const NOTION_TOKEN = process.env.NOTION_TOKEN
 const DB_CALENDARIO = process.env.NOTION_DB_CALENDARIO
 const DB_LEADS = process.env.NOTION_DB_LEADS
 const DB_CLIENTES = process.env.NOTION_DB_CLIENTES
 const DB_DOCUMENTOS = process.env.NOTION_DB_DOCUMENTOS
-
-const NH = {
-  'Authorization': `Bearer ${NOTION_TOKEN}`,
-  'Content-Type': 'application/json',
-  'Notion-Version': '2022-06-28',
-}
 
 type NotionPage = {
   id: string
@@ -27,17 +21,13 @@ type NotionPage = {
 
 async function queryDb(dbId: string | undefined, body: Record<string, unknown>): Promise<NotionPage[]> {
   if (!dbId) return []
-  const res = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
-    method: 'POST',
-    headers: NH,
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) {
-    console.error(`Notion query error (${res.status}) em hub-status`)
+  try {
+    const data = await notionQuery(dbId, body)
+    return data.results ?? []
+  } catch (err) {
+    console.error('Notion query error em hub-status:', err)
     return []
   }
-  const data = await res.json()
-  return data.results ?? []
 }
 
 function isoLocal(d: Date): string {

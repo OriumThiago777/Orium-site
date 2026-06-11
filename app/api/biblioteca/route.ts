@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { notionQuery, notionCreate, notionPatch, NotionError } from '@/lib/notion'
 
 const NOTION_TOKEN = process.env.NOTION_TOKEN
 const NOTION_DB = process.env.NOTION_DB_BIBLIOTECA
-
-function notionHeaders() {
-  return {
-    'Authorization': `Bearer ${NOTION_TOKEN}`,
-    'Content-Type': 'application/json',
-    'Notion-Version': '2022-06-28',
-  }
-}
 
 function extractText(prop: { rich_text?: { plain_text: string }[] } | undefined): string {
   return prop?.rich_text?.map(r => r.plain_text).join('') ?? ''
@@ -74,16 +67,13 @@ export async function GET(req: NextRequest) {
   else if (filter.and.length > 1) Object.assign(body, { filter })
 
   try {
-    const res = await fetch(`https://api.notion.com/v1/databases/${NOTION_DB}/query`, {
-      method: 'POST',
-      headers: notionHeaders(),
-      body: JSON.stringify(body),
-    })
-    const data = await res.json()
-    if (!res.ok) return NextResponse.json({ error: data.message }, { status: res.status })
+    const data = await notionQuery(NOTION_DB, body)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return NextResponse.json(data.results.map((p: any) => mapPage(p)))
   } catch (err) {
+    if (err instanceof NotionError) {
+      return NextResponse.json({ error: err.message }, { status: err.status })
+    }
     console.error('Biblioteca GET error:', err)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
@@ -109,15 +99,12 @@ export async function POST(req: NextRequest) {
     if (notas) properties['Notas'] = { rich_text: [{ text: { content: notas } }] }
     if (data) properties['Data'] = { date: { start: data } }
 
-    const res = await fetch('https://api.notion.com/v1/pages', {
-      method: 'POST',
-      headers: notionHeaders(),
-      body: JSON.stringify({ parent: { database_id: NOTION_DB }, properties }),
-    })
-    const result = await res.json()
-    if (!res.ok) return NextResponse.json({ error: result.message }, { status: res.status })
+    const result = await notionCreate({ parent: { database_id: NOTION_DB }, properties })
     return NextResponse.json({ success: true, id: result.id })
   } catch (err) {
+    if (err instanceof NotionError) {
+      return NextResponse.json({ error: err.message }, { status: err.status })
+    }
     console.error('Biblioteca POST error:', err)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
@@ -131,17 +118,12 @@ export async function DELETE(req: NextRequest) {
     const id = new URL(req.url).searchParams.get('id')
     if (!id) return NextResponse.json({ error: 'ID obrigatório' }, { status: 400 })
 
-    const res = await fetch(`https://api.notion.com/v1/pages/${id}`, {
-      method: 'PATCH',
-      headers: notionHeaders(),
-      body: JSON.stringify({ archived: true }),
-    })
-    if (!res.ok) {
-      const data = await res.json()
-      return NextResponse.json({ error: data.message }, { status: res.status })
-    }
+    await notionPatch(id, { archived: true })
     return NextResponse.json({ success: true })
   } catch (err) {
+    if (err instanceof NotionError) {
+      return NextResponse.json({ error: err.message }, { status: err.status })
+    }
     console.error('Biblioteca DELETE error:', err)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
