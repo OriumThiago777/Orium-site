@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { isAuthenticated, saveAuth } from '@/lib/auth'
+import { isAuthenticated, saveAuth, authHeaders } from '@/lib/auth'
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 interface Asset {
@@ -75,8 +75,8 @@ function emptyForm() {
 function BgImage() {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
-      <Image src="/hero.jpg" alt="" fill style={{ objectFit: 'cover', opacity: 0.04 }} priority />
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%)' }} />
+      <Image src="/hero.jpg" alt="" fill sizes="100vw" style={{ objectFit: 'cover', opacity: 0.07 }} priority />
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%), linear-gradient(to bottom, #080808 0%, transparent 30%, transparent 70%, #080808 100%)' }} />
     </div>
   )
 }
@@ -84,7 +84,7 @@ function BgImage() {
 // ─── Skeleton Card ────────────────────────────────────────────────────────────
 function SkeletonCard() {
   return (
-    <div style={{ background: '#0f0f0f', border: '1px solid #1a1a1a', borderRadius: '8px', overflow: 'hidden' }}>
+    <div style={{ background: '#0f0f0f', border: '1px solid #1a1a1a', borderRadius: '8px', overflow: 'hidden', animation: 'orium-skeleton 1.4s ease-in-out infinite' }}>
       <div style={{ height: '140px', background: '#1a1a1a', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, transparent, rgba(255,107,0,0.04), transparent)', animation: 'orium-pulse 1.5s ease-in-out infinite' }} />
       </div>
@@ -226,7 +226,7 @@ function ModalAdicionar({ onClose, onSave }: { onClose: () => void; onSave: () =
     if (!form.nome.trim()) { alert('Preencha o nome do asset.'); return }
     setSalvando(true)
     try {
-      const res = await fetch('/api/biblioteca', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+      const res = await fetch('/api/biblioteca', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify(form) })
       const data = await res.json()
       if (!data.success) throw new Error(data.error)
       onSave()
@@ -355,6 +355,7 @@ export default function BibliotecaPage() {
 
   const [assets, setAssets] = useState<Asset[]>([])
   const [loading, setLoading] = useState(true)
+  const [erro, setErro] = useState(false)
   const [segmentoAtivo, setSegmentoAtivo] = useState('todos')
   const [tipoFiltro, setTipoFiltro] = useState('')
   const [busca, setBusca] = useState('')
@@ -372,7 +373,7 @@ export default function BibliotecaPage() {
   async function fetchAssets() {
     setLoading(true)
     try {
-      const res = await fetch('/api/biblioteca')
+      const res = await fetch('/api/biblioteca', { headers: authHeaders() })
       const data = await res.json()
       setAssets(Array.isArray(data) ? data : [])
     } catch {
@@ -394,7 +395,7 @@ export default function BibliotecaPage() {
   }
 
   async function handleDelete(id: string) {
-    await fetch(`/api/biblioteca?id=${id}`, { method: 'DELETE' })
+    await fetch(`/api/biblioteca?id=${id}`, { method: 'DELETE', headers: authHeaders() })
     setAssets(a => a.filter(x => x.id !== id))
   }
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { notionQuery, notionCreate, notionPatch, NotionError } from '@/lib/notion'
+import { verificarToken, respostaNaoAutorizada } from '@/lib/api-auth'
 
 const NOTION_TOKEN = process.env.NOTION_TOKEN
 const NOTION_DB = process.env.NOTION_DB_BIBLIOTECA
@@ -51,6 +52,7 @@ export const revalidate = 60
 const CACHE_HEADERS = { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=120' }
 
 export async function GET(req: NextRequest) {
+  if (!verificarToken(req)) return respostaNaoAutorizada()
   if (!NOTION_TOKEN || !NOTION_DB) {
     return NextResponse.json({ error: 'Credenciais não configuradas' }, { status: 500 })
   }
@@ -84,6 +86,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  if (!verificarToken(req)) return respostaNaoAutorizada()
   if (!NOTION_TOKEN || !NOTION_DB) {
     return NextResponse.json({ error: 'Credenciais não configuradas' }, { status: 500 })
   }
@@ -115,6 +118,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  if (!verificarToken(req)) return respostaNaoAutorizada()
   if (!NOTION_TOKEN) {
     return NextResponse.json({ error: 'Credenciais não configuradas' }, { status: 500 })
   }
