@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { isAuthenticated, saveAuth } from '@/lib/auth';
+import { clearAuth } from '@/lib/auth';
+import AuthGate from '@/components/AuthGate';
+import ToolBackground from '@/components/ToolBackground';
 import HubStatusPanel from '@/components/HubStatusPanel';
 
 const FERRAMENTAS = [
@@ -70,127 +71,11 @@ const FERRAMENTAS = [
 
 const EM_BREVE: { tag: string; titulo: string; descricao: string }[] = [];
 
-const BG_STYLE = 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%), linear-gradient(to bottom, #080808 0%, transparent 30%, transparent 70%, #080808 100%)';
-
-function BgImage() {
-  return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
-      <Image src="/hero.jpg" alt="" fill sizes="100vw" className="object-cover" style={{ opacity: 0.07 }} />
-      <div style={{ position: 'absolute', inset: 0, background: BG_STYLE }} />
-    </div>
-  );
-}
-
-export default function HubPage() {
-  const [autenticado, setAutenticado] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [senha, setSenha] = useState('');
-  const [erroSenha, setErroSenha] = useState(false);
-  const [carregando, setCarregando] = useState(false);
-
-  useEffect(() => {
-    setAutenticado(isAuthenticated());
-    setAuthChecked(true);
-  }, []);
-
-  async function handleSenha(e: React.FormEvent) {
-    e.preventDefault();
-    setCarregando(true);
-    setErroSenha(false);
-    try {
-      const res = await fetch('/api/raio-x/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ senha }),
-      });
-      if (res.ok) { saveAuth(senha); setAutenticado(true); }
-      else setErroSenha(true);
-    } catch {
-      setErroSenha(true);
-    } finally {
-      setCarregando(false);
-    }
-  }
-
-  // ── Tela de senha ─────────────────────────────────────────────────────────────
-  if (!authChecked) return null;
-  if (!autenticado) {
-    return (
-      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif' }}>
-        <BgImage />
-        <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '440px', padding: '0 2rem' }}>
-          <div style={{ marginBottom: '3rem' }}>
-            <Image src="/lglaranja.png" alt="ORIUM" width={120} height={40} style={{ objectFit: 'contain' }} />
-          </div>
-          <p style={{ color: '#FF6B00', fontSize: '0.72rem', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: '1rem' }}>
-            ACESSO INTERNO
-          </p>
-          <h1 style={{ fontFamily: 'Anton, sans-serif', fontSize: 'clamp(3rem, 6vw, 4.5rem)', color: '#fff', letterSpacing: '0.02em', lineHeight: 0.95, marginBottom: '1.75rem' }}>
-            HUB ORIUM
-          </h1>
-          <p style={{ color: '#555', fontSize: '1rem', lineHeight: 1.75, marginBottom: '3rem' }}>
-            Central de ferramentas estratégicas.
-          </p>
-          <form onSubmit={handleSenha}>
-            <input
-              type="password"
-              placeholder="Senha de acesso"
-              value={senha}
-              onChange={e => { setSenha(e.target.value); setErroSenha(false); }}
-              autoFocus
-              style={{
-                width: '100%',
-                background: 'rgba(255,255,255,0.04)',
-                border: `1px solid ${erroSenha ? '#ef4444' : '#1e1e1e'}`,
-                borderRadius: '10px',
-                padding: '1rem 1.25rem',
-                color: '#fff',
-                fontSize: '0.95rem',
-                fontFamily: 'Poppins, sans-serif',
-                outline: 'none',
-                boxSizing: 'border-box',
-                transition: 'border-color 0.2s',
-              }}
-              onFocus={e => { if (!erroSenha) e.target.style.borderColor = '#FF6B00'; }}
-              onBlur={e => { if (!erroSenha) e.target.style.borderColor = '#1e1e1e'; }}
-            />
-            {erroSenha && (
-              <p style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: '0.75rem', textAlign: 'center' }}>
-                Senha incorreta. Tente novamente.
-              </p>
-            )}
-            <button
-              type="submit"
-              disabled={carregando || !senha}
-              style={{
-                width: '100%',
-                background: '#FF6B00',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '1rem',
-                color: '#000',
-                fontFamily: 'Anton, sans-serif',
-                fontSize: '1rem',
-                letterSpacing: '0.15em',
-                cursor: carregando || !senha ? 'not-allowed' : 'pointer',
-                boxShadow: '0 4px 20px rgba(255,107,0,0.2)',
-                marginTop: '1rem',
-                opacity: carregando || !senha ? 0.5 : 1,
-                transition: 'all 0.2s',
-              }}
-            >
-              {carregando ? '...' : 'ACESSAR'}
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
+function HubContent() {
   // ── Hub principal ─────────────────────────────────────────────────────────────
   return (
     <div style={{ position: 'fixed', inset: 0, overflowY: 'auto', background: '#080808', fontFamily: 'Poppins, sans-serif' }}>
-      <BgImage />
+      <ToolBackground />
       <div style={{ position: 'relative', zIndex: 1, maxWidth: '960px', margin: '0 auto', padding: '5rem 3rem' }}>
 
         {/* Header */}
@@ -258,7 +143,7 @@ export default function HubPage() {
             ORIUM™ — Ferramentas Internas
           </p>
           <button
-            onClick={() => setAutenticado(false)}
+            onClick={() => { clearAuth(); window.location.reload(); }}
             style={{ background: 'none', border: 'none', color: '#2a2a2a', fontSize: '0.72rem', letterSpacing: '0.2em', textTransform: 'uppercase', cursor: 'pointer', transition: 'color 0.2s', padding: 0, fontFamily: 'Poppins, sans-serif' }}
             onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
             onMouseLeave={e => { e.currentTarget.style.color = '#2a2a2a'; }}
@@ -269,5 +154,13 @@ export default function HubPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function HubPage() {
+  return (
+    <AuthGate title="HUB ORIUM" subtitle="Central de ferramentas estratégicas.">
+      <HubContent />
+    </AuthGate>
   );
 }

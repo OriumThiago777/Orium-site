@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import ToolBackground from '@/components/ToolBackground'
 import type { Cliente, HealthScore } from './types'
 
 export const FASES: { nome: string; cor: string }[] = [
@@ -54,15 +54,8 @@ export function getIniciais(nome: string): string {
   return (palavras[0][0] + palavras[palavras.length - 1][0]).toUpperCase()
 }
 
-export const BG_STYLE = 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%), linear-gradient(to bottom, #080808 0%, transparent 30%, transparent 70%, #080808 100%)'
-
 export function BgImage() {
-  return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
-      <Image src="/hero.jpg" alt="" fill sizes="100vw" className="object-cover" style={{ opacity: 0.07 }} />
-      <div style={{ position: 'absolute', inset: 0, background: BG_STYLE }} />
-    </div>
-  )
+  return <ToolBackground />
 }
 
 export function formatBRL(value: number | null) {

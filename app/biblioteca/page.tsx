@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { isAuthenticated, saveAuth, authHeaders } from '@/lib/auth'
+import { authHeaders } from '@/lib/auth'
+import AuthGate from '@/components/AuthGate'
+import ToolBackground from '@/components/ToolBackground'
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 interface Asset {
@@ -73,12 +75,7 @@ function emptyForm() {
 
 // ─── BgImage ─────────────────────────────────────────────────────────────────
 function BgImage() {
-  return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
-      <Image src="/hero.jpg" alt="" fill sizes="100vw" style={{ objectFit: 'cover', opacity: 0.07 }} priority />
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%), linear-gradient(to bottom, #080808 0%, transparent 30%, transparent 70%, #080808 100%)' }} />
-    </div>
-  )
+  return <ToolBackground />
 }
 
 // ─── Skeleton Card ────────────────────────────────────────────────────────────
@@ -346,13 +343,7 @@ function ModalAdicionar({ onClose, onSave }: { onClose: () => void; onSave: () =
 }
 
 // ─── Página principal ─────────────────────────────────────────────────────────
-export default function BibliotecaPage() {
-  const [autenticado, setAutenticado] = useState(false)
-  const [authChecked, setAuthChecked] = useState(false)
-  const [senha, setSenha] = useState('')
-  const [erroSenha, setErroSenha] = useState(false)
-  const [carregando, setCarregando] = useState(false)
-
+function BibliotecaContent() {
   const [assets, setAssets] = useState<Asset[]>([])
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState(false)
@@ -362,77 +353,28 @@ export default function BibliotecaPage() {
   const [modalAberto, setModalAberto] = useState(false)
 
   useEffect(() => {
-    setAutenticado(isAuthenticated())
-    setAuthChecked(true)
+    fetchAssets()
   }, [])
-
-  useEffect(() => {
-    if (autenticado) fetchAssets()
-  }, [autenticado])
 
   async function fetchAssets() {
     setLoading(true)
+    setErro(false)
     try {
       const res = await fetch('/api/biblioteca', { headers: authHeaders() })
+      if (!res.ok) throw new Error('biblioteca indisponível')
       const data = await res.json()
       setAssets(Array.isArray(data) ? data : [])
     } catch {
       setAssets([])
+      setErro(true)
     } finally {
       setLoading(false)
     }
   }
 
-  async function handleSenha(e: React.FormEvent) {
-    e.preventDefault()
-    setCarregando(true)
-    try {
-      const res = await fetch('/api/raio-x/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senha }) })
-      if (res.ok) { saveAuth(senha); setAutenticado(true) }
-      else { setErroSenha(true) }
-    } catch { setErroSenha(true) }
-    finally { setCarregando(false) }
-  }
-
   async function handleDelete(id: string) {
     await fetch(`/api/biblioteca?id=${id}`, { method: 'DELETE', headers: authHeaders() })
     setAssets(a => a.filter(x => x.id !== id))
-  }
-
-  if (!authChecked) return null
-
-  // ── Tela de senha ────────────────────────────────────────────────────────────
-  if (!autenticado) {
-    return (
-      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FP }}>
-        <BgImage />
-        <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '440px', padding: '0 2rem' }}>
-          <div style={{ marginBottom: '3rem' }}>
-            <Image src="/lglaranja.png" alt="ORIUM" width={120} height={40} style={{ objectFit: 'contain' }} />
-          </div>
-          <p style={{ color: '#FF6B00', fontSize: '0.72rem', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: '1rem' }}>ACESSO INTERNO</p>
-          <h1 style={{ fontFamily: FA, fontSize: 'clamp(2.5rem, 5vw, 4rem)', color: '#fff', letterSpacing: '0.02em', lineHeight: 0.95, marginBottom: '1.75rem' }}>BIBLIOTECA</h1>
-          <p style={{ color: '#555', fontSize: '1rem', lineHeight: 1.75, marginBottom: '3rem' }}>Acervo de templates e criações por segmento.</p>
-          <form onSubmit={handleSenha} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <input
-              type="password"
-              placeholder="Senha de acesso"
-              value={senha}
-              onChange={e => { setSenha(e.target.value); setErroSenha(false) }}
-              autoFocus
-              style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${erroSenha ? '#ef4444' : '#1e1e1e'}`, borderRadius: '10px', padding: '1rem 1.25rem', color: '#fff', fontSize: '0.95rem', fontFamily: FP, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s' }}
-              onFocus={e => { if (!erroSenha) e.target.style.borderColor = '#FF6B00' }}
-              onBlur={e => { if (!erroSenha) e.target.style.borderColor = '#1e1e1e' }}
-            />
-            {erroSenha && <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center' }}>Senha incorreta. Tente novamente.</p>}
-            <button type="submit" disabled={carregando || !senha}
-              style={{ width: '100%', background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '1rem', color: '#000', fontFamily: FA, fontSize: '1rem', letterSpacing: '0.15em', cursor: carregando || !senha ? 'not-allowed' : 'pointer', boxShadow: '0 4px 20px rgba(255,107,0,0.2)', opacity: carregando || !senha ? 0.5 : 1, transition: 'all 0.2s' }}>
-              {carregando ? '...' : 'ACESSAR'}
-            </button>
-          </form>
-        </div>
-      </div>
-    )
   }
 
   // ── Filtros aplicados ────────────────────────────────────────────────────────
@@ -512,7 +454,7 @@ export default function BibliotecaPage() {
         </div>
 
         {/* Contagem */}
-        {!loading && (
+        {!loading && !erro && (
           <p style={{ color: '#444', fontSize: '0.78rem', marginBottom: '1.25rem' }}>
             {assetsFiltrados.length} asset{assetsFiltrados.length !== 1 ? 's' : ''}
             {segmentoAtivo !== 'todos' ? ` em ${segmentoAtivo}` : ''}
@@ -523,6 +465,16 @@ export default function BibliotecaPage() {
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1rem' }}>
             {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+        ) : erro ? (
+          <div style={{ textAlign: 'center', padding: '5rem 2rem', color: '#444' }}>
+            <p style={{ fontSize: '0.95rem', marginBottom: '0.5rem', color: '#777' }}>
+              Não foi possível carregar — tente novamente
+            </p>
+            <button onClick={fetchAssets}
+              style={{ marginTop: '1rem', background: 'transparent', border: '1px solid #FF6B00', borderRadius: '8px', padding: '0.625rem 1.25rem', color: '#FF6B00', fontFamily: FA, fontSize: '0.82rem', letterSpacing: '0.1em', cursor: 'pointer' }}>
+              TENTAR NOVAMENTE
+            </button>
           </div>
         ) : assetsFiltrados.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '5rem 2rem', color: '#444' }}>
@@ -552,5 +504,13 @@ export default function BibliotecaPage() {
         />
       )}
     </div>
+  )
+}
+
+export default function BibliotecaPage() {
+  return (
+    <AuthGate title="BIBLIOTECA" subtitle="Acervo de templates e criações por segmento.">
+      <BibliotecaContent />
+    </AuthGate>
   )
 }

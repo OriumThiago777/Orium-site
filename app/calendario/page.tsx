@@ -4,11 +4,15 @@ import { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { saveAuth, isAuthenticated, clearAuth, authHeaders } from '@/lib/auth';
+import { clearAuth, authHeaders } from '@/lib/auth';
 import { useDraft } from '@/lib/draft';
 import DraftBanner from '@/components/DraftBanner';
 import ClienteSelector from '@/components/ClienteSelector';
 import ImportarBriefing, { BriefingImportado } from '@/components/ImportarBriefing';
+import AuthGate from '@/components/AuthGate';
+import ToolBackground from '@/components/ToolBackground';
+import WizardFooter from '@/components/WizardFooter';
+import OriumInput, { ORIUM_INPUT_STYLE } from '@/components/OriumInput';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -59,28 +63,14 @@ const LOADING_TEXTS = [
 
 // ─── Helpers de estilo ────────────────────────────────────────────────────────
 
-const INPUT_STYLE: React.CSSProperties = {
-  width: '100%',
-  background: 'rgba(255,255,255,0.04)',
-  border: '1px solid #1e1e1e',
-  borderRadius: '10px',
-  padding: '1rem 1.25rem',
-  color: '#fff',
-  fontSize: '0.95rem',
-  fontFamily: 'Poppins, sans-serif',
-  outline: 'none',
-  boxSizing: 'border-box',
-  transition: 'border-color 0.2s',
-};
-
 const TEXTAREA_STYLE: React.CSSProperties = {
-  ...INPUT_STYLE,
+  ...ORIUM_INPUT_STYLE,
   resize: 'none',
   lineHeight: 1.65,
 };
 
 const SELECT_STYLE: React.CSSProperties = {
-  ...INPUT_STYLE,
+  ...ORIUM_INPUT_STYLE,
   cursor: 'pointer',
   appearance: 'none',
   WebkitAppearance: 'none',
@@ -103,12 +93,6 @@ function toggleBtn(active: boolean): React.CSSProperties {
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 function CalendarioPage() {
-  const [autenticado, setAutenticado] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [senha, setSenha] = useState('');
-  const [erroSenha, setErroSenha] = useState(false);
-  const [carregandoAuth, setCarregandoAuth] = useState(false);
-
   const [step, setStep] = useState(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -152,14 +136,8 @@ function CalendarioPage() {
     'calendario',
     { step, form, multi },
     d => { setForm(d.form); setMulti(d.multi); setStep(Math.min(d.step, 2)); },
-    autenticado,
+    true,
   );
-
-  // Checar auth no client
-  useEffect(() => {
-    setAutenticado(isAuthenticated());
-    setAuthChecked(true);
-  }, []);
 
   // Rotacionar textos de loading
   useEffect(() => {
@@ -187,31 +165,6 @@ function CalendarioPage() {
 
   const isChecked = (name: string, value: string) =>
     (multi[name] || []).includes(value);
-
-  // ─── Auth ──────────────────────────────────────────────────────────────────
-
-  async function handleSenha(e: React.FormEvent) {
-    e.preventDefault();
-    setCarregandoAuth(true);
-    setErroSenha(false);
-    try {
-      const res = await fetch('/api/raio-x/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ senha }),
-      });
-      if (res.ok) {
-        saveAuth(senha);
-        setAutenticado(true);
-      } else {
-        setErroSenha(true);
-      }
-    } catch {
-      setErroSenha(true);
-    } finally {
-      setCarregandoAuth(false);
-    }
-  }
 
   // ─── Geração ──────────────────────────────────────────────────────────────
 
@@ -316,59 +269,6 @@ function CalendarioPage() {
     gerarCalendario();
   }
 
-  // ─── Background ──────────────────────────────────────────────────────────
-
-  const bgImage = (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
-      <Image src="/hero.jpg" alt="" fill sizes="100vw" className="object-cover" style={{ opacity: 0.07 }} />
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%), linear-gradient(to bottom, #080808 0%, transparent 30%, transparent 70%, #080808 100%)' }} />
-    </div>
-  );
-
-  // ─── Aguarda checagem de auth ────────────────────────────────────────────
-
-  if (!authChecked) return null;
-
-  // ─── Tela de senha ────────────────────────────────────────────────────────
-
-  if (!autenticado) {
-    return (
-      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif' }}>
-        {bgImage}
-        <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '440px', padding: '0 2rem' }}>
-          <div style={{ marginBottom: '3rem' }}>
-            <Image src="/lglaranja.png" alt="ORIUM" width={120} height={40} style={{ objectFit: 'contain' }} />
-          </div>
-          <p style={{ color: '#FF6B00', fontSize: '0.72rem', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: '1rem' }}>ACESSO INTERNO</p>
-          <h1 style={{ fontFamily: 'Anton, sans-serif', fontSize: 'clamp(3rem, 6vw, 4.5rem)', color: '#fff', letterSpacing: '0.02em', lineHeight: 0.95, marginBottom: '1.75rem' }}>CALENDÁRIO</h1>
-          <p style={{ color: '#555', fontSize: '1rem', lineHeight: 1.75, marginBottom: '3rem' }}>Gerador de conteúdo mensal com IA.</p>
-          <form onSubmit={handleSenha}>
-            <input
-              type="password"
-              placeholder="Senha de acesso"
-              value={senha}
-              onChange={e => { setSenha(e.target.value); setErroSenha(false); }}
-              autoFocus
-              style={{ ...INPUT_STYLE, border: `1px solid ${erroSenha ? '#ef4444' : '#1e1e1e'}` }}
-              onFocus={e => { if (!erroSenha) e.target.style.borderColor = '#FF6B00'; }}
-              onBlur={e => { if (!erroSenha) e.target.style.borderColor = '#1e1e1e'; }}
-            />
-            {erroSenha && (
-              <p style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: '0.75rem', textAlign: 'center' }}>Senha incorreta. Tente novamente.</p>
-            )}
-            <button
-              type="submit"
-              disabled={carregandoAuth || !senha}
-              style={{ width: '100%', background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '1rem', color: '#000', fontFamily: 'Anton, sans-serif', fontSize: '1rem', letterSpacing: '0.15em', cursor: carregandoAuth || !senha ? 'not-allowed' : 'pointer', boxShadow: '0 4px 20px rgba(255,107,0,0.2)', marginTop: '1rem', opacity: carregandoAuth || !senha ? 0.5 : 1, transition: 'all 0.2s' }}
-            >
-              {carregandoAuth ? '...' : 'ACESSAR'}
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
   // ─── Labels e steps ───────────────────────────────────────────────────────
 
   const STEPS = [
@@ -426,14 +326,11 @@ function CalendarioPage() {
             <ImportarBriefing cliente={form.nomeCliente} onImport={importarBriefing} />
           </Field>
           <Field label="Instagram do cliente">
-            <input
+            <OriumInput
               type="text"
               placeholder="@cliente"
               value={form.instagram}
               onChange={e => set('instagram', e.target.value)}
-              style={INPUT_STYLE}
-              onFocus={e => e.target.style.borderColor = '#FF6B00'}
-              onBlur={e => e.target.style.borderColor = '#1e1e1e'}
             />
           </Field>
           <Field label="Segmento *">
@@ -678,7 +575,7 @@ function CalendarioPage() {
 
   return (
     <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', fontFamily: 'Poppins, sans-serif', display: 'flex' }}>
-      {bgImage}
+      <ToolBackground position="absolute" />
       {draft && <DraftBanner savedAt={draft.savedAt} onRetomar={retomar} onDescartar={descartar} />}
 
       {/* Sidebar */}
@@ -768,7 +665,7 @@ function CalendarioPage() {
             )}
             {!sidebarCollapsed && (
               <button
-                onClick={() => { clearAuth(); setAutenticado(false); }}
+                onClick={() => { clearAuth(); window.location.reload(); }}
                 style={{ background: 'none', border: 'none', color: '#1a1a1a', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', cursor: 'pointer', transition: 'color 0.2s', padding: 0, fontFamily: 'Poppins, sans-serif' }}
                 onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
                 onMouseLeave={e => { e.currentTarget.style.color = '#1a1a1a'; }}
@@ -804,25 +701,12 @@ function CalendarioPage() {
 
         {/* Footer */}
         {step < 3 && (
-          <div style={{ padding: '1.75rem 5rem', borderTop: '1px solid #141414', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, background: 'rgba(8,8,8,0.9)', backdropFilter: 'blur(8px)' }}>
-            {step > 0 ? (
-              <button
-                onClick={() => setStep(s => s - 1)}
-                style={{ background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '8px', padding: '0.875rem 2rem', color: '#666', fontSize: '0.9rem', fontFamily: 'Poppins, sans-serif', cursor: 'pointer', transition: 'all 0.2s' }}
-                onMouseEnter={e => { const b = e.currentTarget; b.style.borderColor = '#444'; b.style.color = '#ccc'; }}
-                onMouseLeave={e => { const b = e.currentTarget; b.style.borderColor = '#1e1e1e'; b.style.color = '#666'; }}
-              >← Voltar</button>
-            ) : <div />}
-            <button
-              onClick={() => setStep(s => s + 1)}
-              disabled={!podeAvancar()}
-              style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.875rem 2.75rem', color: '#fff', fontSize: '0.9rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.15em', cursor: podeAvancar() ? 'pointer' : 'not-allowed', opacity: podeAvancar() ? 1 : 0.4, transition: 'all 0.2s', boxShadow: '0 4px 20px rgba(255,107,0,0.2)' }}
-              onMouseEnter={e => { if (podeAvancar()) { const b = e.currentTarget; b.style.background = '#e55f00'; b.style.boxShadow = '0 6px 28px rgba(255,107,0,0.35)'; } }}
-              onMouseLeave={e => { const b = e.currentTarget; b.style.background = '#FF6B00'; b.style.boxShadow = '0 4px 20px rgba(255,107,0,0.2)'; }}
-            >
-              {step === 2 ? 'GERAR CALENDÁRIO →' : 'CONTINUAR →'}
-            </button>
-          </div>
+          <WizardFooter
+            onBack={step > 0 ? () => setStep(s => s - 1) : undefined}
+            onNext={() => setStep(s => s + 1)}
+            nextLabel={step === 2 ? 'GERAR CALENDÁRIO →' : 'CONTINUAR →'}
+            disabled={!podeAvancar()}
+          />
         )}
       </div>
     </div>
@@ -899,7 +783,9 @@ function PostCard({ post }: { post: Post }) {
 export default function Page() {
   return (
     <Suspense>
-      <CalendarioPage />
+      <AuthGate title="CALENDÁRIO" subtitle="Gerador de conteúdo mensal com IA.">
+        <CalendarioPage />
+      </AuthGate>
     </Suspense>
   );
 }

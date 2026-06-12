@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { isAuthenticated, saveAuth, authHeaders } from '@/lib/auth'
+import { authHeaders } from '@/lib/auth'
+import AuthGate from '@/components/AuthGate'
 import { DragEndEvent } from '@dnd-kit/core'
 import type { Cliente, Atividade, ProgressoData, OrdenarPor } from './components/types'
 import {
@@ -145,58 +146,8 @@ function Dashboard({ clientes, onFiltrarEntregas }: { clientes: Cliente[]; onFil
   )
 }
 
-// ─── Tela de Senha ────────────────────────────────────────────────────────────
-function TelaSenha({ onAuth }: { onAuth: () => void }) {
-  const [senha, setSenha] = useState('')
-  const [erro, setErro] = useState(false)
-  const [loading, setLoading] = useState(false)
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true); setErro(false)
-    try {
-      const res = await fetch('/api/raio-x/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
-        body: JSON.stringify({ senha }),
-      })
-      if (res.ok) { saveAuth(senha); onAuth() }
-      else setErro(true)
-    } catch { setErro(true) }
-    finally { setLoading(false) }
-  }
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif' }}>
-      <BgImage />
-      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '440px', padding: '0 2rem' }}>
-        <div style={{ marginBottom: '3rem' }}>
-          <Image src="/lglaranja.png" alt="ORIUM" width={120} height={40} style={{ objectFit: 'contain' }} />
-        </div>
-        <p style={{ color: '#FF6B00', fontSize: '0.72rem', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: '1rem' }}>ACESSO INTERNO</p>
-        <h1 style={{ fontFamily: 'Anton, sans-serif', fontSize: 'clamp(3rem, 6vw, 4.5rem)', color: '#fff', letterSpacing: '0.02em', lineHeight: 0.95, marginBottom: '1.75rem' }}>CLIENTES</h1>
-        <p style={{ color: '#555', fontSize: '1rem', lineHeight: 1.75, marginBottom: '3rem' }}>Gestão de clientes e fases.</p>
-        <form onSubmit={handleSubmit}>
-          <input type="password" placeholder="Senha de acesso" value={senha}
-            onChange={e => { setSenha(e.target.value); setErro(false) }} autoFocus
-            style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${erro ? '#ef4444' : '#1e1e1e'}`, borderRadius: '10px', padding: '1rem 1.25rem', color: '#fff', fontSize: '0.95rem', fontFamily: 'Poppins, sans-serif', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s' }}
-            onFocus={e => { if (!erro) e.target.style.borderColor = '#FF6B00' }}
-            onBlur={e => { if (!erro) e.target.style.borderColor = '#1e1e1e' }} />
-          {erro && <p style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: '0.75rem', textAlign: 'center' }}>Senha incorreta.</p>}
-          <button type="submit" disabled={loading || !senha}
-            style={{ width: '100%', background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '1rem', color: '#000', fontFamily: 'Anton, sans-serif', fontSize: '1rem', letterSpacing: '0.15em', cursor: loading || !senha ? 'not-allowed' : 'pointer', boxShadow: '0 4px 20px rgba(255,107,0,0.2)', marginTop: '1rem', opacity: loading || !senha ? 0.5 : 1, transition: 'all 0.2s' }}>
-            {loading ? '...' : 'ACESSAR'}
-          </button>
-        </form>
-      </div>
-    </div>
-  )
-}
-
 // ─── Página Principal ─────────────────────────────────────────────────────────
-export default function ClientesPage() {
-  const [autenticado, setAutenticado] = useState(false)
-  const [authChecked, setAuthChecked] = useState(false)
+function ClientesContent() {
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [loading, setLoading] = useState(false)
   const [vistaAtiva, setVistaAtiva] = useState<'kanban' | 'table' | 'leads' | 'calendario'>('kanban')
@@ -218,8 +169,6 @@ export default function ClientesPage() {
   const justDraggedRef = useRef(false)
 
   useEffect(() => {
-    setAutenticado(isAuthenticated())
-    setAuthChecked(true)
     const vista = new URLSearchParams(window.location.search).get('vista')
     if (vista === 'kanban' || vista === 'table' || vista === 'leads' || vista === 'calendario') {
       setVistaAtiva(vista)
@@ -227,13 +176,12 @@ export default function ClientesPage() {
   }, [])
 
   useEffect(() => {
-    if (!autenticado) return
     setLoading(true)
     fetch('/api/clientes', { headers: authHeaders() })
       .then(r => r.json())
       .then(d => setClientes(d.clientes ?? []))
       .finally(() => setLoading(false))
-  }, [autenticado])
+  }, [])
 
   useEffect(() => {
     if (!clienteSelecionado) return
@@ -307,9 +255,6 @@ export default function ClientesPage() {
     setVistaAtiva('table')
     setFiltroUrgente(true)
   }
-
-  if (!authChecked) return null
-  if (!autenticado) return <TelaSenha onAuth={() => setAutenticado(true)} />
 
   const receitaMensal = clientes.filter(c => c.status === 'Ativo').reduce((acc, c) => acc + (c.valorMensal ?? 0), 0)
   const totalAtivos = clientes.filter(c => c.status === 'Ativo').length
@@ -504,5 +449,13 @@ export default function ClientesPage() {
           progresso={progressos[clienteSelecionado.id] ?? null} />
       )}
     </div>
+  )
+}
+
+export default function ClientesPage() {
+  return (
+    <AuthGate title="CLIENTES" subtitle="Gestão de clientes e fases.">
+      <ClientesContent />
+    </AuthGate>
   )
 }

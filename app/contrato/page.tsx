@@ -4,12 +4,15 @@ import { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { isAuthenticated, saveAuth, authHeaders } from '@/lib/auth';
+import { authHeaders } from '@/lib/auth';
 import { savePdfToCloud } from '@/lib/upload-helper';
 import { useDraft } from '@/lib/draft';
 import SaveToast from '@/components/SaveToast';
 import DraftBanner from '@/components/DraftBanner';
 import ClienteSelector from '@/components/ClienteSelector';
+import AuthGate from '@/components/AuthGate';
+import ToolBackground from '@/components/ToolBackground';
+import WizardFooter from '@/components/WizardFooter';
 
 const FA = 'Anton, sans-serif';
 const FP = 'Poppins, sans-serif';
@@ -437,19 +440,9 @@ function CharCounter({ value, max }: { value: string; max: number }) {
 }
 
 function ContratoPage() {
-  const [autenticado, setAutenticado] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [senha, setSenha] = useState('');
-  const [erroSenha, setErroSenha] = useState(false);
-  const [carregando, setCarregando] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [etapa, setEtapa] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setAutenticado(isAuthenticated());
-    setAuthChecked(true);
-  }, []);
 
   useEffect(() => {
     if (contentRef.current) contentRef.current.scrollTop = 0;
@@ -475,28 +468,19 @@ function ContratoPage() {
   const [gerando, setGerando] = useState(false);
 
   useEffect(() => {
-    if (!autenticado || !docParam) return;
+    if (!docParam) return;
     fetch(`/api/documentos?id=${docParam}`, { headers: authHeaders() })
       .then(r => r.json())
       .then(data => { if (data.dados) { setForm(data.dados); setDocumentoId(docParam); } })
       .catch(console.error);
-  }, [autenticado, docParam]);
+  }, [docParam]);
 
   const { draft, retomar, descartar, concluir } = useDraft(
     'contrato',
     { etapa, form },
     d => { setForm(d.form); setEtapa(d.etapa); },
-    autenticado && !docParam,
+    !docParam,
   );
-
-  async function handleSenha(e: React.FormEvent) {
-    e.preventDefault();
-    setCarregando(true); setErroSenha(false);
-    try {
-      const res = await fetch('/api/raio-x/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senha }) });
-      if (res.ok) { saveAuth(senha); setAutenticado(true); } else setErroSenha(true);
-    } catch { setErroSenha(true); } finally { setCarregando(false); }
-  }
 
   const setPrestador = useCallback((k: keyof FormState['prestador'], v: string) => setForm(p => ({ ...p, prestador: { ...p.prestador, [k]: v } })), []);
   const setCliente = useCallback((k: keyof FormState['cliente'], v: string) => setForm(p => ({ ...p, cliente: { ...p.cliente, [k]: v } })), []);
@@ -642,33 +626,10 @@ function ContratoPage() {
   const parcela = calcParcela(restante, form.numeroParcelas);
   const progress = ((etapa + 1) / ETAPAS.length) * 100;
 
-  // ── Tela de acesso ──────────────────────────────────────────────────────────
-  if (!authChecked) return null;
-  if (!autenticado) {
-    return (
-      <div style={{ position: 'fixed', inset: 0, background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FP }}>
-        <div style={{ width: '100%', maxWidth: '260px', textAlign: 'center' }}>
-          <p style={{ fontFamily: FA, color: '#FF6B00', letterSpacing: '0.3em', textTransform: 'uppercase', marginBottom: '3rem', fontSize: '1rem' }}>ORIUM</p>
-          <form onSubmit={handleSenha} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <input
-              type="password" placeholder="senha de acesso" value={senha} autoFocus
-              onChange={e => { setSenha(e.target.value); setErroSenha(false); }}
-              style={{ ...BI, textAlign: 'center', letterSpacing: '0.08em', border: `1px solid ${erroSenha ? 'rgba(239,68,68,0.5)' : '#1e1e1e'}`, background: 'transparent' }}
-              onFocus={erroSenha ? undefined : onF} onBlur={erroSenha ? undefined : onB}
-            />
-            {erroSenha && <p style={{ color: 'rgba(239,68,68,0.8)', fontSize: '0.78rem' }}>senha incorreta</p>}
-            <button type="submit" disabled={carregando || !senha} style={{ padding: '0.875rem', background: '#FF6B00', border: 'none', borderRadius: '10px', color: '#080808', fontFamily: FP, fontWeight: 500, fontSize: '0.9rem', cursor: carregando || !senha ? 'not-allowed' : 'pointer', opacity: carregando || !senha ? 0.3 : 1 }}>
-              {carregando ? '...' : 'entrar'}
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
   // ── Layout principal ─────────────────────────────────────────────────────────
   return (
     <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', fontFamily: FP, display: 'flex' }}>
+      <ToolBackground position="absolute" gradient="radial" />
 
       {/* Sidebar */}
       <div style={{ position: 'relative', width: sidebarCollapsed ? '60px' : '260px', flexShrink: 0, height: '100%', zIndex: 10, transition: 'width 0.3s ease' }}>
@@ -1055,31 +1016,12 @@ function ContratoPage() {
         </div>
 
         {/* Rodapé de navegação */}
-        <div style={{ padding: '1.5rem 4rem', borderTop: '1px solid #141414', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, background: 'rgba(8,8,8,0.9)', backdropFilter: 'blur(8px)' }}>
-          {etapa > 0 ? (
-            <button
-              onClick={voltar}
-              style={{ background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '8px', padding: '0.875rem 2rem', color: '#555', fontSize: '0.9rem', fontFamily: FP, cursor: 'pointer', transition: 'all 0.2s' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#444'; e.currentTarget.style.color = '#ccc'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = '#1e1e1e'; e.currentTarget.style.color = '#555'; }}
-            >← Voltar</button>
-          ) : <div />}
-          {etapa < ETAPAS.length - 1 ? (
-            <button
-              onClick={avancar}
-              style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.875rem 2.75rem', color: '#fff', fontSize: '0.9rem', fontFamily: FA, letterSpacing: '0.15em', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 20px rgba(255,107,0,0.2)' }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#e55f00'; e.currentTarget.style.boxShadow = '0 6px 28px rgba(255,107,0,0.35)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = '#FF6B00'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(255,107,0,0.2)'; }}
-            >CONTINUAR →</button>
-          ) : (
-            <button
-              onClick={copiar}
-              style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.875rem 2.75rem', color: '#fff', fontSize: '0.9rem', fontFamily: FA, letterSpacing: '0.15em', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 20px rgba(255,107,0,0.2)' }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#e55f00'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = '#FF6B00'; }}
-            >{copiado ? '✓ COPIADO!' : 'COPIAR CONTRATO'}</button>
-          )}
-        </div>
+        <WizardFooter
+          containerStyle={{ padding: '1.5rem 4rem' }}
+          onBack={etapa > 0 ? voltar : undefined}
+          onNext={etapa < ETAPAS.length - 1 ? avancar : copiar}
+          nextLabel={etapa < ETAPAS.length - 1 ? 'CONTINUAR →' : copiado ? '✓ COPIADO!' : 'COPIAR CONTRATO'}
+        />
 
       </div>
       {savedMsg && (
@@ -1096,7 +1038,9 @@ function ContratoPage() {
 export default function Page() {
   return (
     <Suspense>
-      <ContratoPage />
+      <AuthGate title="CONTRATO" subtitle="Gerador de contratos de prestação de serviços.">
+        <ContratoPage />
+      </AuthGate>
     </Suspense>
   );
 }

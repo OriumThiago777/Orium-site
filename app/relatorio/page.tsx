@@ -1,15 +1,18 @@
 'use client'
 
-import React, { useState, useRef, useEffect, Suspense } from 'react'
+import React, { useState, useRef, Suspense } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { isAuthenticated, saveAuth } from '@/lib/auth'
 import { savePdfToCloud } from '@/lib/upload-helper'
 import { useDraft } from '@/lib/draft'
 import SaveToast from '@/components/SaveToast'
 import DraftBanner from '@/components/DraftBanner'
 import ClienteSelector from '@/components/ClienteSelector'
+import AuthGate from '@/components/AuthGate'
+import ToolBackground from '@/components/ToolBackground'
+import WizardFooter from '@/components/WizardFooter'
+import OriumInput, { ORIUM_INPUT_STYLE } from '@/components/OriumInput'
 
 type FormData = {
   cliente: string
@@ -45,22 +48,9 @@ const STEPS = [
   { bloco: 'OBSERVAÇÕES',         subtitulo: 'Notas livres.' },
 ]
 
-const BG_GRADIENT = 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%), linear-gradient(to bottom, #080808 0%, transparent 30%, transparent 70%, #080808 100%)'
-
 function RelatorioPage() {
   const searchParams = useSearchParams()
   const clienteParam = searchParams.get('cliente')
-
-  const [autenticado, setAutenticado] = useState(false)
-  const [authChecked, setAuthChecked] = useState(false)
-  const [senha, setSenha] = useState('')
-  const [erroSenha, setErroSenha] = useState(false)
-  const [carregando, setCarregando] = useState(false)
-
-  useEffect(() => {
-    setAutenticado(isAuthenticated())
-    setAuthChecked(true)
-  }, [])
 
   const [step, setStep] = useState(0)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -82,7 +72,7 @@ function RelatorioPage() {
     'relatorio',
     { step, form, listas },
     d => { setForm(d.form); setListas(d.listas); setStep(d.step) },
-    autenticado,
+    true,
   )
 
   const setF = (key: keyof FormData, value: string) =>
@@ -98,70 +88,14 @@ function RelatorioPage() {
   const removeLista = (key: keyof Listas, idx: number) =>
     setListas(prev => ({ ...prev, [key]: prev[key].filter((_, i) => i !== idx) }))
 
-  const bgImage = (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
-      <Image src="/hero.jpg" alt="" fill sizes="100vw" className="object-cover" style={{ opacity: 0.07 }} />
-      <div style={{ position: 'absolute', inset: 0, background: BG_GRADIENT }} />
-    </div>
-  )
+  const bgImage = <ToolBackground position="absolute" />
 
-  // ── Tela de senha ──────────────────────────────────────────────────────────
-  if (!authChecked) return null
-  if (!autenticado) {
-    return (
-      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif' }}>
-        {bgImage}
-        <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '440px', padding: '0 2rem' }}>
-          <div style={{ marginBottom: '3rem' }}>
-            <Image src="/lglaranja.png" alt="ORIUM" width={120} height={40} style={{ objectFit: 'contain' }} />
-          </div>
-          <p style={{ color: '#FF6B00', fontSize: '0.72rem', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: '1rem' }}>ACESSO INTERNO</p>
-          <h1 style={{ fontFamily: 'Anton, sans-serif', fontSize: 'clamp(3rem, 6vw, 4.5rem)', color: '#fff', letterSpacing: '0.02em', lineHeight: 0.95, marginBottom: '1.75rem' }}>RELATÓRIO</h1>
-          <p style={{ color: '#555', fontSize: '1rem', lineHeight: 1.75, marginBottom: '3rem' }}>Relatório mensal de resultados por cliente.</p>
-          <form onSubmit={async e => {
-            e.preventDefault()
-            setCarregando(true); setErroSenha(false)
-            try {
-              const res = await fetch('/api/raio-x/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senha }) })
-              if (res.ok) { saveAuth(senha); setAutenticado(true) }
-              else setErroSenha(true)
-            } catch { setErroSenha(true) }
-            finally { setCarregando(false) }
-          }}>
-            <input
-              type="password" placeholder="Senha de acesso" value={senha}
-              onChange={e => { setSenha(e.target.value); setErroSenha(false) }} autoFocus
-              style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${erroSenha ? '#ef4444' : '#1e1e1e'}`, borderRadius: '10px', padding: '1rem 1.25rem', color: '#fff', fontSize: '0.95rem', fontFamily: 'Poppins, sans-serif', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s' }}
-              onFocus={e => { if (!erroSenha) e.target.style.borderColor = '#FF6B00' }}
-              onBlur={e => { if (!erroSenha) e.target.style.borderColor = '#1e1e1e' }}
-            />
-            {erroSenha && <p style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: '0.75rem', textAlign: 'center' }}>Senha incorreta. Tente novamente.</p>}
-            <button type="submit" disabled={carregando || !senha}
-              style={{ width: '100%', background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '1rem', color: '#000', fontFamily: 'Anton, sans-serif', fontSize: '1rem', letterSpacing: '0.15em', cursor: carregando || !senha ? 'not-allowed' : 'pointer', boxShadow: '0 4px 20px rgba(255,107,0,0.2)', marginTop: '1rem', opacity: carregando || !senha ? 0.5 : 1, transition: 'all 0.2s' }}>
-              {carregando ? '...' : 'ACESSAR'}
-            </button>
-          </form>
-        </div>
-      </div>
-    )
-  }
-
-  // ── Placeholder functions (serão implementadas nas tasks seguintes) ─────────
-  const inputStyle: React.CSSProperties = {
-    width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid #1e1e1e',
-    borderRadius: '10px', padding: '1rem 1.25rem', color: '#fff', fontSize: '0.95rem',
-    fontFamily: 'Poppins, sans-serif', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s',
-  }
+  const inputStyle: React.CSSProperties = ORIUM_INPUT_STYLE
   const labelStyle: React.CSSProperties = {
     display: 'block', color: '#e0e0e0', fontSize: '1rem', lineHeight: 1.5, marginBottom: '0.75rem', fontWeight: 500,
   }
   const fieldWrap: React.CSSProperties = { display: 'flex', flexDirection: 'column' }
-  const textareaStyle: React.CSSProperties = {
-    width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid #1e1e1e',
-    borderRadius: '10px', padding: '1rem 1.25rem', color: '#fff', fontSize: '0.95rem',
-    fontFamily: 'Poppins, sans-serif', resize: 'none', outline: 'none', boxSizing: 'border-box',
-    lineHeight: 1.65, transition: 'border-color 0.2s',
-  }
+  const textareaStyle: React.CSSProperties = { ...ORIUM_INPUT_STYLE, resize: 'none', lineHeight: 1.65 }
 
   function renderStep(): React.ReactNode {
     const wrap = { maxWidth: '680px', display: 'flex', flexDirection: 'column' as const, gap: '2.5rem' }
@@ -189,8 +123,7 @@ function RelatorioPage() {
         </div>
         <div style={fieldWrap}>
           <label style={labelStyle}>Responsável ORIUM</label>
-          <input style={inputStyle} value={form.responsavel} onChange={e => setF('responsavel', e.target.value)} placeholder="Thiago"
-            onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+          <OriumInput value={form.responsavel} onChange={e => setF('responsavel', e.target.value)} placeholder="Thiago" />
         </div>
       </div>
     )
@@ -235,35 +168,29 @@ function RelatorioPage() {
           <div style={{ display: 'flex', gap: '1rem' }}>
             <div style={{ flex: 1 }}>
               <p style={{ color: '#555', fontSize: '0.78rem', marginBottom: '0.5rem' }}>Início do mês</p>
-              <input type="number" style={inputStyle} value={form.segInicio} onChange={e => setF('segInicio', e.target.value)} placeholder="0"
-                onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+              <OriumInput type="number" value={form.segInicio} onChange={e => setF('segInicio', e.target.value)} placeholder="0" />
             </div>
             <div style={{ flex: 1 }}>
               <p style={{ color: '#555', fontSize: '0.78rem', marginBottom: '0.5rem' }}>Fim do mês</p>
-              <input type="number" style={inputStyle} value={form.segFim} onChange={e => setF('segFim', e.target.value)} placeholder="0"
-                onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+              <OriumInput type="number" value={form.segFim} onChange={e => setF('segFim', e.target.value)} placeholder="0" />
             </div>
           </div>
         </div>
         <div style={fieldWrap}>
           <label style={labelStyle}>Alcance total</label>
-          <input type="number" style={inputStyle} value={form.alcance} onChange={e => setF('alcance', e.target.value)} placeholder="0"
-            onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+          <OriumInput type="number" value={form.alcance} onChange={e => setF('alcance', e.target.value)} placeholder="0" />
         </div>
         <div style={fieldWrap}>
           <label style={labelStyle}>Impressões</label>
-          <input type="number" style={inputStyle} value={form.impressoes} onChange={e => setF('impressoes', e.target.value)} placeholder="0"
-            onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+          <OriumInput type="number" value={form.impressoes} onChange={e => setF('impressoes', e.target.value)} placeholder="0" />
         </div>
         <div style={fieldWrap}>
           <label style={labelStyle}>Engajamento %</label>
-          <input type="number" step="0.1" style={inputStyle} value={form.engajamento} onChange={e => setF('engajamento', e.target.value)} placeholder="0"
-            onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+          <OriumInput type="number" step="0.1" value={form.engajamento} onChange={e => setF('engajamento', e.target.value)} placeholder="0" />
         </div>
         <div style={fieldWrap}>
           <label style={labelStyle}>Cliques no link</label>
-          <input type="number" style={inputStyle} value={form.cliques} onChange={e => setF('cliques', e.target.value)} placeholder="0"
-            onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#1e1e1e'} />
+          <OriumInput type="number" value={form.cliques} onChange={e => setF('cliques', e.target.value)} placeholder="0" />
         </div>
       </div>
     )
@@ -733,23 +660,11 @@ function RelatorioPage() {
 
         {/* footer formulário */}
         {!isPreview && (
-          <div style={{ padding: '1.75rem 5rem', borderTop: '1px solid #141414', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, background: 'rgba(8,8,8,0.9)', backdropFilter: 'blur(8px)' }}>
-            {step > 0 ? (
-              <button onClick={() => setStep(s => s - 1)}
-                style={{ background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '8px', padding: '0.875rem 2rem', color: '#666', fontSize: '0.9rem', fontFamily: 'Poppins, sans-serif', cursor: 'pointer', transition: 'all 0.2s' }}
-                onMouseEnter={e => { const b = e.currentTarget; b.style.borderColor = '#444'; b.style.color = '#ccc' }}
-                onMouseLeave={e => { const b = e.currentTarget; b.style.borderColor = '#1e1e1e'; b.style.color = '#666' }}
-              >← Voltar</button>
-            ) : <div />}
-            <button
-              onClick={() => { if (contentRef.current) contentRef.current.scrollTop = 0; setStep(s => s + 1) }}
-              style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.875rem 2.75rem', color: '#fff', fontFamily: 'Anton, sans-serif', fontSize: '0.9rem', letterSpacing: '0.15em', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 20px rgba(255,107,0,0.2)' }}
-              onMouseEnter={e => { const b = e.currentTarget; b.style.background = '#e55f00'; b.style.boxShadow = '0 6px 28px rgba(255,107,0,0.35)' }}
-              onMouseLeave={e => { const b = e.currentTarget; b.style.background = '#FF6B00'; b.style.boxShadow = '0 4px 20px rgba(255,107,0,0.2)' }}
-            >
-              {step === 6 ? 'VER RELATÓRIO' : 'CONTINUAR →'}
-            </button>
-          </div>
+          <WizardFooter
+            onBack={step > 0 ? () => setStep(s => s - 1) : undefined}
+            onNext={() => { if (contentRef.current) contentRef.current.scrollTop = 0; setStep(s => s + 1) }}
+            nextLabel={step === 6 ? 'VER RELATÓRIO' : 'CONTINUAR →'}
+          />
         )}
 
         {/* footer preview — implementado na Task 6 */}
@@ -784,7 +699,9 @@ function RelatorioPage() {
 export default function Page() {
   return (
     <Suspense>
-      <RelatorioPage />
+      <AuthGate title="RELATÓRIO" subtitle="Relatório mensal de resultados por cliente.">
+        <RelatorioPage />
+      </AuthGate>
     </Suspense>
   )
 }

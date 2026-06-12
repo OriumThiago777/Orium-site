@@ -4,13 +4,16 @@ import { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import NextImage from 'next/image';
 import Link from 'next/link';
-import { isAuthenticated, saveAuth, authHeaders } from '@/lib/auth';
+import { authHeaders } from '@/lib/auth';
 import { savePdfToCloud } from '@/lib/upload-helper';
 import { useDraft } from '@/lib/draft';
 import SaveToast from '@/components/SaveToast';
 import DraftBanner from '@/components/DraftBanner';
 import ClienteSelector from '@/components/ClienteSelector';
 import ImportarBriefing, { BriefingImportado } from '@/components/ImportarBriefing';
+import AuthGate from '@/components/AuthGate';
+import ToolBackground from '@/components/ToolBackground';
+import WizardFooter from '@/components/WizardFooter';
 
 // ── Serviços pré-definidos ────────────────────────────────────────────────────
 
@@ -124,20 +127,10 @@ function CharCounter({ value, max }: { value: string; max: number }) {
 }
 
 function PropostaPage() {
-  const [autenticado, setAutenticado] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [senha, setSenha] = useState('');
-  const [erroSenha, setErroSenha] = useState(false);
-  const [carregando, setCarregando] = useState(false);
   const [gerando, setGerando] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [step, setStep] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setAutenticado(isAuthenticated());
-    setAuthChecked(true);
-  }, []);
 
   useEffect(() => {
     if (contentRef.current) contentRef.current.scrollTop = 0;
@@ -150,12 +143,12 @@ function PropostaPage() {
   const clienteParam = searchParams.get('cliente');
 
   useEffect(() => {
-    if (!autenticado || !docParam) return;
+    if (!docParam) return;
     fetch(`/api/documentos?id=${docParam}`, { headers: authHeaders() })
       .then(r => r.json())
       .then(data => { if (data.dados) { setForm(data.dados); setDocumentoId(docParam); } })
       .catch(console.error);
-  }, [autenticado, docParam]);
+  }, [docParam]);
 
   const [categoriasColapsadas, setCategoriasColapsadas] = useState<Set<string>>(new Set());
 
@@ -179,28 +172,8 @@ function PropostaPage() {
     'proposta',
     { step, form },
     d => { setForm(d.form); setStep(d.step); },
-    autenticado && !docParam,
+    !docParam,
   );
-
-  // ── Auth ────────────────────────────────────────────────────────────────────
-  async function handleSenha(e: React.FormEvent) {
-    e.preventDefault();
-    setCarregando(true);
-    setErroSenha(false);
-    try {
-      const res = await fetch('/api/raio-x/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ senha }),
-      });
-      if (res.ok) { saveAuth(senha); setAutenticado(true); }
-      else setErroSenha(true);
-    } catch {
-      setErroSenha(true);
-    } finally {
-      setCarregando(false);
-    }
-  }
 
   // ── Fases ───────────────────────────────────────────────────────────────────
   function adicionarFase() {
@@ -475,44 +448,6 @@ function PropostaPage() {
     }
   }
 
-  // ── Tela de senha ──────────────────────────────────────────────────────────
-  if (!authChecked) return null;
-  if (!autenticado) {
-    return (
-      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins, sans-serif' }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '440px', padding: '0 2rem' }}>
-          <div style={{ marginBottom: '3rem' }}>
-            <NextImage src="/lglaranja.png" alt="ORIUM" width={120} height={40} style={{ objectFit: 'contain' }} />
-          </div>
-          <p style={{ color: '#FF6B00', fontSize: '0.72rem', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: '1rem' }}>ACESSO INTERNO</p>
-          <h1 style={{ fontFamily: 'Anton, sans-serif', fontSize: 'clamp(3rem, 6vw, 4.5rem)', color: '#fff', letterSpacing: '0.02em', lineHeight: 0.95, marginBottom: '1.75rem' }}>PROPOSTA</h1>
-          <p style={{ color: '#555', fontSize: '1rem', lineHeight: 1.75, marginBottom: '3rem' }}>Gerador de propostas comerciais em PDF.</p>
-          <form onSubmit={handleSenha} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <input
-              type="password"
-              placeholder="Senha de acesso"
-              value={senha}
-              onChange={e => { setSenha(e.target.value); setErroSenha(false); }}
-              autoFocus
-              style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${erroSenha ? '#ef4444' : '#1e1e1e'}`, borderRadius: '10px', padding: '1rem 1.25rem', color: '#fff', fontSize: '0.95rem', fontFamily: 'Poppins, sans-serif', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s' }}
-              onFocus={e => { if (!erroSenha) e.target.style.borderColor = '#FF6B00'; }}
-              onBlur={e => { if (!erroSenha) e.target.style.borderColor = '#1e1e1e'; }}
-            />
-            {erroSenha && <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center' }}>Senha incorreta. Tente novamente.</p>}
-            <button
-              type="submit"
-              disabled={carregando || !senha}
-              style={{ width: '100%', background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '1rem', color: '#000', fontFamily: 'Anton, sans-serif', fontSize: '1rem', letterSpacing: '0.15em', cursor: carregando || !senha ? 'not-allowed' : 'pointer', boxShadow: '0 4px 20px rgba(255,107,0,0.2)', opacity: carregando || !senha ? 0.5 : 1, transition: 'all 0.2s' }}
-            >
-              {carregando ? '...' : 'ACESSAR'}
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
   // ── Layout principal ─────────────────────────────────────────────────────────
 
   const totalSteps = STEPS_PROPOSTA.length;
@@ -694,7 +629,7 @@ function PropostaPage() {
 
   return (
     <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', fontFamily: 'Poppins, sans-serif', display: 'flex' }}>
-      <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%)' }} />
+      <ToolBackground position="absolute" gradient="radial" />
 
       {/* Sidebar */}
       <div style={{ position: 'relative', width: sidebarCollapsed ? '60px' : '260px', flexShrink: 0, height: '100%', zIndex: 10, transition: 'width 0.3s ease' }}>
@@ -819,32 +754,12 @@ function PropostaPage() {
         </div>
 
         {/* Footer */}
-        <div style={{ padding: '1.75rem 5rem', borderTop: '1px solid #141414', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, background: 'rgba(8,8,8,0.9)', backdropFilter: 'blur(8px)' }}>
-          {step > 0 ? (
-            <button
-              onClick={() => setStep(s => s - 1)}
-              style={{ background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '8px', padding: '0.875rem 2rem', color: '#666', fontSize: '0.9rem', fontFamily: 'Poppins, sans-serif', cursor: 'pointer', transition: 'all 0.2s' }}
-              onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#444'; b.style.color = '#ccc'; }}
-              onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#1e1e1e'; b.style.color = '#666'; }}
-            >← Voltar</button>
-          ) : <div />}
-          {step < totalSteps - 1 ? (
-            <button
-              onClick={() => setStep(s => s + 1)}
-              style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.875rem 2.75rem', color: '#fff', fontSize: '0.9rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.15em', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 20px rgba(255,107,0,0.2)' }}
-              onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = '#e55f00'; b.style.boxShadow = '0 6px 28px rgba(255,107,0,0.35)'; }}
-              onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = '#FF6B00'; b.style.boxShadow = '0 4px 20px rgba(255,107,0,0.2)'; }}
-            >CONTINUAR →</button>
-          ) : (
-            <button
-              onClick={gerarPDF}
-              disabled={gerando}
-              style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.875rem 2.75rem', color: '#fff', fontSize: '0.9rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.15em', cursor: gerando ? 'not-allowed' : 'pointer', opacity: gerando ? 0.6 : 1, transition: 'all 0.2s', boxShadow: '0 4px 20px rgba(255,107,0,0.2)' }}
-              onMouseEnter={e => { if (!gerando) e.currentTarget.style.background = '#e55f00'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = '#FF6B00'; }}
-            >{gerando ? 'GERANDO...' : 'GERAR PDF'}</button>
-          )}
-        </div>
+        <WizardFooter
+          onBack={step > 0 ? () => setStep(s => s - 1) : undefined}
+          onNext={step < totalSteps - 1 ? () => setStep(s => s + 1) : gerarPDF}
+          nextLabel={step < totalSteps - 1 ? 'CONTINUAR →' : gerando ? 'GERANDO...' : 'GERAR PDF'}
+          loading={step === totalSteps - 1 && gerando}
+        />
       </div>
       {savedMsg && (
         <div style={{ position: 'fixed', bottom: '5rem', right: '2rem', zIndex: 100, background: 'rgba(8,8,8,0.95)', border: '1px solid #FF6B00', borderRadius: '8px', padding: '0.75rem 1.25rem', color: '#FF6B00', fontSize: '0.8rem', fontFamily: 'Poppins, sans-serif', backdropFilter: 'blur(8px)' }}>
@@ -860,7 +775,9 @@ function PropostaPage() {
 export default function Page() {
   return (
     <Suspense>
-      <PropostaPage />
+      <AuthGate title="PROPOSTA" subtitle="Gerador de propostas comerciais em PDF.">
+        <PropostaPage />
+      </AuthGate>
     </Suspense>
   );
 }

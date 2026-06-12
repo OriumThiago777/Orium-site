@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import NextImage from 'next/image';
-import { isAuthenticated, saveAuth, authHeaders } from '@/lib/auth';
+import { authHeaders } from '@/lib/auth';
+import AuthGate from '@/components/AuthGate';
+import ToolBackground from '@/components/ToolBackground';
 
 interface Documento {
   id: string;
@@ -31,32 +33,11 @@ function fmtData(iso: string | null): string {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-export default function MeusDocumentosPage() {
-  const [autenticado, setAutenticado] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [senha, setSenha] = useState('');
-  const [erroSenha, setErroSenha] = useState(false);
-  const [carregando, setCarregando] = useState(false);
+function MeusDocumentosContent() {
   const [docs, setDocs] = useState<Documento[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
   const [filtro, setFiltro] = useState('Todos');
   const [excluindo, setExcluindo] = useState<string | null>(null);
-
-  async function handleSenha(e: React.FormEvent) {
-    e.preventDefault();
-    setCarregando(true);
-    setErroSenha(false);
-    try {
-      const res = await fetch('/api/raio-x/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ senha }),
-      });
-      if (res.ok) { saveAuth(senha); setAutenticado(true); }
-      else setErroSenha(true);
-    } catch { setErroSenha(true); }
-    finally { setCarregando(false); }
-  }
 
   async function carregarDocs() {
     setLoadingDocs(true);
@@ -68,13 +49,8 @@ export default function MeusDocumentosPage() {
   }
 
   useEffect(() => {
-    setAutenticado(isAuthenticated());
-    setAuthChecked(true);
+    carregarDocs();
   }, []);
-
-  useEffect(() => {
-    if (autenticado) carregarDocs();
-  }, [autenticado]);
 
   async function excluir(id: string) {
     if (!confirm('Excluir este documento? Esta ação não pode ser desfeita.')) return;
@@ -89,52 +65,12 @@ export default function MeusDocumentosPage() {
   const FP = 'Poppins, sans-serif';
   const FA = 'Anton, sans-serif';
 
-  if (!authChecked) return null;
-  if (!autenticado) {
-    return (
-      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FP }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '440px', padding: '0 2rem' }}>
-          <div style={{ marginBottom: '3rem' }}>
-            <NextImage src="/lglaranja.png" alt="ORIUM" width={120} height={40} style={{ objectFit: 'contain' }} />
-          </div>
-          <p style={{ color: '#FF6B00', fontSize: '0.72rem', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: '1rem' }}>ACESSO INTERNO</p>
-          <h1 style={{ fontFamily: FA, fontSize: 'clamp(2.5rem, 5vw, 4rem)', color: '#fff', letterSpacing: '0.02em', lineHeight: 0.95, marginBottom: '1.75rem' }}>DOCUMENTOS</h1>
-          <p style={{ color: '#777', fontSize: '1rem', lineHeight: 1.75, marginBottom: '3rem' }}>Acesse os documentos gerados pela equipe.</p>
-          <form onSubmit={handleSenha} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <input
-              type="password"
-              placeholder="Senha de acesso"
-              value={senha}
-              onChange={e => { setSenha(e.target.value); setErroSenha(false); }}
-              autoFocus
-              style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: `1px solid ${erroSenha ? '#ef4444' : '#1e1e1e'}`, borderRadius: '10px', padding: '1rem 1.25rem', color: '#fff', fontSize: '0.95rem', fontFamily: FP, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s' }}
-              onFocus={e => { if (!erroSenha) e.target.style.borderColor = '#FF6B00'; }}
-              onBlur={e => { if (!erroSenha) e.target.style.borderColor = '#1e1e1e'; }}
-            />
-            {erroSenha && <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center' }}>Senha incorreta. Tente novamente.</p>}
-            <button
-              type="submit"
-              disabled={carregando || !senha}
-              style={{ width: '100%', background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '1rem', color: '#000', fontFamily: FA, fontSize: '1rem', letterSpacing: '0.15em', cursor: carregando || !senha ? 'not-allowed' : 'pointer', boxShadow: '0 4px 20px rgba(255,107,0,0.2)', opacity: carregando || !senha ? 0.5 : 1, transition: 'all 0.2s' }}
-            >
-              {carregando ? '...' : 'ACESSAR'}
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
   const tiposFiltro = ['Todos', 'Raio-X', 'Proposta', 'Contrato'];
   const docsFiltrados = filtro === 'Todos' ? docs : docs.filter(d => d.tipo === filtro);
 
   return (
     <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', fontFamily: FP, display: 'flex', flexDirection: 'column' }}>
-      <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%)' }} />
-      <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
-        <NextImage src="/hero.jpg" alt="" fill style={{ objectFit: 'cover', opacity: 0.07 }} priority />
-      </div>
+      <ToolBackground position="absolute" gradient="radial" />
 
       {/* Header */}
       <div style={{ position: 'relative', zIndex: 1, padding: '2.5rem 4rem 2rem', borderBottom: '1px solid #141414', flexShrink: 0 }}>
@@ -225,5 +161,13 @@ export default function MeusDocumentosPage() {
         <p style={{ color: '#333', fontSize: '0.7rem', letterSpacing: '0.15em' }}>{docs.length} documento{docs.length !== 1 ? 's' : ''} salvos</p>
       </div>
     </div>
+  );
+}
+
+export default function MeusDocumentosPage() {
+  return (
+    <AuthGate title="DOCUMENTOS" subtitle="Acesse os documentos gerados pela equipe.">
+      <MeusDocumentosContent />
+    </AuthGate>
   );
 }

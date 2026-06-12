@@ -7,6 +7,8 @@ import { savePdfToCloud } from '@/lib/upload-helper'
 import { useDraft } from '@/lib/draft'
 import SaveToast from '@/components/SaveToast'
 import DraftBanner from '@/components/DraftBanner'
+import ToolBackground from '@/components/ToolBackground'
+import WizardFooter from '@/components/WizardFooter'
 
 type Tipo = 'pessoa' | 'empresa' | null
 
@@ -319,12 +321,7 @@ export default function BriefingPage() {
     justifyContent: 'center',
   }
 
-  const bgImage = (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
-      <Image src="/hero.jpg" alt="" fill sizes="100vw" className="object-cover" style={{ opacity: 0.07 }} />
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 20% 50%, rgba(255,107,0,0.05) 0%, transparent 60%), linear-gradient(to bottom, #080808 0%, transparent 30%, transparent 70%, #080808 100%)' }} />
-    </div>
-  )
+  const bgImage = <ToolBackground position="absolute" />
 
   if (enviado) {
     return (
@@ -541,24 +538,12 @@ export default function BriefingPage() {
           </div>
         </div>
 
-        <div style={{ padding: '1.75rem 5rem', borderTop: '1px solid #141414', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, background: 'rgba(8,8,8,0.9)', backdropFilter: 'blur(8px)' }}>
-          {step > 0 ? (
-            <button onClick={handleBack}
-              style={{ background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '8px', padding: '0.875rem 2rem', color: '#666', fontSize: '0.9rem', fontFamily: 'Poppins, sans-serif', cursor: 'pointer', transition: 'all 0.2s' }}
-              onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#444'; b.style.color = '#ccc' }}
-              onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#1e1e1e'; b.style.color = '#666' }}
-            >← Voltar</button>
-          ) : <div />}
-          <button
-            onClick={step === totalSteps - 1 ? handleSubmit : handleNext}
-            disabled={enviando}
-            style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.875rem 2.75rem', color: '#fff', fontSize: '0.9rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.15em', cursor: enviando ? 'not-allowed' : 'pointer', opacity: enviando ? 0.7 : 1, transition: 'all 0.2s', boxShadow: '0 4px 20px rgba(255,107,0,0.2)' }}
-            onMouseEnter={e => { if (!enviando) { const b = e.currentTarget as HTMLButtonElement; b.style.background = '#e55f00'; b.style.boxShadow = '0 6px 28px rgba(255,107,0,0.35)' }}}
-            onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = '#FF6B00'; b.style.boxShadow = '0 4px 20px rgba(255,107,0,0.2)' }}
-          >
-            {enviando ? 'ENVIANDO...' : step === totalSteps - 1 ? 'ENVIAR BRIEFING' : 'CONTINUAR →'}
-          </button>
-        </div>
+        <WizardFooter
+          onBack={step > 0 ? handleBack : undefined}
+          onNext={step === totalSteps - 1 ? handleSubmit : handleNext}
+          nextLabel={enviando ? 'ENVIANDO...' : step === totalSteps - 1 ? 'ENVIAR BRIEFING' : 'CONTINUAR →'}
+          loading={enviando}
+        />
       </div>
     </div>
   )
