@@ -35,16 +35,19 @@ function fmtData(iso: string | null): string {
 
 function MeusDocumentosContent() {
   const [docs, setDocs] = useState<Documento[]>([]);
-  const [loadingDocs, setLoadingDocs] = useState(false);
+  const [loadingDocs, setLoadingDocs] = useState(true);
+  const [erroDocs, setErroDocs] = useState(false);
   const [filtro, setFiltro] = useState('Todos');
   const [excluindo, setExcluindo] = useState<string | null>(null);
 
   async function carregarDocs() {
     setLoadingDocs(true);
+    setErroDocs(false);
     try {
       const res = await fetch('/api/documentos', { headers: authHeaders() });
-      if (res.ok) setDocs(await res.json());
-    } catch (e) { console.error(e); }
+      if (!res.ok) throw new Error('documentos indisponíveis');
+      setDocs(await res.json());
+    } catch (e) { console.error(e); setErroDocs(true); }
     finally { setLoadingDocs(false); }
   }
 
@@ -99,11 +102,34 @@ function MeusDocumentosContent() {
       {/* Lista */}
       <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: '2rem 4rem' }}>
         {loadingDocs ? (
-          <p style={{ color: '#777', fontSize: '0.9rem' }}>Carregando documentos...</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} style={{ background: '#0f0f0f', border: '1px solid #1a1a1a', borderRadius: '12px', padding: '1.5rem', minHeight: '150px', animation: 'orium-skeleton 1.4s ease-in-out infinite' }}>
+                <div style={{ height: '14px', background: '#1a1a1a', borderRadius: '4px', width: '60%', marginBottom: '0.75rem' }} />
+                <div style={{ height: '10px', background: '#1a1a1a', borderRadius: '4px', width: '40%', marginBottom: '1.5rem' }} />
+                <div style={{ height: '10px', background: '#1a1a1a', borderRadius: '4px', width: '70%' }} />
+              </div>
+            ))}
+          </div>
+        ) : erroDocs ? (
+          <div style={{ textAlign: 'center', paddingTop: '4rem' }}>
+            <p style={{ color: '#777', fontSize: '0.95rem', marginBottom: '1.5rem' }}>Não foi possível carregar — tente novamente</p>
+            <button onClick={carregarDocs}
+              style={{ background: 'transparent', border: '1px solid #FF6B00', borderRadius: '8px', padding: '0.625rem 1.25rem', color: '#FF6B00', fontFamily: FA, fontSize: '0.82rem', letterSpacing: '0.1em', cursor: 'pointer' }}>
+              TENTAR NOVAMENTE
+            </button>
+          </div>
         ) : docsFiltrados.length === 0 ? (
           <div style={{ textAlign: 'center', paddingTop: '4rem' }}>
-            <p style={{ color: '#777', fontSize: '0.95rem', marginBottom: '1.5rem' }}>Nenhum documento salvo ainda.</p>
-            <a href="/hub" style={{ color: '#FF6B00', fontSize: '0.82rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none' }}>← Ir ao painel</a>
+            <div style={{ fontSize: '2rem', marginBottom: '1rem', opacity: 0.35 }}>📄</div>
+            <p style={{ color: '#777', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
+              {docs.length === 0
+                ? 'Nenhum documento ainda — gere o primeiro no Raio-X'
+                : `Nenhum documento do tipo ${filtro}.`}
+            </p>
+            {docs.length === 0 && (
+              <a href="/raio-x" style={{ color: '#FF6B00', fontSize: '0.82rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none' }}>Abrir Raio-X →</a>
+            )}
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>

@@ -37,6 +37,12 @@ a {
   50% { opacity: 0.4; }
 }
 
+/* Skeleton de loading — mesmo pulso do HubStatusPanel */
+@keyframes orium-skeleton {
+  0%, 100% { background-color: #0f0f0f; }
+  50% { background-color: #141414; }
+}
+
 .orium-scrollbar {
   scrollbar-color: #ff6b00 #0b0b0b;
   scrollbar-width: thin;

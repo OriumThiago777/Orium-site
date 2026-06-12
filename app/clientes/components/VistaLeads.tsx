@@ -148,7 +148,17 @@ export function VistaLeads() {
 
       {/* Tabela / Empty state */}
       {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '5rem', color: '#444', fontSize: '0.9rem' }}>Carregando leads...</div>
+        <div style={{ borderRadius: '8px', border: '1px solid #1a1a1a', background: '#0f0f0f', overflow: 'hidden' }}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '0.875rem 1rem', borderBottom: i < 5 ? '1px solid #141414' : 'none', animation: 'orium-skeleton 1.4s ease-in-out infinite' }}>
+              <div style={{ height: '14px', background: '#1a1a1a', borderRadius: '4px', width: '120px' }} />
+              <div style={{ height: '20px', background: '#1a1a1a', borderRadius: '20px', width: '90px' }} />
+              <div style={{ height: '12px', background: '#1a1a1a', borderRadius: '4px', width: '110px' }} />
+              <div style={{ height: '12px', background: '#1a1a1a', borderRadius: '4px', flex: 1, maxWidth: '220px' }} />
+              <div style={{ height: '26px', background: '#1a1a1a', borderRadius: '6px', width: '110px', marginLeft: 'auto' }} />
+            </div>
+          ))}
+        </div>
       ) : filtrados.length === 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '5rem 2rem', color: '#333', textAlign: 'center' }}>
           <span style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📭</span>
