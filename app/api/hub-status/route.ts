@@ -104,6 +104,10 @@ async function geradoEstaSemana() {
   return { total: pages.length, porTipo }
 }
 
+export const revalidate = 30
+
+const CACHE_HEADERS = { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' }
+
 export async function GET(request: Request) {
   if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
@@ -113,7 +117,7 @@ export async function GET(request: Request) {
       clientesParados().catch(() => []),
       geradoEstaSemana().catch(() => ({ total: 0, porTipo: {} })),
     ])
-    return NextResponse.json({ entregas, leads, clientesSemContato, documentos })
+    return NextResponse.json({ entregas, leads, clientesSemContato, documentos }, { headers: CACHE_HEADERS })
   } catch (err) {
     console.error('GET /api/hub-status:', err)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })

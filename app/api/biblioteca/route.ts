@@ -46,6 +46,10 @@ function mapPage(page: any) {
   }
 }
 
+export const revalidate = 60
+
+const CACHE_HEADERS = { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=120' }
+
 export async function GET(req: NextRequest) {
   if (!NOTION_TOKEN || !NOTION_DB) {
     return NextResponse.json({ error: 'Credenciais não configuradas' }, { status: 500 })
@@ -69,7 +73,7 @@ export async function GET(req: NextRequest) {
   try {
     const data = await notionQuery(NOTION_DB, body)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return NextResponse.json(data.results.map((p: any) => mapPage(p)))
+    return NextResponse.json(data.results.map((p: any) => mapPage(p)), { headers: CACHE_HEADERS })
   } catch (err) {
     if (err instanceof NotionError) {
       return NextResponse.json({ error: err.message }, { status: err.status })

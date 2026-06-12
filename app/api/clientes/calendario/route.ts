@@ -39,6 +39,10 @@ function ultimoDiaDoMes(mes: string): string {
   return `${mes}-${String(ultimo).padStart(2, '0')}`
 }
 
+export const revalidate = 60
+
+const CACHE_HEADERS = { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=120' }
+
 export async function GET(request: Request) {
   if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
@@ -79,7 +83,7 @@ export async function GET(request: Request) {
       equipamentoGravacao: page.properties['Equipamento Gravação']?.rich_text?.[0]?.plain_text || '',
     }))
 
-    return NextResponse.json({ items })
+    return NextResponse.json({ items }, { headers: CACHE_HEADERS })
   } catch (err) {
     console.error('GET /api/clientes/calendario:', err)
     return NextResponse.json({ items: [] })

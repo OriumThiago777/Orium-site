@@ -29,6 +29,10 @@ async function findPage(id: string): Promise<{ pageId: string } | null> {
   }
 }
 
+export const revalidate = 60
+
+const CACHE_HEADERS = { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=120' }
+
 export async function GET(request: Request) {
   if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
@@ -82,7 +86,7 @@ export async function GET(request: Request) {
       };
     });
 
-    return NextResponse.json(docs);
+    return NextResponse.json(docs, { headers: CACHE_HEADERS });
   } catch (err) {
     console.error('GET /api/documentos:', err);
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 });

@@ -17,6 +17,7 @@ const registrarAtividade = (body: object) => {
 
 const STATUS_VALIDOS = new Set(['Ativo', 'Inativo', 'Proposta']);
 const FASES_VALIDAS = new Set([
+  'Prospecção',
   'Diagnóstico',
   'Estruturação Inicial',
   'Conteúdo e Comunicação',
@@ -122,6 +123,10 @@ function buildProperties(body: Record<string, unknown>) {
   return props;
 }
 
+export const revalidate = 60
+
+const CACHE_HEADERS = { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=120' }
+
 export async function GET(request: Request) {
   if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
@@ -130,7 +135,7 @@ export async function GET(request: Request) {
       page_size: 100,
     });
     const clientes = (data.results ?? []).map((page: NotionPage) => extractCliente(page));
-    return NextResponse.json({ clientes });
+    return NextResponse.json({ clientes }, { headers: CACHE_HEADERS });
   } catch (err) {
     if (err instanceof NotionError) {
       const detail = notionErrorDetail(err);
