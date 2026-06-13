@@ -14,53 +14,7 @@ import ImportarBriefing, { BriefingImportado } from '@/components/ImportarBriefi
 import AuthGate from '@/components/AuthGate';
 import ToolBackground from '@/components/ToolBackground';
 import WizardFooter from '@/components/WizardFooter';
-
-// ── Serviços pré-definidos ────────────────────────────────────────────────────
-
-interface Servico {
-  id: string;
-  nome: string;
-  descricao: string;
-}
-
-const SERVICOS_POR_CATEGORIA: Array<{ nome: string; servicos: Servico[] }> = [
-  {
-    nome: 'ESTRUTURAÇÃO INICIAL',
-    servicos: [
-      { id: 'briefing-estrategico', nome: 'Briefing Estratégico™', descricao: 'Diagnóstico inicial para entender posicionamento, público, objetivos e direção da marca' },
-      { id: 'direcao-percepcao', nome: 'Direção de Percepção™', descricao: 'Definição de como a marca deve ser percebida visualmente e estrategicamente' },
-      { id: 'presenca-base', nome: 'Presença Base™', descricao: 'Bio profissional, destaques e alinhamento inicial da comunicação' },
-      { id: 'vitrine-estrategica', nome: 'Vitrine Estratégica™', descricao: 'Estruturação dos 3 posts fixados para apresentação da marca' },
-      { id: 'estruturacao-instagram', nome: 'Estruturação do Instagram™', descricao: 'Organização inicial do perfil, comunicação e presença digital' },
-      { id: 'google-meu-negocio', nome: 'Google Meu Negócio™', descricao: 'Configuração e otimização da presença no Google' },
-      { id: 'facebook', nome: 'Facebook™', descricao: 'Estruturação e organização da página no Facebook' },
-      { id: 'whatsapp-business', nome: 'WhatsApp Business™', descricao: 'Configuração profissional do WhatsApp Business' },
-    ],
-  },
-  {
-    nome: 'CONTEÚDO E COMUNICAÇÃO',
-    servicos: [
-      { id: 'planejamento-conteudo', nome: 'Planejamento de Conteúdo™', descricao: 'Organização mensal das publicações e direção estratégica dos conteúdos' },
-      { id: 'conteudo-estrategico', nome: 'Conteúdo Estratégico™', descricao: 'Criação de posts institucionais, educativos e de divulgação' },
-      { id: 'presenca-continua', nome: 'Presença Contínua™', descricao: 'Fortalecimento da consistência visual e da comunicação da marca' },
-      { id: 'stories-estrategicos', nome: 'Stories Estratégicos™', descricao: 'Criação e planejamento de stories com intenção comercial' },
-      { id: 'reels-videos', nome: 'Reels e Vídeos™', descricao: 'Produção de conteúdo em vídeo para engajamento e alcance' },
-    ],
-  },
-  {
-    nome: 'EXPANSÃO DIGITAL',
-    servicos: [
-      { id: 'site-institucional', nome: 'Site Institucional™', descricao: 'Estruturação de um site profissional para apresentação da marca' },
-      { id: 'landing-page', nome: 'Landing Page™', descricao: 'Página de venda ou captura focada em conversão' },
-      { id: 'automacao-atendimento', nome: 'Automação de Atendimento™', descricao: 'Fluxos entre Instagram, WhatsApp e formulários' },
-      { id: 'estrutura-cursos', nome: 'Estrutura de Cursos™', descricao: 'Páginas para divulgação e venda das formações' },
-      { id: 'campanhas-divulgacao', nome: 'Campanhas de Divulgação™', descricao: 'Estratégias para fortalecimento da presença e alcance' },
-      { id: 'relatorio-mensal', nome: 'Relatório Mensal™', descricao: 'Análise de resultados e direcionamento estratégico mensal' },
-    ],
-  },
-];
-
-const TODOS_SERVICOS = SERVICOS_POR_CATEGORIA.flatMap(c => c.servicos);
+import { SERVICOS_POR_CATEGORIA, TODOS_SERVICOS, Servico } from '@/lib/servicos-proposta';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -138,6 +92,8 @@ function PropostaPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [documentoId, setDocumentoId] = useState<string | null>(null);
   const [savedMsg, setSavedMsg] = useState('');
+  const [propostaLink, setPropostaLink] = useState<string | null>(null);
+  const [linkCopiado, setLinkCopiado] = useState(false);
   const searchParams = useSearchParams();
   const docParam = searchParams.get('doc');
   const clienteParam = searchParams.get('cliente');
@@ -437,7 +393,13 @@ function PropostaPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ id: docId, tipo: 'Proposta', nome: form.nomeCliente || 'Documento sem nome', cliente: form.nomeCliente, dados: form }),
-      }).then(() => { setDocumentoId(docId); setSavedMsg('Salvo em Documentos'); setTimeout(() => setSavedMsg(''), 3000); }).catch(console.error);
+      }).then(() => {
+        setDocumentoId(docId);
+        setSavedMsg('Salvo em Documentos');
+        setTimeout(() => setSavedMsg(''), 3000);
+        setLinkCopiado(false);
+        setPropostaLink(`https://oriumagencia.com.br/proposta/${docId}`);
+      }).catch(console.error);
       concluir();
 
     } catch (err) {
@@ -764,6 +726,32 @@ function PropostaPage() {
       {savedMsg && (
         <div style={{ position: 'fixed', bottom: '5rem', right: '2rem', zIndex: 100, background: 'rgba(8,8,8,0.95)', border: '1px solid #FF6B00', borderRadius: '8px', padding: '0.75rem 1.25rem', color: '#FF6B00', fontSize: '0.8rem', fontFamily: 'Poppins, sans-serif', backdropFilter: 'blur(8px)' }}>
           {savedMsg}
+        </div>
+      )}
+      {propostaLink && (
+        <div style={{ position: 'fixed', bottom: '5rem', left: '2rem', zIndex: 100, background: 'rgba(8,8,8,0.97)', border: '1px solid #1e1e1e', borderRadius: '12px', padding: '1rem 1.25rem', maxWidth: '420px', backdropFilter: 'blur(16px)' }}>
+          <p style={{ color: '#777', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '0.625rem' }}>Link da proposta</p>
+          <div style={{ display: 'flex', gap: '0.625rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(propostaLink).then(() => {
+                  setLinkCopiado(true);
+                  setTimeout(() => setLinkCopiado(false), 2500);
+                });
+              }}
+              style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.6rem 1.25rem', color: '#fff', fontSize: '0.75rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.1em', cursor: 'pointer', whiteSpace: 'nowrap' }}
+            >
+              {linkCopiado ? 'LINK COPIADO!' : 'COPIAR LINK DA PROPOSTA'}
+            </button>
+            <button
+              onClick={() => setPropostaLink(null)}
+              style={{ background: 'transparent', border: 'none', color: '#555', fontSize: '0.9rem', cursor: 'pointer', lineHeight: 1 }}
+              title="Fechar"
+            >
+              ×
+            </button>
+          </div>
+          <p style={{ color: '#666', fontSize: '0.75rem', marginTop: '0.625rem', wordBreak: 'break-all' }}>{propostaLink}</p>
         </div>
       )}
       {draft && <DraftBanner savedAt={draft.savedAt} onRetomar={retomar} onDescartar={descartar} />}
