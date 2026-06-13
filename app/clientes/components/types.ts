@@ -9,6 +9,7 @@ export type Cliente = {
   email: string
   contato: string
   dataInicio: string
+  dataTermino: string
   ultimaInteracao: string
   proximoDeliverable: string
   precisaRelatorio: boolean

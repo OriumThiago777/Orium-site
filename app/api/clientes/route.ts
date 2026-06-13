@@ -84,6 +84,7 @@ function extractCliente(page: NotionPage) {
     email: p['E-mail']?.email ?? '',
     contato: p['Contato']?.phone_number ?? '',
     dataInicio: p['Data de Início']?.date?.start ?? '',
+    dataTermino: p['Data de Término']?.date?.start ?? '',
     ultimaInteracao: p['Última Interação']?.date?.start ?? '',
     proximoDeliverable: p['Próximo Deliverable']?.date?.start ?? '',
     precisaRelatorio: p['Precisa Relatório']?.checkbox ?? false,
@@ -111,6 +112,8 @@ function buildProperties(body: Record<string, unknown>) {
     props['Notas'] = { rich_text: [{ text: { content: String(body.notas).slice(0, 2000) } }] };
   if (body.dataInicio !== undefined)
     props['Data de Início'] = { date: body.dataInicio ? { start: String(body.dataInicio) } : null };
+  if (body.dataTermino !== undefined)
+    props['Data de Término'] = { date: body.dataTermino ? { start: String(body.dataTermino) } : null };
   if (body.ultimaInteracao !== undefined)
     props['Última Interação'] = { date: body.ultimaInteracao ? { start: String(body.ultimaInteracao) } : null };
   if (body.proximoDeliverable !== undefined)

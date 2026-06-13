@@ -8,6 +8,7 @@ type HubStatus = {
   leads: Array<{ nome: string; segmento: string; createdTime: string }>
   clientesSemContato: Array<{ nome: string; diasSemContato: number }>
   documentos: { total: number; porTipo: Record<string, number> }
+  renovacoes: Array<{ nome: string; dataTermino: string; diasRestantes: number }>
 }
 
 const CARD_BASE: React.CSSProperties = {
@@ -58,13 +59,14 @@ function tempoDesde(iso: string): string {
   return `há ${Math.max(horas, 1)}h`
 }
 
-function Card({ titulo, numero, sub, href, destaque, vazio }: {
+function Card({ titulo, numero, sub, href, destaque, vazio, vazioTexto = 'Tudo em dia' }: {
   titulo: string
   numero: number
   sub: string
   href: string
   destaque?: boolean
   vazio: boolean
+  vazioTexto?: string
 }) {
   const borda = destaque ? '#FF6B00' : '#1e1e1e'
   return (
@@ -76,7 +78,7 @@ function Card({ titulo, numero, sub, href, destaque, vazio }: {
     >
       <p style={TITULO_STYLE}>{titulo}</p>
       <p style={{ ...NUMERO_STYLE, color: vazio ? '#333' : '#FF6B00' }}>{numero}</p>
-      <p style={SUB_STYLE}>{vazio ? 'Tudo em dia' : sub}</p>
+      <p style={SUB_STYLE}>{vazio ? vazioTexto : sub}</p>
     </a>
   )
 }
@@ -106,11 +108,11 @@ export default function HubStatusPanel() {
       <div style={{ marginBottom: '3rem' }}>
         <style>{`
           .hub-status-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-          @media (min-width: 900px) { .hub-status-grid { grid-template-columns: repeat(4, 1fr); } }
+          @media (min-width: 900px) { .hub-status-grid { grid-template-columns: repeat(5, 1fr); } }
           @keyframes hubPulse { 0%, 100% { background-color: #0f0f0f; } 50% { background-color: #141414; } }
         `}</style>
         <div className="hub-status-grid">
-          {[0, 1, 2, 3].map(i => (
+          {[0, 1, 2, 3, 4].map(i => (
             <div key={i} style={{ ...CARD_BASE, cursor: 'default', animation: 'hubPulse 1.4s ease-in-out infinite', minHeight: '120px' }} />
           ))}
         </div>
@@ -118,7 +120,7 @@ export default function HubStatusPanel() {
     )
   }
 
-  const { entregas, leads, clientesSemContato, documentos } = status
+  const { entregas, leads, clientesSemContato, documentos, renovacoes = [] } = status
 
   const leadMaisAntigo = leads[0] // API ordena por created_time ascendente
   const leadAtrasado = leadMaisAntigo
@@ -131,11 +133,17 @@ export default function HubStatusPanel() {
     .map(([tipo, n]) => `${n} ${n > 1 && tipo !== 'Raio-X' ? `${tipo}s` : tipo}`)
     .join(' · ')
 
+  const renovacaoUrgente = renovacoes[0] // API ordena por diasRestantes ascendente
+  const renovacaoSub = renovacaoUrgente
+    ? `${renovacaoUrgente.nome} vence ${renovacaoUrgente.diasRestantes === 0 ? 'hoje' : `em ${renovacaoUrgente.diasRestantes} ${renovacaoUrgente.diasRestantes === 1 ? 'dia' : 'dias'}`}`
+    : ''
+  const renovacaoCritica = renovacoes.some(r => r.diasRestantes < 7)
+
   return (
     <div style={{ marginBottom: '3rem' }}>
       <style>{`
         .hub-status-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-        @media (min-width: 900px) { .hub-status-grid { grid-template-columns: repeat(4, 1fr); } }
+        @media (min-width: 900px) { .hub-status-grid { grid-template-columns: repeat(5, 1fr); } }
       `}</style>
       <div className="hub-status-grid">
         <Card
@@ -166,6 +174,15 @@ export default function HubStatusPanel() {
           sub={breakdown}
           href="/meus-documentos"
           vazio={documentos.total === 0}
+        />
+        <Card
+          titulo="Renovações"
+          numero={renovacoes.length}
+          sub={renovacaoSub}
+          href="/clientes?vista=kanban"
+          destaque={renovacaoCritica}
+          vazio={renovacoes.length === 0}
+          vazioTexto="Nenhuma renovação próxima"
         />
       </div>
     </div>

@@ -88,6 +88,31 @@ async function clientesParados() {
     .sort((a, b) => b.diasSemContato - a.diasSemContato)
 }
 
+async function contratosAVencer() {
+  const hoje = new Date()
+  const fim = new Date(hoje)
+  fim.setDate(fim.getDate() + 30)
+  const pages = await queryDb(DB_CLIENTES, {
+    filter: {
+      and: [
+        { property: 'Status', select: { equals: 'Ativo' } },
+        { property: 'Data de Término', date: { on_or_after: isoLocal(hoje) } },
+        { property: 'Data de Término', date: { on_or_before: isoLocal(fim) } },
+      ],
+    },
+    sorts: [{ property: 'Data de Término', direction: 'ascending' }],
+    page_size: 100,
+  })
+  const hojeMs = new Date(`${isoLocal(hoje)}T00:00:00`).getTime()
+  return pages
+    .map(p => {
+      const dataTermino = p.properties['Data de Término']?.date?.start || ''
+      const diasRestantes = Math.floor((new Date(`${dataTermino}T00:00:00`).getTime() - hojeMs) / 86400000)
+      return { nome: p.properties['Nome']?.title?.[0]?.plain_text || '', dataTermino, diasRestantes }
+    })
+    .sort((a, b) => a.diasRestantes - b.diasRestantes)
+}
+
 async function geradoEstaSemana() {
   const hoje = new Date()
   const segunda = new Date(hoje)
@@ -111,13 +136,14 @@ const CACHE_HEADERS = { 'Cache-Control': 'private, max-age=30, stale-while-reval
 export async function GET(request: Request) {
   if (!verificarToken(request)) return respostaNaoAutorizada()
   try {
-    const [entregas, leads, clientesSemContato, documentos] = await Promise.all([
+    const [entregas, leads, clientesSemContato, documentos, renovacoes] = await Promise.all([
       proximasEntregas().catch(() => []),
       leadsNovos().catch(() => []),
       clientesParados().catch(() => []),
       geradoEstaSemana().catch(() => ({ total: 0, porTipo: {} })),
+      contratosAVencer().catch(() => []),
     ])
-    return NextResponse.json({ entregas, leads, clientesSemContato, documentos }, { headers: CACHE_HEADERS })
+    return NextResponse.json({ entregas, leads, clientesSemContato, documentos, renovacoes }, { headers: CACHE_HEADERS })
   } catch (err) {
     console.error('GET /api/hub-status:', err)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })

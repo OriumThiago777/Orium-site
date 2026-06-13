@@ -7,7 +7,7 @@ import { FASES } from './shared'
 
 // ─── Modal Novo Cliente ──────────────────────────────────────────────────────
 export function ModalNovoCliente({ onClose, onCreated }: { onClose: () => void; onCreated: (c: Cliente) => void }) {
-  const [form, setForm] = useState({ nome: '', status: 'Proposta', faseAtual: 'Diagnóstico', instagram: '', email: '', contato: '' })
+  const [form, setForm] = useState({ nome: '', status: 'Proposta', faseAtual: 'Diagnóstico', instagram: '', email: '', contato: '', dataTermino: '' })
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
 
@@ -86,6 +86,11 @@ export function ModalNovoCliente({ onClose, onCreated }: { onClose: () => void; 
               <input type="tel" value={form.contato} onChange={e => set('contato', e.target.value)} placeholder="(XX) XXXXX-XXXX" style={inputStyle}
                 onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#333'} />
             </div>
+          </div>
+          <div>
+            <label style={labelStyle}>Término do contrato</label>
+            <input type="date" value={form.dataTermino} onChange={e => set('dataTermino', e.target.value)} style={{ ...inputStyle, colorScheme: 'dark' }}
+              onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#333'} />
           </div>
           {erro && (
             <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: '8px', padding: '0.75rem 0.875rem', color: '#fca5a5', fontSize: '0.82rem', lineHeight: 1.5 }}>

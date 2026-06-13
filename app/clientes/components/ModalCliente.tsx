@@ -279,11 +279,18 @@ export function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividad
                     onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#333'} />
                 </div>
               </div>
-              <div>
-                <label style={labelStyle}>Próximo Deliverable</label>
-                <input type="date" value={form.proximoDeliverable} onChange={e => set('proximoDeliverable', e.target.value)}
-                  style={{ ...inputStyle, colorScheme: 'dark', borderColor: deliverableBorder }}
-                  onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = deliverableBorder} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div>
+                  <label style={labelStyle}>Próximo Deliverable</label>
+                  <input type="date" value={form.proximoDeliverable} onChange={e => set('proximoDeliverable', e.target.value)}
+                    style={{ ...inputStyle, colorScheme: 'dark', borderColor: deliverableBorder }}
+                    onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = deliverableBorder} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Término do contrato</label>
+                  <input type="date" value={form.dataTermino} onChange={e => set('dataTermino', e.target.value)} style={{ ...inputStyle, colorScheme: 'dark' }}
+                    onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#333'} />
+                </div>
               </div>
               <div>
                 <label style={labelStyle}>Valor Mensal (R$)</label>
