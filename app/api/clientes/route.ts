@@ -90,6 +90,7 @@ function extractCliente(page: NotionPage) {
     precisaRelatorio: p['Precisa Relatório']?.checkbox ?? false,
     notas: p['Notas']?.rich_text?.[0]?.plain_text ?? '',
     valorMensal: p['Valor Mensal']?.number ?? null,
+    tokenPortal: p['Token Portal']?.rich_text?.[0]?.plain_text ?? '',
   };
 }
 

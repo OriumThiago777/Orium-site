@@ -15,6 +15,7 @@ export type Cliente = {
   precisaRelatorio: boolean
   notas: string
   valorMensal: number | null
+  tokenPortal: string
 }
 
 export type Atividade = {

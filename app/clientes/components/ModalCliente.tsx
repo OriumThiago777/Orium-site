@@ -18,6 +18,7 @@ import {
   TIPO_DOC_ROTA,
   iconeAtividade,
 } from './shared'
+import { ModalPauta } from './ModalPauta'
 
 // ─── Modal Detalhes ──────────────────────────────────────────────────────────
 export function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loadingAtividades, atividadesExpandidas, setAtividadesExpandidas, progresso }: {
@@ -45,6 +46,9 @@ export function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividad
   const [expandirNotas, setExpandirNotas] = useState(false)
   const [progressoLocal, setProgressoLocal] = useState<ProgressoData | null>(null)
   const [loadingProgressoLocal, setLoadingProgressoLocal] = useState(false)
+  const [gerandoPauta, setGerandoPauta] = useState(false)
+  const [pautaTexto, setPautaTexto] = useState<string | null>(null)
+  const [erroPauta, setErroPauta] = useState('')
 
   useEffect(() => {
     if (progresso !== null) return
@@ -103,6 +107,26 @@ export function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividad
       if (res.ok) { onDeleted(cliente.id); onClose() }
     } finally {
       setDeleting(false)
+    }
+  }
+
+  async function gerarPauta() {
+    setGerandoPauta(true)
+    setErroPauta('')
+    try {
+      const res = await fetch(`/api/pauta?clienteId=${encodeURIComponent(cliente.id)}&clienteNome=${encodeURIComponent(cliente.nome)}`, {
+        headers: authHeaders(),
+      })
+      const data = await res.json()
+      if (res.ok && data.pauta) {
+        setPautaTexto(data.pauta)
+      } else {
+        setErroPauta('Não foi possível gerar a pauta')
+      }
+    } catch {
+      setErroPauta('Não foi possível gerar a pauta')
+    } finally {
+      setGerandoPauta(false)
     }
   }
 
@@ -388,6 +412,22 @@ export function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividad
                 )}
               </div>
 
+              {/* Portal do cliente */}
+              {cliente.tokenPortal && (
+                <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '8px', padding: '0.875rem' }}>
+                  <p style={{ fontFamily: 'Anton, sans-serif', color: '#fff', fontSize: '0.75rem', letterSpacing: '0.12em', margin: '0 0 0.625rem', textTransform: 'uppercase' }}>PORTAL DO CLIENTE</p>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <input readOnly value={`https://oriumagencia.com.br/portal/${cliente.tokenPortal}`}
+                      style={{ ...inputStyle, flex: 1, color: '#777', fontSize: '0.78rem' }}
+                      onFocus={e => e.target.select()} />
+                    <button onClick={() => navigator.clipboard.writeText(`https://oriumagencia.com.br/portal/${cliente.tokenPortal}`)}
+                      style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.65rem 0.875rem', color: '#fff', fontFamily: 'Anton, sans-serif', fontSize: '0.7rem', letterSpacing: '0.1em', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                      COPIAR LINK
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Atividades */}
               <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '8px', padding: '0.875rem', marginBottom: '1rem' }}>
                 <p style={{ fontFamily: 'Anton, sans-serif', fontSize: '0.75rem', letterSpacing: '0.12em', color: '#fff', margin: '0 0 0.75rem' }}>
@@ -450,6 +490,14 @@ export function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividad
               {erroSalvar}
             </div>
           )}
+          {erroPauta && (
+            <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: '8px', padding: '0.625rem 0.875rem', color: '#fca5a5', fontSize: '0.82rem', marginBottom: '0.75rem', lineHeight: 1.5 }}>
+              {erroPauta}
+            </div>
+          )}
+          <button onClick={gerarPauta} disabled={gerandoPauta} style={{ width: '100%', background: 'transparent', border: '1px solid #FF6B00', borderRadius: '8px', padding: '0.75rem', color: '#FF6B00', fontFamily: 'Anton, sans-serif', fontSize: '0.85rem', letterSpacing: '0.12em', cursor: gerandoPauta ? 'not-allowed' : 'pointer', opacity: gerandoPauta ? 0.6 : 1, marginBottom: '0.625rem', transition: 'opacity 0.15s' }}>
+            {gerandoPauta ? 'GERANDO...' : 'GERAR PAUTA'}
+          </button>
           <div style={{ display: 'flex', gap: '0.625rem' }}>
           <button onClick={handleSave} disabled={saving} style={{ flex: 2, background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.75rem', color: '#fff', fontFamily: 'Anton, sans-serif', fontSize: '0.9rem', letterSpacing: '0.12em', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1, transition: 'opacity 0.15s' }}>
             {saving ? 'SALVANDO...' : 'SALVAR'}
@@ -473,6 +521,9 @@ export function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividad
           </div>
         </div>
       </div>
+      {pautaTexto !== null && (
+        <ModalPauta clienteNome={cliente.nome} pauta={pautaTexto} onClose={() => setPautaTexto(null)} />
+      )}
     </div>
   )
 }
