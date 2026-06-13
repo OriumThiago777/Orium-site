@@ -35,6 +35,7 @@ const GRID: Ferramenta[] = [
 const SECUNDARIAS: Ferramenta[] = [
   { cls: 'docs', tier: 'small', titulo: 'MEUS DOCUMENTOS', href: '/meus-documentos', icon: 'icon-operacao' },
   { cls: 'biblioteca', tier: 'small', titulo: 'BIBLIOTECA', href: '/biblioteca', icon: 'icon-percepcao' },
+  { cls: 'prospecto', tier: 'small', titulo: 'PROSPECTO', descricao: 'Briefing rápido para prospects.', href: '/prospecto', icon: 'icon-contato' },
 ];
 
 const STYLES = `
@@ -180,11 +181,11 @@ const STYLES = `
   .hub-secondary { display: flex; gap: 12px; margin-top: 12px; flex-shrink: 0; }
   .hub-sec-item {
     flex: 1;
-    height: 56px;
+    min-height: 56px;
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0 1.25rem;
+    padding: 0.75rem 1.25rem;
     background: #0a0a0a;
     border: 1px solid #1a1a1a;
     border-radius: 12px;
@@ -194,12 +195,19 @@ const STYLES = `
   }
   .hub-sec-item:hover { border-color: #FF6B00; background: #0f0f0f; }
   .hub-sec-ico { width: 20px; height: 20px; object-fit: contain; flex-shrink: 0; }
+  .hub-sec-text { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
   .hub-sec-name {
     font-family: 'Anton', sans-serif;
     font-size: 11px;
     color: #fff;
     text-transform: uppercase;
     letter-spacing: 0.08em;
+  }
+  .hub-sec-desc {
+    font-family: 'Poppins', sans-serif;
+    font-size: 11px;
+    color: #555;
+    line-height: 1.4;
   }
 
   /* ── Tablet (768–1024px): 3 colunas, scroll permitido ── */
@@ -277,7 +285,10 @@ function HubContent() {
             <a key={f.href} href={f.href} className="hub-sec-item">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="hub-sec-ico" src={`/icons/${f.icon}.svg`} alt="" />
-              <span className="hub-sec-name">{f.titulo}</span>
+              <span className="hub-sec-text">
+                <span className="hub-sec-name">{f.titulo}</span>
+                {f.descricao && <span className="hub-sec-desc">{f.descricao}</span>}
+              </span>
             </a>
           ))}
         </div>
