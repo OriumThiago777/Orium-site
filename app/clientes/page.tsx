@@ -18,6 +18,8 @@ import {
   FaseBadge,
 } from './components/shared'
 import { ModalNovoCliente } from './components/ModalNovoCliente'
+import { MensagemFase } from '@/components/MensagemFase'
+import { FASE_MENSAGENS } from '@/lib/fase-mensagens'
 import { ModalDetalhes } from './components/ModalCliente'
 import { KanbanBoard } from './components/KanbanBoard'
 import { VistaTable } from './components/TabelaClientes'
@@ -165,6 +167,7 @@ function ClientesContent() {
   const [atividadesExpandidas, setAtividadesExpandidas] = useState(false)
   const [progressos, setProgressos] = useState<Record<string, ProgressoData>>({})
   const [kanbanErro, setKanbanErro] = useState('')
+  const [mensagemFase, setMensagemFase] = useState<{ clienteNome: string; faseDestino: string } | null>(null)
 
   const justDraggedRef = useRef(false)
 
@@ -219,6 +222,7 @@ function ClientesContent() {
       }
       const atualizado = await res.json()
       setClientes(cs => cs.map(c => c.id === clienteId ? { ...c, ...atualizado } : c))
+      if (FASE_MENSAGENS[novaFase]) setMensagemFase({ clienteNome: cliente.nome, faseDestino: novaFase })
     } catch (err) {
       console.error('Erro ao mover cliente no Kanban:', err)
       setClientes(prev)
@@ -431,6 +435,12 @@ function ClientesContent() {
       </div>
 
       {/* Modais */}
+      {mensagemFase && (
+        <MensagemFase
+          cliente={mensagemFase.clienteNome}
+          fase={mensagemFase.faseDestino}
+          onClose={() => setMensagemFase(null)} />
+      )}
       {modalNovo && (
         <ModalNovoCliente
           onClose={() => setModalNovo(false)}
