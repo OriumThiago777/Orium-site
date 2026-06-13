@@ -4,6 +4,7 @@ import React, { useState, useRef, Suspense } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { authHeaders } from '@/lib/auth'
 import { savePdfToCloud } from '@/lib/upload-helper'
 import { useDraft } from '@/lib/draft'
 import SaveToast from '@/components/SaveToast'
@@ -25,6 +26,7 @@ type FormData = {
   impressoes: string
   engajamento: string
   cliques: string
+  postsPublicados: string
   destaques: string
   atencao: string
   observacoes: string
@@ -59,13 +61,15 @@ function RelatorioPage() {
   const [form, setForm] = useState<FormData>({
     cliente: clienteParam || '', periodoMes: '', periodoAno: '', responsavel: 'Thiago',
     segInicio: '', segFim: '', alcance: '', impressoes: '',
-    engajamento: '', cliques: '', destaques: '', atencao: '', observacoes: '',
+    engajamento: '', cliques: '', postsPublicados: '', destaques: '', atencao: '', observacoes: '',
   })
   const [listas, setListas] = useState<Listas>({ entregas: [], proximos: [] })
   const [inputTemp, setInputTemp] = useState({ entregas: '', proximos: '' })
   const [copiado, setCopiado] = useState(false)
   const [exportando, setExportando] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle')
+  const [carregandoDados, setCarregandoDados] = useState(false)
+  const [importMsg, setImportMsg] = useState('')
   const previewRef = useRef<HTMLDivElement>(null)
 
   const { draft, retomar, descartar, concluir } = useDraft(
@@ -87,6 +91,60 @@ function RelatorioPage() {
 
   const removeLista = (key: keyof Listas, idx: number) =>
     setListas(prev => ({ ...prev, [key]: prev[key].filter((_, i) => i !== idx) }))
+
+  async function carregarDadosDoPeriodo() {
+    const mesIdx = MESES.indexOf(form.periodoMes)
+    if (!form.cliente || mesIdx === -1 || !form.periodoAno) return
+
+    setCarregandoDados(true)
+    setImportMsg('')
+    try {
+      const mes = `${form.periodoAno}-${String(mesIdx + 1).padStart(2, '0')}`
+      const res = await fetch(`/api/relatorio/dados?cliente=${encodeURIComponent(form.cliente)}&mes=${mes}`, {
+        headers: authHeaders(),
+      })
+      if (!res.ok) throw new Error('Falha ao buscar dados')
+      const data = await res.json()
+
+      const documentos: Array<{ tipo: string; nome: string; data: string; linkDrive: string }> = data.documentos ?? []
+      const atividades: Array<{ descricao: string; data: string; tipo: string }> = data.atividades ?? []
+      const calendario: Array<{ titulo: string; data: string; tipo: string }> = data.calendario ?? []
+
+      if (documentos.length === 0 && atividades.length === 0 && calendario.length === 0) {
+        setImportMsg('Nenhum dado encontrado para este período')
+        return
+      }
+
+      // Documentos gerados → entregas do mês
+      if (documentos.length > 0) {
+        setListas(prev => {
+          const novos = documentos
+            .map(d => `${d.tipo}: ${d.nome}`)
+            .filter(item => !prev.entregas.includes(item))
+          return { ...prev, entregas: [...prev.entregas, ...novos] }
+        })
+      }
+
+      // Itens de calendário publicados → total de posts publicados
+      if (calendario.length > 0) {
+        setF('postsPublicados', String(calendario.length))
+      }
+
+      // Atividades registradas → ações realizadas (observações)
+      if (atividades.length > 0) {
+        const linhas = atividades.map(a => `• ${a.data ? a.data + ' — ' : ''}${a.descricao || a.tipo}`)
+        const bloco = ['Ações realizadas no período:', ...linhas].join('\n')
+        setF('observacoes', form.observacoes ? `${form.observacoes}\n\n${bloco}` : bloco)
+      }
+
+      setImportMsg('Dados importados — revise antes de continuar')
+    } catch {
+      setImportMsg('Nenhum dado encontrado para este período')
+    } finally {
+      setCarregandoDados(false)
+      setTimeout(() => setImportMsg(''), 4000)
+    }
+  }
 
   const bgImage = <ToolBackground position="absolute" />
 
@@ -120,6 +178,15 @@ function RelatorioPage() {
               {ANOS.map(a => <option key={a} value={a}>{a}</option>)}
             </select>
           </div>
+          {form.cliente && form.periodoMes && form.periodoAno && (
+            <button onClick={carregarDadosDoPeriodo} disabled={carregandoDados}
+              style={{ marginTop: '1rem', alignSelf: 'flex-start', background: 'transparent', border: '1px solid rgba(255,107,0,0.35)', borderRadius: '8px', padding: '0.7rem 1.5rem', color: '#FF6B00', fontSize: '0.8rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.1em', cursor: carregandoDados ? 'not-allowed' : 'pointer', opacity: carregandoDados ? 0.6 : 1, transition: 'all 0.2s' }}
+              onMouseEnter={e => { if (!carregandoDados) { const b = e.currentTarget; b.style.background = 'rgba(255,107,0,0.1)' } }}
+              onMouseLeave={e => { const b = e.currentTarget; b.style.background = 'transparent' }}
+            >
+              {carregandoDados ? 'BUSCANDO DADOS...' : '↓ CARREGAR DADOS DO PERÍODO'}
+            </button>
+          )}
         </div>
         <div style={fieldWrap}>
           <label style={labelStyle}>Responsável ORIUM</label>
@@ -191,6 +258,10 @@ function RelatorioPage() {
         <div style={fieldWrap}>
           <label style={labelStyle}>Cliques no link</label>
           <OriumInput type="number" value={form.cliques} onChange={e => setF('cliques', e.target.value)} placeholder="0" />
+        </div>
+        <div style={fieldWrap}>
+          <label style={labelStyle}>Posts publicados</label>
+          <OriumInput type="number" value={form.postsPublicados} onChange={e => setF('postsPublicados', e.target.value)} placeholder="0" />
         </div>
       </div>
     )
@@ -312,6 +383,7 @@ function RelatorioPage() {
               { label: 'IMPRESSÕES', value: form.impressoes || '—', sub: undefined, subColor: '#555' },
               { label: 'ENGAJAMENTO', value: form.engajamento ? `${form.engajamento}%` : '—', sub: undefined, subColor: '#555' },
               { label: 'CLIQUES', value: form.cliques || '—', sub: undefined, subColor: '#555' },
+              { label: 'POSTS PUBLICADOS', value: form.postsPublicados || '—', sub: undefined, subColor: '#555' },
             ].map(card => (
               <div key={card.label} style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: '8px', padding: '1.25rem', textAlign: 'center' }}>
                 <p style={{ color: '#444', fontSize: '0.6rem', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '0.5rem' }}>{card.label}</p>
@@ -414,6 +486,7 @@ function RelatorioPage() {
       `Impressões: ${form.impressoes || '—'}`,
       `Engajamento: ${form.engajamento ? form.engajamento + '%' : '—'}`,
       `Cliques no link: ${form.cliques || '—'}`,
+      `Posts publicados: ${form.postsPublicados || '—'}`,
     ]
 
     if (listas.entregas.length > 0) {
@@ -692,6 +765,11 @@ function RelatorioPage() {
       </div>
       {draft && <DraftBanner savedAt={draft.savedAt} onRetomar={retomar} onDescartar={descartar} />}
       {saveStatus !== 'idle' && <SaveToast status={saveStatus} />}
+      {importMsg && (
+        <div style={{ position: 'fixed', bottom: '1.5rem', left: '50%', transform: 'translateX(-50%)', zIndex: 50, background: '#0a0a0a', border: '1px solid rgba(255,107,0,0.35)', borderRadius: '8px', padding: '0.75rem 1.5rem', color: '#FF6B00', fontSize: '0.85rem', fontFamily: 'Poppins, sans-serif', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          {importMsg}
+        </div>
+      )}
     </div>
   )
 }
