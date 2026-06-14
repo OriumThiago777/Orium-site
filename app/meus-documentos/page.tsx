@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import NextImage from 'next/image';
 import { authHeaders } from '@/lib/auth';
 import AuthGate from '@/components/AuthGate';
 import ToolBackground from '@/components/ToolBackground';
+import { duplicarDocumento, getToolKey } from '@/lib/duplicar-documento';
 
 interface Documento {
   id: string;
@@ -26,6 +28,9 @@ const TIPO_COR: Record<string, string> = {
   'Raio-X': '#FF6B00',
   'Proposta': '#3b82f6',
   'Contrato': '#22c55e',
+  'Relatório': '#a855f7',
+  'Calendário': '#eab308',
+  'Checklist': '#06b6d4',
 };
 
 function fmtData(iso: string | null): string {
@@ -34,11 +39,14 @@ function fmtData(iso: string | null): string {
 }
 
 function MeusDocumentosContent() {
+  const router = useRouter();
   const [docs, setDocs] = useState<Documento[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
   const [erroDocs, setErroDocs] = useState(false);
   const [filtro, setFiltro] = useState('Todos');
   const [excluindo, setExcluindo] = useState<string | null>(null);
+  const [duplicando, setDuplicando] = useState<string | null>(null);
+  const [erroDuplicar, setErroDuplicar] = useState<string | null>(null);
 
   async function carregarDocs() {
     setLoadingDocs(true);
@@ -63,6 +71,24 @@ function MeusDocumentosContent() {
       setDocs(prev => prev.filter(d => d.id !== id));
     } catch (e) { console.error(e); }
     finally { setExcluindo(null); }
+  }
+
+  async function duplicar(doc: Documento) {
+    setErroDuplicar(null);
+    setDuplicando(doc.id);
+    try {
+      const res = await fetch(`/api/documentos?id=${doc.id}`, { headers: authHeaders() });
+      if (!res.ok) throw new Error('documento indisponível');
+      const data = await res.json();
+      if (!data.dados) throw new Error('sem dados');
+      duplicarDocumento(doc.tipo, data.dados, doc.cliente, router);
+    } catch (e) {
+      console.error(e);
+      setErroDuplicar('Não foi possível carregar o documento');
+      setTimeout(() => setErroDuplicar(null), 4000);
+    } finally {
+      setDuplicando(null);
+    }
   }
 
   const FP = 'Poppins, sans-serif';
@@ -161,6 +187,17 @@ function MeusDocumentosContent() {
                   >
                     EDITAR
                   </a>
+                  {getToolKey(doc.tipo) && (
+                    <button
+                      onClick={() => duplicar(doc)}
+                      disabled={duplicando === doc.id}
+                      style={{ padding: '0.625rem 1rem', background: 'transparent', border: '1px solid #333', borderRadius: '8px', color: '#999', fontSize: '0.625rem', fontFamily: FA, letterSpacing: '0.1em', cursor: duplicando === doc.id ? 'not-allowed' : 'pointer', transition: 'all 0.2s', opacity: duplicando === doc.id ? 0.4 : 1 }}
+                      onMouseEnter={e => { if (duplicando !== doc.id) e.currentTarget.style.borderColor = '#FF6B00'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = '#333'; }}
+                    >
+                      {duplicando === doc.id ? '...' : 'DUPLICAR'}
+                    </button>
+                  )}
                   <button
                     onClick={() => excluir(doc.id)}
                     disabled={excluindo === doc.id}
@@ -186,6 +223,12 @@ function MeusDocumentosContent() {
         </a>
         <p style={{ color: '#333', fontSize: '0.7rem', letterSpacing: '0.15em' }}>{docs.length} documento{docs.length !== 1 ? 's' : ''} salvos</p>
       </div>
+
+      {erroDuplicar && (
+        <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 200, background: '#1a1a1a', borderLeft: '3px solid #991111', borderRadius: '6px', padding: '0.75rem 1.25rem', color: '#fff', fontSize: '0.82rem', fontFamily: FP, boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }}>
+          ⚠️ {erroDuplicar}
+        </div>
+      )}
     </div>
   );
 }

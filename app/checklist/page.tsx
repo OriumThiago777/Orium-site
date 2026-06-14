@@ -1,14 +1,16 @@
 'use client'
 
-import React, { useState, useRef, Suspense } from 'react'
+import React, { useState, useRef, useEffect, Suspense } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { authHeaders } from '@/lib/auth'
 import { savePdfToCloud } from '@/lib/upload-helper'
-import { useDraft } from '@/lib/draft'
+import { useDraft, loadDraft } from '@/lib/draft'
+import { loadDuplicado } from '@/lib/duplicar-documento'
 import SaveToast from '@/components/SaveToast'
 import DraftBanner from '@/components/DraftBanner'
+import DuplicadoBanner from '@/components/DuplicadoBanner'
 import ClienteSelector from '@/components/ClienteSelector'
 import AuthGate from '@/components/AuthGate'
 import ToolBackground from '@/components/ToolBackground'
@@ -97,6 +99,7 @@ function ChecklistContent() {
   const [items, setItems] = useState<ChecklistItem[]>(buildItems)
   const [salvando, setSalvando] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle')
+  const [duplicado, setDuplicado] = useState(false)
 
   const { draft, retomar, descartar, concluir } = useDraft(
     'checklist',
@@ -104,6 +107,22 @@ function ChecklistContent() {
     d => { setCliente(d.cliente); setPeriodo(d.periodo); setResponsavel(d.responsavel); setObservacoes(d.observacoes); setItems(d.items); setStep(d.step) },
     true,
   )
+
+  // Pré-preenchimento via "Duplicar" na Biblioteca — não sobrescreve rascunho existente
+  useEffect(() => {
+    if (loadDraft('checklist')) return
+    const dup = loadDuplicado<{ cliente: string; periodo: string; responsavel: string; observacoes: string; itensMarcados: Array<{ categoria: string; label: string }> }>('checklist')
+    if (!dup) return
+    setCliente(dup.cliente || '')
+    setPeriodo(dup.periodo || '')
+    setResponsavel(dup.responsavel || 'Thiago')
+    setObservacoes(dup.observacoes || '')
+    setItems(prev => prev.map(i => ({
+      ...i,
+      incluido: (dup.itensMarcados || []).some(m => m.categoria === i.categoria && m.label === i.label),
+    })))
+    setDuplicado(true)
+  }, [])
 
   const itensMarcados = items.filter(i => i.incluido)
   const totalMarcados = itensMarcados.length
@@ -608,6 +627,7 @@ function ChecklistContent() {
         />
       </div>
       {draft && <DraftBanner savedAt={draft.savedAt} onRetomar={retomar} onDescartar={descartar} />}
+      {duplicado && <DuplicadoBanner onDismiss={() => setDuplicado(false)} />}
       {saveStatus !== 'idle' && <SaveToast status={saveStatus} />}
     </div>
   )

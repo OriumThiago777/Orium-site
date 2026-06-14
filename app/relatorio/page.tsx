@@ -1,13 +1,15 @@
 'use client'
 
-import React, { useState, useRef, Suspense } from 'react'
+import React, { useState, useRef, useEffect, Suspense } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { savePdfToCloud } from '@/lib/upload-helper'
-import { useDraft } from '@/lib/draft'
+import { useDraft, loadDraft } from '@/lib/draft'
+import { loadDuplicado } from '@/lib/duplicar-documento'
 import SaveToast from '@/components/SaveToast'
 import DraftBanner from '@/components/DraftBanner'
+import DuplicadoBanner from '@/components/DuplicadoBanner'
 import ClienteSelector from '@/components/ClienteSelector'
 import AuthGate from '@/components/AuthGate'
 import ToolBackground from '@/components/ToolBackground'
@@ -74,6 +76,17 @@ function RelatorioPage() {
     d => { setForm(d.form); setListas(d.listas); setStep(d.step) },
     true,
   )
+  const [duplicado, setDuplicado] = useState(false)
+
+  // Pré-preenchimento via "Duplicar" na Biblioteca — não sobrescreve rascunho existente
+  useEffect(() => {
+    if (loadDraft('relatorio')) return
+    const dup = loadDuplicado<{ form: FormData; listas: Listas }>('relatorio')
+    if (!dup) return
+    setForm(prev => ({ ...prev, ...dup.form }))
+    if (dup.listas) setListas(dup.listas)
+    setDuplicado(true)
+  }, [])
 
   const setF = (key: keyof FormData, value: string) =>
     setForm(prev => ({ ...prev, [key]: value }))
@@ -691,6 +704,7 @@ function RelatorioPage() {
         )}
       </div>
       {draft && <DraftBanner savedAt={draft.savedAt} onRetomar={retomar} onDescartar={descartar} />}
+      {duplicado && <DuplicadoBanner onDismiss={() => setDuplicado(false)} />}
       {saveStatus !== 'idle' && <SaveToast status={saveStatus} />}
     </div>
   )

@@ -5,8 +5,10 @@ import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { clearAuth, authHeaders } from '@/lib/auth';
-import { useDraft } from '@/lib/draft';
+import { useDraft, loadDraft } from '@/lib/draft';
+import { loadDuplicado } from '@/lib/duplicar-documento';
 import DraftBanner from '@/components/DraftBanner';
+import DuplicadoBanner from '@/components/DuplicadoBanner';
 import ClienteSelector from '@/components/ClienteSelector';
 import ImportarBriefing, { BriefingImportado } from '@/components/ImportarBriefing';
 import AuthGate from '@/components/AuthGate';
@@ -129,6 +131,7 @@ function CalendarioPage() {
   const [erroGeracao, setErroGeracao] = useState('');
   const [documentoId, setDocumentoId] = useState('');
   const [copiado, setCopiado] = useState(false);
+  const [duplicado, setDuplicado] = useState(false);
 
   // Rascunho: restaura no máximo até o step 2 — entrar direto no step 3
   // dispararia a geração via IA automaticamente
@@ -138,6 +141,16 @@ function CalendarioPage() {
     d => { setForm(d.form); setMulti(d.multi); setStep(Math.min(d.step, 2)); },
     true,
   );
+
+  // Pré-preenchimento via "Duplicar" na Biblioteca — não sobrescreve rascunho existente
+  useEffect(() => {
+    if (loadDraft('calendario')) return;
+    const dup = loadDuplicado<{ form: Record<string, string>; formatos: string[]; temas: string[] }>('calendario');
+    if (!dup) return;
+    setForm(prev => ({ ...prev, ...dup.form }));
+    setMulti({ formatos: dup.formatos || [], temas: dup.temas || [] });
+    setDuplicado(true);
+  }, []);
 
   // Rotacionar textos de loading
   useEffect(() => {
@@ -577,6 +590,7 @@ function CalendarioPage() {
     <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', fontFamily: 'Poppins, sans-serif', display: 'flex' }}>
       <ToolBackground position="absolute" />
       {draft && <DraftBanner savedAt={draft.savedAt} onRetomar={retomar} onDescartar={descartar} />}
+      {duplicado && <DuplicadoBanner onDismiss={() => setDuplicado(false)} />}
 
       {/* Sidebar */}
       <div style={{ position: 'relative', width: sidebarCollapsed ? '60px' : '260px', flexShrink: 0, height: '100%', zIndex: 10, transition: 'width 0.3s ease' }}>
