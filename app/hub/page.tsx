@@ -74,29 +74,58 @@ const EM_BREVE: { tag: string; titulo: string; descricao: string }[] = [];
 function HubContent() {
   // ── Hub principal ─────────────────────────────────────────────────────────────
   return (
-    <div style={{ position: 'fixed', inset: 0, overflowY: 'auto', background: '#080808', fontFamily: 'Poppins, sans-serif' }}>
+    <div className="hub-shell" style={{ position: 'fixed', inset: 0, background: '#080808', fontFamily: 'Poppins, sans-serif' }}>
+      <style>{`
+        .hub-shell { overflow-y: auto; }
+        .hub-content { display: block; }
+        .hub-logo-wrap { margin-bottom: 4rem; }
+        .hub-tag { margin-bottom: 1rem; }
+        .hub-title { margin-bottom: 0.75rem; }
+        .hub-subtitle { margin-bottom: 4rem; }
+        .hub-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        .hub-footer { margin-top: 5rem; padding-top: 2rem; }
+        @media (min-width: 768px) {
+          .hub-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (min-width: 1025px) {
+          .hub-shell { overflow: hidden; }
+          .hub-content { display: flex; flex-direction: column; height: 100%; padding: 0.4rem 3rem !important; }
+          .hub-header { flex-shrink: 0; }
+          .hub-logo-wrap { margin-bottom: 0.5rem; }
+          .hub-tag { margin-bottom: 0.375rem; }
+          .hub-title { margin-bottom: 0.25rem; }
+          .hub-subtitle { margin-bottom: 0.5rem; }
+          .hub-status-wrap { flex-shrink: 0; }
+          .hub-status-wrap > div { margin-bottom: 0.25rem !important; }
+          .hub-grid { flex: 1; min-height: 0; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+          .hub-grid > a { min-height: 0; }
+          .hub-footer { flex-shrink: 0; margin-top: 0.25rem; padding-top: 0.5rem; }
+        }
+      `}</style>
       <ToolBackground />
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: '960px', margin: '0 auto', padding: '5rem 3rem' }}>
+      <div className="hub-content" style={{ position: 'relative', zIndex: 1, maxWidth: '960px', margin: '0 auto', padding: '5rem 3rem', boxSizing: 'border-box', minHeight: '100%' }}>
 
         {/* Header */}
-        <div style={{ marginBottom: '4rem' }}>
-          <Image src="/lglaranja.png" alt="ORIUM" width={120} height={40} style={{ objectFit: 'contain', display: 'block', marginBottom: '4rem' }} />
+        <div className="hub-header">
+          <Image src="/lglaranja.png" alt="ORIUM" width={120} height={40} className="hub-logo-wrap" style={{ objectFit: 'contain', display: 'block' }} />
           <p style={{ color: '#FF6B00', fontSize: '0.72rem', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: '1rem' }}>
             FERRAMENTAS INTERNAS
           </p>
           <h1 style={{ fontFamily: 'Anton, sans-serif', fontSize: 'clamp(2.5rem, 5vw, 4rem)', color: '#fff', letterSpacing: '0.02em', lineHeight: 0.95, marginBottom: '0.75rem' }}>
             HUB ORIUM
           </h1>
-          <p style={{ color: '#555', fontSize: '0.95rem', lineHeight: 1.75, marginBottom: '4rem' }}>
+          <p className="hub-subtitle" style={{ color: '#555', fontSize: '0.95rem', lineHeight: 1.75 }}>
             Acesse, gerencie e execute. Tudo em um lugar.
           </p>
         </div>
 
         {/* Painel operacional */}
-        <HubStatusPanel />
+        <div className="hub-status-wrap">
+          <HubStatusPanel />
+        </div>
 
         {/* Grid de cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
+        <div className="hub-grid">
           {FERRAMENTAS.map(f => (
             <a key={f.href} href={f.href} style={{ textDecoration: 'none', display: 'block' }}>
               <div
@@ -138,7 +167,7 @@ function HubContent() {
         </div>
 
         {/* Rodapé */}
-        <div style={{ marginTop: '5rem', paddingTop: '2rem', borderTop: '1px solid #141414', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="hub-footer" style={{ paddingTop: '2rem', borderTop: '1px solid #141414', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <p style={{ color: '#1e1e1e', fontSize: '0.72rem', letterSpacing: '0.2em', textTransform: 'uppercase', margin: 0 }}>
             ORIUM™ — Ferramentas Internas
           </p>
