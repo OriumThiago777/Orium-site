@@ -12,6 +12,7 @@ import {
   HEALTH_COR,
   FASES,
   deliverableUrgency,
+  diasDesdeInteracao,
   formatarDataHora,
   formatDate,
   TIPO_DOC_COR,
@@ -19,6 +20,13 @@ import {
   iconeAtividade,
 } from './shared'
 import { ModalPauta } from './ModalPauta'
+import { getSugestao, SUGESTAO_FERRAMENTA } from '@/lib/proximo-passo'
+
+const URGENCIA_COR_SUGESTAO: Record<'alta' | 'media' | 'baixa', string> = {
+  alta: '#FF6B00',
+  media: '#666',
+  baixa: '#333',
+}
 
 // ─── Modal Detalhes ──────────────────────────────────────────────────────────
 export function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividades, loadingAtividades, atividadesExpandidas, setAtividadesExpandidas, progresso }: {
@@ -63,6 +71,15 @@ export function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividad
   const progressoEfetivo = progresso ?? progressoLocal
   const router = useRouter()
   const primeiraEtapaPendente = progressoEfetivo?.etapas.find(e => !e.concluida)?.nome ?? null
+
+  const sugestao = progressoEfetivo ? getSugestao({
+    nome: cliente.nome,
+    faseAtual: cliente.faseAtual,
+    diasSemContato: diasDesdeInteracao(cliente),
+    etapasConcluidas: progressoEfetivo.concluidas,
+    totalEtapas: progressoEfetivo.total,
+  }) : null
+  const ferramentaSugestao = sugestao ? SUGESTAO_FERRAMENTA[sugestao.acao] : undefined
 
   useEffect(() => {
     setLoadingDocs(true)
@@ -322,6 +339,30 @@ export function ModalDetalhes({ cliente, onClose, onUpdated, onDeleted, atividad
                   placeholder="0,00" style={inputStyle}
                   onFocus={e => e.target.style.borderColor = '#FF6B00'} onBlur={e => e.target.style.borderColor = '#333'} />
               </div>
+
+              {/* Próximo passo sugerido */}
+              {sugestao && (
+                <div>
+                  <label style={labelStyle}>Próximo passo sugerido</label>
+                  <div style={{ background: '#0f0f0f', border: `1px solid ${URGENCIA_COR_SUGESTAO[sugestao.urgencia]}`, borderRadius: '8px', padding: '0.875rem' }}>
+                    <p style={{ fontFamily: 'Anton, sans-serif', color: '#fff', fontSize: '0.875rem', letterSpacing: '0.05em', margin: '0 0 0.25rem' }}>
+                      {sugestao.acao.toUpperCase()}
+                    </p>
+                    <p style={{ fontFamily: 'Poppins, sans-serif', color: '#666', fontSize: '0.75rem', margin: ferramentaSugestao ? '0 0 0.75rem' : 0 }}>
+                      {sugestao.motivo}
+                    </p>
+                    {ferramentaSugestao && (
+                      <button
+                        onClick={() => router.push(getToolUrl(ferramentaSugestao, cliente.nome))}
+                        style={{ background: 'transparent', border: 'none', color: '#FF6B00', fontFamily: 'Anton, sans-serif', fontSize: '0.75rem', letterSpacing: '0.12em', cursor: 'pointer', padding: 0, transition: 'opacity 0.15s' }}
+                        onMouseEnter={e => { e.currentTarget.style.opacity = '0.75' }}
+                        onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}>
+                        EXECUTAR →
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Notas com timestamp */}
               <div>

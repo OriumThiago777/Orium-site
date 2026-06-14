@@ -25,6 +25,19 @@ import {
   StatusBadge,
   DeliverableLabel,
 } from './shared'
+import { getSugestao } from '@/lib/proximo-passo'
+
+const URGENCIA_COR: Record<'alta' | 'media' | 'baixa', string> = {
+  alta: '#FF6B00',
+  media: '#999',
+  baixa: '#555',
+}
+
+const URGENCIA_PREFIXO: Record<'alta' | 'media' | 'baixa', string> = {
+  alta: '⚡',
+  media: '→',
+  baixa: '·',
+}
 
 // ─── Kanban Card ─────────────────────────────────────────────────────────────
 function KanbanCard({ cliente, faseCor, faseNome, progresso, onProgressoLoaded, onSelect }: {
@@ -56,6 +69,14 @@ function KanbanCard({ cliente, faseCor, faseNome, progresso, onProgressoLoaded, 
   const avatarBg = FASE_AVATAR_BG[faseNome] ?? '#1a1a1a'
   const iniciais = getIniciais(cliente.nome)
   const borderSide = isDragging ? faseCor : hovered ? 'rgba(255,107,0,0.55)' : '#1a1a1a'
+
+  const sugestao = progresso ? getSugestao({
+    nome: cliente.nome,
+    faseAtual: cliente.faseAtual,
+    diasSemContato: diasDesdeInteracao(cliente),
+    etapasConcluidas: progresso.concluidas,
+    totalEtapas: progresso.total,
+  }) : null
 
   return (
     <div
@@ -100,6 +121,14 @@ function KanbanCard({ cliente, faseCor, faseNome, progresso, onProgressoLoaded, 
             </span>
             {cliente.precisaRelatorio && <span title="Precisa relatório" style={{ fontSize: '0.72rem', flexShrink: 0 }}>📊</span>}
           </div>
+          {sugestao && (
+            <p style={{
+              color: URGENCIA_COR[sugestao.urgencia], fontSize: '10px', fontFamily: 'Poppins, sans-serif',
+              margin: '0.125rem 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {URGENCIA_PREFIXO[sugestao.urgencia]} {sugestao.acao}
+            </p>
+          )}
         </div>
       </div>
 
