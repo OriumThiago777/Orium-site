@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import ToolBackground from '@/components/ToolBackground';
+import { useScrollSpy } from '@/lib/useScrollSpy';
 
 const CURSOS = [
   'Primeiros Socorros', 'PS Familiar em Geriatria', 'Suporte Básico de Vida',
@@ -24,6 +25,8 @@ const SIDEBAR_ITEMS = [
   { id: 'parte8', label: '8. Perguntas Abertas' },
 ];
 
+const SECTION_IDS = SIDEBAR_ITEMS.map(item => item.id);
+
 type CursoRow = { status: string; frequencia: string; alunos: string; preco: string; canal: string };
 const defaultCurso = (): CursoRow => ({ status: 'Ativo', frequencia: '', alunos: '', preco: '', canal: '' });
 
@@ -32,7 +35,7 @@ export default function BriefingCortexPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  const [activeSection, setActiveSection] = useState('parte1');
+  const [activeSection, setActiveSection] = useScrollSpy(SECTION_IDS);
 
   // Parte 1
   const [frase_marca, setFraseMarca] = useState('');
@@ -241,7 +244,7 @@ export default function BriefingCortexPage() {
     <div className="min-h-screen bg-[#080808] flex relative">
       <ToolBackground />
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-56' : 'w-0 overflow-hidden'} transition-all duration-300 flex-shrink-0 bg-[#0d0d0d] border-r border-[#1a1a1a] flex flex-col relative z-10`}>
+      <aside className={`${sidebarOpen ? 'w-56' : 'w-0 overflow-hidden'} transition-all duration-300 flex-shrink-0 bg-[#0d0d0d] border-r border-[#1a1a1a] flex flex-col sticky top-0 h-screen overflow-y-auto z-10`}>
         <div className="p-5 border-b border-[#1a1a1a]">
           <Link href="/hub">
             <img src="/lglaranja.png" alt="ORIUM" className="h-7 w-auto" />
