@@ -2,8 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import ToolBackground from '@/components/ToolBackground';
 import { useScrollSpy } from '@/lib/useScrollSpy';
+
+const FA = 'Anton, sans-serif';
+const FP = 'Poppins, sans-serif';
 
 const CURSOS = [
   'Primeiros Socorros', 'PS Familiar em Geriatria', 'Suporte Básico de Vida',
@@ -15,23 +19,36 @@ const CURSOS = [
 ];
 
 const SIDEBAR_ITEMS = [
-  { id: 'parte1', label: '1. A Marca' },
-  { id: 'parte2', label: '2. O Fundador' },
-  { id: 'parte3', label: '3. Os Públicos' },
-  { id: 'parte4', label: '4. Os Cursos' },
-  { id: 'parte5', label: '5. Presença Digital' },
-  { id: 'parte6', label: '6. Autoridade e Prova Social' },
-  { id: 'parte7', label: '7. Objetivos e Direção' },
-  { id: 'parte8', label: '8. Perguntas Abertas' },
+  { id: 'parte1', label: 'A Marca' },
+  { id: 'parte2', label: 'O Fundador' },
+  { id: 'parte3', label: 'Os Públicos' },
+  { id: 'parte4', label: 'Os Cursos' },
+  { id: 'parte5', label: 'Presença Digital' },
+  { id: 'parte6', label: 'Autoridade e Prova Social' },
+  { id: 'parte7', label: 'Objetivos e Direção' },
+  { id: 'parte8', label: 'Perguntas Abertas' },
 ];
 
 const SECTION_IDS = SIDEBAR_ITEMS.map(item => item.id);
+
+function PartHeader({ n, title }: { n: number; title: string }) {
+  return (
+    <div style={{ paddingBottom: '2rem', marginBottom: '2.5rem', borderBottom: '1px solid #141414' }}>
+      <p style={{ color: '#FF6B00', fontSize: '0.68rem', letterSpacing: '0.3em', textTransform: 'uppercase', marginBottom: '0.625rem', fontFamily: FP }}>
+        Parte {n} de {SECTION_IDS.length}
+      </p>
+      <h2 style={{ fontFamily: FA, fontSize: 'clamp(1.6rem, 3vw, 2.5rem)', color: '#fff', letterSpacing: '0.04em', lineHeight: 1, margin: 0 }}>
+        {title.toUpperCase()}
+      </h2>
+    </div>
+  );
+}
 
 type CursoRow = { status: string; frequencia: string; alunos: string; preco: string; canal: string };
 const defaultCurso = (): CursoRow => ({ status: 'Ativo', frequencia: '', alunos: '', preco: '', canal: '' });
 
 export default function BriefingCortexPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -190,12 +207,13 @@ export default function BriefingCortexPage() {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   }
 
-  const input = 'w-full bg-[#111] border border-[#222] rounded-lg px-4 py-3 text-white text-sm font-["Poppins"] placeholder-[#444] focus:outline-none focus:border-[#FF6B00] transition-colors';
+  const input = "w-full bg-[rgba(255,255,255,0.04)] border border-[#1e1e1e] rounded-[10px] px-5 py-3.5 text-white text-[0.9rem] font-['Poppins'] placeholder-[#444] outline-none transition-colors duration-200 focus:border-[#FF6B00]";
   const ta = input + ' resize-none min-h-[80px]';
-  const lbl = 'block text-xs font-["Poppins"] text-[#888] mb-2 uppercase tracking-wider';
-  const secTitle = 'font-["Anton"] text-[#FF6B00] text-base uppercase tracking-wide mb-4 mt-8';
-  const partTitle = 'font-["Anton"] text-white text-2xl uppercase tracking-wide mb-4 pb-3 border-b border-[#222]';
+  const lbl = "block text-[#444] text-[0.68rem] tracking-[0.2em] uppercase mb-2 font-['Poppins']";
+  const secTitle = "text-[#2a2a2a] text-[0.65rem] tracking-[0.22em] uppercase mb-6 pb-3 border-b border-[#141414] mt-8 font-['Poppins']";
   const chk = 'w-4 h-4 rounded border-[#444] bg-[#111] cursor-pointer accent-[#FF6B00]';
+  const activeIndex = SECTION_IDS.indexOf(activeSection);
+  const progress = ((activeIndex + 1) / SECTION_IDS.length) * 100;
 
   function Checks({ options, state, setState }: { options: string[]; state: string[]; setState: (v: string[]) => void }) {
     return (
@@ -241,47 +259,104 @@ export default function BriefingCortexPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#080808] flex relative">
+    <div style={{ minHeight: '100vh', background: '#080808', fontFamily: FP, display: 'flex', position: 'relative' }}>
       <ToolBackground />
+
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-56' : 'w-0 overflow-hidden'} transition-all duration-300 flex-shrink-0 bg-[#0d0d0d] border-r border-[#1a1a1a] flex flex-col sticky top-0 h-screen overflow-y-auto z-10`}>
-        <div className="p-5 border-b border-[#1a1a1a]">
-          <Link href="/hub">
-            <img src="/lglaranja.png" alt="ORIUM" className="h-7 w-auto" />
-          </Link>
+      <div style={{ position: 'sticky', top: 0, width: sidebarCollapsed ? '60px' : '260px', flexShrink: 0, height: '100vh', zIndex: 10, transition: 'width 0.3s ease' }}>
+
+        {/* Toggle — círculo */}
+        <button
+          onClick={() => setSidebarCollapsed(c => !c)}
+          title={sidebarCollapsed ? 'Expandir' : 'Recolher'}
+          style={{ position: 'absolute', right: '-12px', top: '50%', transform: 'translateY(-50%)', zIndex: 20, width: '24px', height: '24px', background: '#0a0a0a', border: '1px solid #1e1e1e', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#333', fontSize: '0.65rem', transition: 'all 0.2s' }}
+          onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#FF6B00'; b.style.color = '#FF6B00'; }}
+          onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#1e1e1e'; b.style.color = '#333'; }}
+        >
+          {sidebarCollapsed ? '›' : '‹'}
+        </button>
+
+        <div style={{ width: '100%', height: '100%', borderRight: '1px solid #0f0f0f', display: 'flex', flexDirection: 'column', background: 'rgba(8,8,8,0.97)', backdropFilter: 'blur(16px)', overflow: 'hidden' }}>
+
+          {/* ZONA 1 — Logo */}
+          {!sidebarCollapsed ? (
+            <div style={{ padding: '1.5rem 1.75rem', borderBottom: '1px solid #0f0f0f', flexShrink: 0 }}>
+              <Link href="/" className="inline-block cursor-pointer transition-opacity hover:opacity-80">
+                <Image src="/lglaranja.png" alt="ORIUM" width={90} height={28} style={{ objectFit: 'contain' }} />
+              </Link>
+              <p style={{ color: '#444444', fontSize: '0.62rem', letterSpacing: '0.2em', textTransform: 'uppercase', fontFamily: FP, marginTop: '0.5rem', marginBottom: 0 }}>BRIEFING — CÓRTEX HUB</p>
+            </div>
+          ) : (
+            <div style={{ flexShrink: 0, height: '60px', borderBottom: '1px solid #0f0f0f' }} />
+          )}
+
+          {/* ZONA 2 — Partes */}
+          <div style={{ flex: 1, overflowY: 'hidden' }}>
+            {!sidebarCollapsed && (
+              <p style={{ color: '#444444', fontSize: '0.58rem', letterSpacing: '0.25em', textTransform: 'uppercase', padding: '1.25rem 1.75rem 0.75rem', margin: 0 }}>PARTES</p>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {SIDEBAR_ITEMS.map((item, i) => {
+                const isActive = activeSection === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => scrollTo(item.id)}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: sidebarCollapsed ? 'center' : 'flex-start', gap: '0.75rem', padding: sidebarCollapsed ? '0.875rem 0' : '0.7rem 1.75rem', background: isActive ? 'rgba(255,107,0,0.15)' : 'transparent', border: 'none', borderLeft: sidebarCollapsed ? 'none' : `2px solid ${isActive ? '#FF6B00' : 'transparent'}`, outline: 'none', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.2s', boxSizing: 'border-box' as const }}
+                    onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; }}
+                    onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                  >
+                    <span style={{ fontFamily: FA, fontSize: '0.65rem', letterSpacing: '0.05em', minWidth: '20px', flexShrink: 0, color: isActive ? '#FF6B00' : '#555555', transition: 'color 0.2s' }}>
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    {!sidebarCollapsed && (
+                      <span style={{ fontSize: '0.78rem', color: isActive ? '#fff' : '#888888', fontFamily: FP, fontWeight: isActive ? 600 : 400, lineHeight: 1.3, transition: 'color 0.2s' }}>
+                        {item.label}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ZONA 3 — Progresso */}
+          {!sidebarCollapsed && (
+            <div style={{ borderTop: '1px solid #0f0f0f', padding: '1.25rem 1.75rem', flexShrink: 0 }}>
+              <p style={{ color: '#444444', fontSize: '0.58rem', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '0.625rem' }}>PROGRESSO</p>
+              <div style={{ height: '2px', background: '#111', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${progress}%`, background: '#FF6B00', borderRadius: '2px', transition: 'width 0.5s ease' }} />
+              </div>
+              <p style={{ color: '#2a2a2a', fontSize: '0.7rem', marginTop: '0.5rem' }}>{Math.round(progress)}% concluído</p>
+            </div>
+          )}
+
+          {/* ZONA 4 — Painel */}
+          <div style={{ borderTop: '1px solid #0f0f0f', padding: sidebarCollapsed ? '1rem 0' : '1rem 1.75rem 1.5rem', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.625rem', alignItems: sidebarCollapsed ? 'center' : 'flex-start' }}>
+            <a
+              href="/hub"
+              title="Voltar ao painel"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#888888', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none', transition: 'all 0.15s', fontFamily: FP, border: '1px solid #1e1e1e', padding: '8px 12px', borderRadius: '8px' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; e.currentTarget.style.borderColor = '#FF6B00'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#888888'; e.currentTarget.style.borderColor = '#1e1e1e'; }}
+            >
+              <span>←</span>
+              {!sidebarCollapsed && <span>PAINEL</span>}
+            </a>
+          </div>
+
         </div>
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {SIDEBAR_ITEMS.map(item => (
-            <button key={item.id} onClick={() => scrollTo(item.id)}
-              className={`w-full text-left px-3 py-2 rounded-lg text-xs font-['Poppins'] transition-colors ${activeSection === item.id ? 'bg-[#FF6B00]/10 text-[#FF6B00]' : 'text-[#666] hover:text-white hover:bg-[#111]'}`}>
-              {item.label}
-            </button>
-          ))}
-        </nav>
-      </aside>
+      </div>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col min-h-screen relative z-10">
-        {/* Header */}
-        <header className="flex items-center justify-between px-8 py-5 border-b border-[#1a1a1a] sticky top-0 bg-[#080808] z-10">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-lg hover:bg-[#111] text-[#555] hover:text-white transition-colors">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <div className="text-center">
-            <p className="font-['Anton'] text-white text-base uppercase tracking-widest">Briefing Estratégico</p>
-            <p className="font-['Poppins'] text-[#FF6B00] text-xs tracking-wider">Córtex Hub</p>
-          </div>
-          <div className="w-9" />
-        </header>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, position: 'relative', zIndex: 1 }}>
 
         {/* Form */}
-        <main className="flex-1 px-8 py-10 max-w-3xl mx-auto w-full space-y-16">
+        <main className="flex-1 px-16 py-10 max-w-[720px] w-full space-y-16">
 
           {/* PARTE 1 */}
           <section id="parte1">
-            <p className={partTitle}>1. A Marca</p>
+            <PartHeader n={1} title="A Marca" />
             <p className={secTitle}>1.1 Identidade</p>
             <div className="space-y-5">
               <div><label className={lbl}>Frase da marca</label><textarea className={ta} value={frase_marca} onChange={e => setFraseMarca(e.target.value)} placeholder="A frase que resume o que a Córtex é..." /></div>
@@ -311,7 +386,7 @@ export default function BriefingCortexPage() {
 
           {/* PARTE 2 */}
           <section id="parte2">
-            <p className={partTitle}>2. O Fundador</p>
+            <PartHeader n={2} title="O Fundador" />
             <p className={secTitle}>2.1 Marcelo Félix</p>
             <div className="space-y-5">
               <div><label className={lbl}>Momento de origem da Córtex</label><textarea className={ta} value={momento_origem} onChange={e => setMomentoOrigem(e.target.value)} /></div>
@@ -336,7 +411,7 @@ export default function BriefingCortexPage() {
 
           {/* PARTE 3 */}
           <section id="parte3">
-            <p className={partTitle}>3. Os Públicos</p>
+            <PartHeader n={3} title="Os Públicos" />
             <p className={secTitle}>3.1 Profissionais e estudantes de saúde</p>
             <div className="space-y-5">
               <div><label className={lbl}>Aluno típico (Idade / Área / Nível / Onde trabalha / Como chegou / O que sentia antes)</label><textarea className={ta} rows={5} value={aluno_tipico} onChange={e => setAlunoTipico(e.target.value)} /></div>
@@ -375,34 +450,34 @@ export default function BriefingCortexPage() {
 
           {/* PARTE 4 */}
           <section id="parte4">
-            <p className={partTitle}>4. Os Cursos</p>
+            <PartHeader n={4} title="Os Cursos" />
             <p className={secTitle}>4.1 Portfólio atual</p>
-            <div className="overflow-x-auto rounded-lg border border-[#222] mb-6">
+            <div className="overflow-x-auto rounded-[10px] border border-[#1e1e1e] mb-6">
               <table className="w-full text-xs font-['Poppins']">
                 <thead>
-                  <tr className="border-b border-[#222]">
-                    <th className="text-left px-3 py-3 text-[#555] font-normal">Curso</th>
-                    <th className="text-left px-3 py-3 text-[#555] font-normal">Status</th>
-                    <th className="text-left px-3 py-3 text-[#555] font-normal">Frequência</th>
-                    <th className="text-left px-3 py-3 text-[#555] font-normal">Alunos/turma</th>
-                    <th className="text-left px-3 py-3 text-[#555] font-normal">Preço médio</th>
-                    <th className="text-left px-3 py-3 text-[#555] font-normal">Canal inscrição</th>
+                  <tr className="border-b border-[#1e1e1e]">
+                    <th className="text-left px-3 py-3 text-[#444] font-normal">Curso</th>
+                    <th className="text-left px-3 py-3 text-[#444] font-normal">Status</th>
+                    <th className="text-left px-3 py-3 text-[#444] font-normal">Frequência</th>
+                    <th className="text-left px-3 py-3 text-[#444] font-normal">Alunos/turma</th>
+                    <th className="text-left px-3 py-3 text-[#444] font-normal">Preço médio</th>
+                    <th className="text-left px-3 py-3 text-[#444] font-normal">Canal inscrição</th>
                   </tr>
                 </thead>
                 <tbody>
                   {CURSOS.map((curso, i) => (
-                    <tr key={curso} className={`border-b border-[#1a1a1a] ${i % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#080808]'}`}>
+                    <tr key={curso} className={`border-b border-[#141414] ${i % 2 === 0 ? 'bg-[rgba(255,255,255,0.02)]' : 'bg-transparent'}`}>
                       <td className="px-3 py-2 text-[#ccc] whitespace-nowrap">{curso}</td>
                       <td className="px-3 py-2">
-                        <select className="bg-[#111] border border-[#222] rounded px-2 py-1 text-white text-xs focus:outline-none focus:border-[#FF6B00]"
+                        <select className="bg-[rgba(255,255,255,0.04)] border border-[#1e1e1e] rounded-[8px] px-2 py-1 text-white text-xs outline-none focus:border-[#FF6B00]"
                           value={cursos[curso].status} onChange={e => updateCurso(curso, 'status', e.target.value)}>
                           {['Ativo', 'Pausado', 'Em breve'].map(s => <option key={s}>{s}</option>)}
                         </select>
                       </td>
-                      <td className="px-3 py-2"><input className="bg-[#111] border border-[#222] rounded px-2 py-1 text-white text-xs w-24 focus:outline-none focus:border-[#FF6B00]" value={cursos[curso].frequencia} onChange={e => updateCurso(curso, 'frequencia', e.target.value)} placeholder="Ex: mensal" /></td>
-                      <td className="px-3 py-2"><input type="number" className="bg-[#111] border border-[#222] rounded px-2 py-1 text-white text-xs w-16 focus:outline-none focus:border-[#FF6B00]" value={cursos[curso].alunos} onChange={e => updateCurso(curso, 'alunos', e.target.value)} /></td>
-                      <td className="px-3 py-2"><input className="bg-[#111] border border-[#222] rounded px-2 py-1 text-white text-xs w-24 focus:outline-none focus:border-[#FF6B00]" value={cursos[curso].preco} onChange={e => updateCurso(curso, 'preco', e.target.value)} placeholder="R$" /></td>
-                      <td className="px-3 py-2"><input className="bg-[#111] border border-[#222] rounded px-2 py-1 text-white text-xs w-28 focus:outline-none focus:border-[#FF6B00]" value={cursos[curso].canal} onChange={e => updateCurso(curso, 'canal', e.target.value)} placeholder="WhatsApp, site..." /></td>
+                      <td className="px-3 py-2"><input className="bg-[rgba(255,255,255,0.04)] border border-[#1e1e1e] rounded-[8px] px-2 py-1 text-white text-xs w-24 outline-none focus:border-[#FF6B00]" value={cursos[curso].frequencia} onChange={e => updateCurso(curso, 'frequencia', e.target.value)} placeholder="Ex: mensal" /></td>
+                      <td className="px-3 py-2"><input type="number" className="bg-[rgba(255,255,255,0.04)] border border-[#1e1e1e] rounded-[8px] px-2 py-1 text-white text-xs w-16 outline-none focus:border-[#FF6B00]" value={cursos[curso].alunos} onChange={e => updateCurso(curso, 'alunos', e.target.value)} /></td>
+                      <td className="px-3 py-2"><input className="bg-[rgba(255,255,255,0.04)] border border-[#1e1e1e] rounded-[8px] px-2 py-1 text-white text-xs w-24 outline-none focus:border-[#FF6B00]" value={cursos[curso].preco} onChange={e => updateCurso(curso, 'preco', e.target.value)} placeholder="R$" /></td>
+                      <td className="px-3 py-2"><input className="bg-[rgba(255,255,255,0.04)] border border-[#1e1e1e] rounded-[8px] px-2 py-1 text-white text-xs w-28 outline-none focus:border-[#FF6B00]" value={cursos[curso].canal} onChange={e => updateCurso(curso, 'canal', e.target.value)} placeholder="WhatsApp, site..." /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -428,7 +503,7 @@ export default function BriefingCortexPage() {
 
           {/* PARTE 5 */}
           <section id="parte5">
-            <p className={partTitle}>5. Presença Digital</p>
+            <PartHeader n={5} title="Presença Digital" />
             <p className={secTitle}>5.1 Instagram atual</p>
             <div className="space-y-5">
               <div><label className={lbl}>Frequência de postagem</label><textarea className={ta} value={frequencia_postagem} onChange={e => setFrequenciaPostagem(e.target.value)} /></div>
@@ -470,7 +545,7 @@ export default function BriefingCortexPage() {
 
           {/* PARTE 6 */}
           <section id="parte6">
-            <p className={partTitle}>6. Autoridade e Prova Social</p>
+            <PartHeader n={6} title="Autoridade e Prova Social" />
             <div className="space-y-5">
               <div><label className={lbl}>Total de alunos desde a fundação</label><input className={input} value={total_alunos} onChange={e => setTotalAlunos(e.target.value)} /></div>
               <div><label className={lbl}>Números de prova (turmas / certificados / nota média)</label><textarea className={ta} value={numeros_prova} onChange={e => setNumerosProva(e.target.value)} /></div>
@@ -483,7 +558,7 @@ export default function BriefingCortexPage() {
 
           {/* PARTE 7 */}
           <section id="parte7">
-            <p className={partTitle}>7. Objetivos e Direção</p>
+            <PartHeader n={7} title="Objetivos e Direção" />
             <p className={secTitle}>7.1 Objetivos</p>
             <div className="space-y-5">
               <div>
@@ -517,7 +592,7 @@ export default function BriefingCortexPage() {
 
           {/* PARTE 8 */}
           <section id="parte8">
-            <p className={partTitle}>8. Perguntas Abertas</p>
+            <PartHeader n={8} title="Perguntas Abertas" />
             <div className="space-y-5">
               <div><label className={lbl}>O que querem que as pessoas digam da Córtex</label><textarea className={ta} value={o_que_digam} onChange={e => setOQueDigam(e.target.value)} /></div>
               <div><label className={lbl}>Frustração com a comunicação atual</label><textarea className={ta} value={frustracao} onChange={e => setFrustracao(e.target.value)} /></div>
@@ -534,9 +609,14 @@ export default function BriefingCortexPage() {
           )}
 
           <div className="pb-16">
-            <button onClick={handleSubmit} disabled={loading}
-              className="w-full bg-[#FF6B00] hover:bg-[#e05e00] disabled:bg-[#FF6B00]/40 disabled:cursor-not-allowed text-white font-['Anton'] uppercase tracking-widest text-sm py-4 rounded-lg transition-colors">
-              {loading ? 'Enviando...' : 'Enviar briefing'}
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              style={{ width: '100%', padding: '0.875rem 1.75rem', background: loading ? 'rgba(255,107,0,0.4)' : '#FF6B00', border: 'none', borderRadius: '8px', color: '#fff', fontFamily: FA, fontSize: '0.88rem', letterSpacing: '0.12em', textTransform: 'uppercase' as const, cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 16px rgba(255,107,0,0.2)' }}
+              onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#e55f00'; }}
+              onMouseLeave={e => { if (!loading) e.currentTarget.style.background = '#FF6B00'; }}
+            >
+              {loading ? 'ENVIANDO...' : 'ENVIAR BRIEFING'}
             </button>
           </div>
 
