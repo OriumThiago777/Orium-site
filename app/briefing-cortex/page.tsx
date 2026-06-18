@@ -6,7 +6,6 @@ import Image from 'next/image';
 import ToolBackground from '@/components/ToolBackground';
 import { useScrollSpy } from '@/lib/useScrollSpy';
 
-const FA = 'Anton, sans-serif';
 const FP = 'Poppins, sans-serif';
 
 const CURSOS = [
@@ -37,7 +36,7 @@ function PartHeader({ n, title }: { n: number; title: string }) {
       <p style={{ color: '#FF6B00', fontSize: '0.68rem', letterSpacing: '0.3em', textTransform: 'uppercase', marginBottom: '0.625rem', fontFamily: FP }}>
         Parte {n} de {SECTION_IDS.length}
       </p>
-      <h2 style={{ fontFamily: FA, fontSize: 'clamp(1.6rem, 3vw, 2.5rem)', color: '#fff', letterSpacing: '0.04em', lineHeight: 1, margin: 0 }}>
+      <h2 style={{ fontFamily: FP, fontSize: 'clamp(1.6rem, 3vw, 2.5rem)', color: '#fff', letterSpacing: '0.04em', lineHeight: 1, margin: 0 }}>
         {title.toUpperCase()}
       </h2>
     </div>
@@ -250,7 +249,7 @@ export default function BriefingCortexPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <p className="font-['Anton'] text-white text-2xl uppercase tracking-wide mb-2">Briefing enviado</p>
+          <p className="font-['Poppins'] text-white text-2xl uppercase tracking-wide mb-2">Briefing enviado</p>
           <p className="font-['Poppins'] text-[#666] text-sm mb-8">As respostas foram registradas no Notion.</p>
           <Link href="/hub" className="text-[#FF6B00] font-['Poppins'] text-sm underline">Voltar ao hub</Link>
         </div>
@@ -306,7 +305,7 @@ export default function BriefingCortexPage() {
                     onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; }}
                     onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
                   >
-                    <span style={{ fontFamily: FA, fontSize: '0.65rem', letterSpacing: '0.05em', minWidth: '20px', flexShrink: 0, color: isActive ? '#FF6B00' : '#555555', transition: 'color 0.2s' }}>
+                    <span style={{ fontFamily: FP, fontSize: '0.65rem', letterSpacing: '0.05em', minWidth: '20px', flexShrink: 0, color: isActive ? '#FF6B00' : '#555555', transition: 'color 0.2s' }}>
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     {!sidebarCollapsed && (
@@ -612,7 +611,7 @@ export default function BriefingCortexPage() {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              style={{ width: '100%', padding: '0.875rem 1.75rem', background: loading ? 'rgba(255,107,0,0.4)' : '#FF6B00', border: 'none', borderRadius: '8px', color: '#fff', fontFamily: FA, fontSize: '0.88rem', letterSpacing: '0.12em', textTransform: 'uppercase' as const, cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 16px rgba(255,107,0,0.2)' }}
+              style={{ width: '100%', padding: '0.875rem 1.75rem', background: loading ? 'rgba(255,107,0,0.4)' : '#FF6B00', border: 'none', borderRadius: '8px', color: '#fff', fontFamily: FP, fontSize: '0.88rem', letterSpacing: '0.12em', textTransform: 'uppercase' as const, cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 16px rgba(255,107,0,0.2)' }}
               onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#e55f00'; }}
               onMouseLeave={e => { if (!loading) e.currentTarget.style.background = '#FF6B00'; }}
             >
