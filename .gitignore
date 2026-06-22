@@ -43,3 +43,9 @@ CLAUDE.md
 
 # Claude Code superpowers (estado de sessão efêmero)
 .superpowers/
+
+# Claude/local operational files
+.claude/worktrees/
+.claude/skills/
+docs/superpowers/plans/
+*.patch

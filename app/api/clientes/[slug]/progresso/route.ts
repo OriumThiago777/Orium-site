@@ -5,8 +5,13 @@ import { notionQuery, NotionError } from '@/lib/notion'
 const DB_ID = process.env.NOTION_DB_DOCUMENTOS
 
 const ETAPAS = [
-  'Raio-X', 'Briefing', 'Proposta', 'Contrato',
-  'Calendário', 'Relatório', 'Checklist',
+  'Raio-X',
+  'Briefing',
+  'Proposta',
+  'Contrato',
+  'Calendário',
+  'Relatório',
+  'Checklist',
 ] as const
 
 type EtapaDoc = {
@@ -18,11 +23,13 @@ type EtapaDoc = {
 
 export async function GET(request: Request) {
   if (!verificarToken(request)) return respostaNaoAutorizada()
+
   try {
     const { searchParams } = new URL(request.url)
     const nome = searchParams.get('nome')
+
     if (!nome) {
-      return NextResponse.json({ error: 'Parâmetro nome obrigatório' }, { status: 400 })
+      return NextResponse.json({ error: 'Parametro nome obrigatorio' }, { status: 400 })
     }
 
     let data
@@ -39,12 +46,14 @@ export async function GET(request: Request) {
       }
       throw err
     }
-    const docs = (data.results ?? []) as EtapaDoc[]
 
+    const docs = (data.results ?? []) as EtapaDoc[]
     const docMap = new Map<string, string | null>()
+
     for (const doc of docs) {
       const tipo = doc.properties.Tipo?.select?.name
       if (!tipo) continue
+
       const link = doc.properties['Link Drive']?.url ?? null
       if (!docMap.has(tipo) || (docMap.get(tipo) === null && link)) {
         docMap.set(tipo, link)
@@ -57,7 +66,7 @@ export async function GET(request: Request) {
       linkDrive: docMap.get(etapaNome) ?? null,
     }))
 
-    const concluidas = etapas.filter(e => e.concluida).length
+    const concluidas = etapas.filter(etapa => etapa.concluida).length
 
     return NextResponse.json({
       etapas,
@@ -66,7 +75,7 @@ export async function GET(request: Request) {
       percentual: Math.round((concluidas / 7) * 100),
     })
   } catch (err) {
-    console.error('GET /api/clientes/[id]/progresso:', err)
+    console.error('GET /api/clientes/[slug]/progresso:', err)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }
