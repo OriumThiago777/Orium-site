@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type CSSProperties, type FocusEvent, type FormEvent } from 'react'
+import { useState, type CSSProperties, type FocusEvent, type FormEvent, type MouseEvent } from 'react'
 import {
   FORMATO_OPTIONS,
   STATUS_OPTIONS,
@@ -18,24 +18,24 @@ type Props = {
 const inputStyle: CSSProperties = {
   width: '100%',
   background: 'rgba(255,255,255,0.04)',
-  border: '1px solid #1e1e1e',
-  borderRadius: '10px',
-  padding: '0.75rem 1rem',
+  border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: '4px',
+  padding: '0.6rem 0.75rem',
   color: '#fff',
-  fontSize: '0.9rem',
+  fontSize: '0.85rem',
   fontFamily: 'Poppins, sans-serif',
   outline: 'none',
   boxSizing: 'border-box',
-  transition: 'border-color 0.15s',
+  transition: 'border-color 150ms',
 }
 
 const labelStyle: CSSProperties = {
   display: 'block',
-  fontSize: '0.72rem',
+  fontSize: '0.7rem',
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
-  color: '#666',
-  marginBottom: '0.4rem',
+  color: 'rgba(255,255,255,0.4)',
+  marginBottom: '6px',
   fontFamily: 'Poppins, sans-serif',
 }
 
@@ -44,7 +44,31 @@ function focusOrange(e: FocusEvent<HTMLInputElement | HTMLSelectElement | HTMLTe
 }
 
 function blurGray(e: FocusEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
-  e.target.style.borderColor = '#1e1e1e'
+  e.target.style.borderColor = 'rgba(255,255,255,0.08)'
+}
+
+function hoverCancelarIn(e: MouseEvent<HTMLButtonElement>) {
+  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'
+}
+
+function hoverCancelarOut(e: MouseEvent<HTMLButtonElement>) {
+  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'
+}
+
+function hoverSalvarIn(e: MouseEvent<HTMLButtonElement>) {
+  e.currentTarget.style.background = '#e55f00'
+}
+
+function hoverSalvarOut(e: MouseEvent<HTMLButtonElement>) {
+  e.currentTarget.style.background = '#FF6B00'
+}
+
+function hoverExcluirIn(e: MouseEvent<HTMLButtonElement>) {
+  e.currentTarget.style.background = 'rgba(220,38,38,0.2)'
+}
+
+function hoverExcluirOut(e: MouseEvent<HTMLButtonElement>) {
+  e.currentTarget.style.background = 'rgba(220,38,38,0.12)'
 }
 
 function gerarTitulo(ideia: string, formato: string, data: string) {
@@ -123,15 +147,15 @@ export default function ModalConteudo({ slug, item, dataInicial, onClose, onSave
 
   return (
     <div
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}
       onClick={onClose}
     >
       <form
         onSubmit={handleSalvar}
         onClick={e => e.stopPropagation()}
-        style={{ background: '#1C1C1C', border: '1px solid #2a2a2a', borderRadius: '12px', padding: '2rem', width: '100%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto' }}
+        style={{ background: '#111111', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', boxShadow: '0 24px 64px rgba(0,0,0,0.6)', padding: '1.75rem', width: 'calc(100% - 2rem)', maxWidth: '480px', maxHeight: '90vh', overflowY: 'auto' }}
       >
-        <h2 style={{ fontFamily: 'Anton, sans-serif', fontSize: '1.3rem', color: '#fff', letterSpacing: '0.04em', marginBottom: '1.5rem' }}>
+        <h2 style={{ fontFamily: 'Anton, sans-serif', fontSize: '1.1rem', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '1.5rem' }}>
           Nova ideia de conteúdo
         </h2>
 
@@ -153,7 +177,7 @@ export default function ModalConteudo({ slug, item, dataInicial, onClose, onSave
           <div style={{ flex: 1 }}>
             <label style={labelStyle}>TIPO DE CONTEÚDO</label>
             <select value={tipoConteudo} onChange={e => setTipoConteudo(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }} onFocus={focusOrange} onBlur={blurGray}>
-              {FORMATO_OPTIONS.map(option => <option key={option} value={option} style={{ background: '#1C1C1C' }}>{option}</option>)}
+              {FORMATO_OPTIONS.map(option => <option key={option} value={option} style={{ background: '#111111' }}>{option}</option>)}
             </select>
           </div>
           <div style={{ flex: 1 }}>
@@ -185,7 +209,7 @@ export default function ModalConteudo({ slug, item, dataInicial, onClose, onSave
           <div style={{ flex: 1 }}>
             <label style={labelStyle}>STATUS</label>
             <select value={status} onChange={e => setStatus(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }} onFocus={focusOrange} onBlur={blurGray}>
-              {STATUS_OPTIONS.map(option => <option key={option} value={option} style={{ background: '#1C1C1C' }}>{option}</option>)}
+              {STATUS_OPTIONS.map(option => <option key={option} value={option} style={{ background: '#111111' }}>{option}</option>)}
             </select>
           </div>
         </div>
@@ -196,7 +220,9 @@ export default function ModalConteudo({ slug, item, dataInicial, onClose, onSave
               type="button"
               onClick={handleExcluir}
               disabled={excluindo}
-              style={{ background: 'transparent', border: '1px solid #DC2626', borderRadius: '8px', color: '#DC2626', padding: '0.7rem 1.5rem', fontSize: '0.85rem', fontFamily: 'Poppins, sans-serif', cursor: excluindo ? 'default' : 'pointer', opacity: excluindo ? 0.6 : 1 }}
+              onMouseEnter={hoverExcluirIn}
+              onMouseLeave={hoverExcluirOut}
+              style={{ background: 'rgba(220,38,38,0.12)', border: '1px solid rgba(220,38,38,0.3)', borderRadius: '4px', color: '#ef4444', padding: '0.65rem 1.5rem', fontSize: '0.8rem', fontFamily: 'Poppins, sans-serif', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, transition: 'background 150ms', cursor: excluindo ? 'default' : 'pointer', opacity: excluindo ? 0.6 : 1 }}
             >
               {excluindo ? 'Excluindo...' : 'Excluir'}
             </button>
@@ -205,14 +231,18 @@ export default function ModalConteudo({ slug, item, dataInicial, onClose, onSave
             <button
               type="button"
               onClick={onClose}
-              style={{ background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '8px', color: '#999', padding: '0.7rem 1.5rem', fontSize: '0.85rem', fontFamily: 'Poppins, sans-serif', cursor: 'pointer' }}
+              onMouseEnter={hoverCancelarIn}
+              onMouseLeave={hoverCancelarOut}
+              style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', color: 'rgba(255,255,255,0.6)', padding: '0.65rem 1.5rem', fontSize: '0.8rem', fontFamily: 'Poppins, sans-serif', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, transition: 'border-color 150ms', cursor: 'pointer' }}
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={salvando}
-              style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', color: '#000', padding: '0.7rem 1.5rem', fontSize: '0.85rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.05em', cursor: salvando ? 'default' : 'pointer', opacity: salvando ? 0.6 : 1, boxShadow: '0 4px 20px rgba(255,107,0,0.2)' }}
+              onMouseEnter={hoverSalvarIn}
+              onMouseLeave={hoverSalvarOut}
+              style={{ background: '#FF6B00', border: 'none', borderRadius: '4px', color: '#000', padding: '0.65rem 1.5rem', fontSize: '0.8rem', fontFamily: 'Poppins, sans-serif', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, transition: 'background 150ms', cursor: salvando ? 'default' : 'pointer', opacity: salvando ? 0.6 : 1 }}
             >
               {salvando ? 'SALVANDO...' : 'SALVAR'}
             </button>
