@@ -28,10 +28,19 @@ type CalendarioResponse = {
   error?: string
 }
 
+type AbaId = 'calendario' | 'documentos' | 'relatorios'
+
+const ABAS: Array<{ id: AbaId; label: string; habilitada: boolean }> = [
+  { id: 'calendario', label: 'Calendário', habilitada: true },
+  { id: 'documentos', label: 'Documentos', habilitada: false },
+  { id: 'relatorios', label: 'Relatórios', habilitada: false },
+]
+
 export default function CalendarioClientePage() {
   const params = useParams<{ slug: string }>()
   const slug = params.slug
 
+  const [abaAtiva, setAbaAtiva] = useState<AbaId>('calendario')
   const [currentDate, setCurrentDate] = useState(() => new Date())
   const [items, setItems] = useState<CalendarioClienteItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -173,6 +182,58 @@ export default function CalendarioClientePage() {
         <div style={{ width: '120px' }} />
       </header>
 
+      <div style={{ display: 'flex', gap: '1.75rem', background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '0 1.5rem' }}>
+        {ABAS.map(aba => {
+          const ativa = abaAtiva === aba.id
+          const corTexto = ativa ? '#fff' : aba.habilitada ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.25)'
+
+          return (
+            <button
+              key={aba.id}
+              type="button"
+              onClick={() => {
+                if (aba.habilitada) setAbaAtiva(aba.id)
+              }}
+              disabled={!aba.habilitada}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                background: 'transparent',
+                border: 'none',
+                borderBottom: ativa ? '2px solid #FF6B00' : '2px solid transparent',
+                padding: '0.9rem 0',
+                margin: 0,
+                fontFamily: 'Poppins, sans-serif',
+                fontSize: '0.8rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: corTexto,
+                cursor: aba.habilitada ? 'pointer' : 'default',
+              }}
+            >
+              {aba.label}
+              {!aba.habilitada && (
+                <span
+                  style={{
+                    marginLeft: '6px',
+                    background: 'rgba(255,107,0,0.15)',
+                    color: '#FF6B00',
+                    borderRadius: '4px',
+                    padding: '1px 5px',
+                    fontSize: '0.6rem',
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  EM BREVE
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      {abaAtiva === 'calendario' && (
+      <>
       <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '2rem 1.5rem 4rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
           <button type="button" onClick={() => navegarMes(-1)} style={navBtnStyle} aria-label="Mês anterior">
@@ -305,6 +366,8 @@ export default function CalendarioClientePage() {
           onClose={() => setModalOpen(false)}
           onSaved={carregarItens}
         />
+      )}
+      </>
       )}
     </div>
   )
