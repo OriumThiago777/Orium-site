@@ -14,60 +14,52 @@ const GRAIN =
 
 const projetos = [
   {
-    nome: "Altemans Barbearia",
-    ramo: "Beleza & Estética",
+    nome: "Infinity",
+    foto: "/fotos/infinity-capa.jpg",
     descricao:
-      "Gestão mensal completa da presença digital. Planejamento de conteúdo, produção de posts, stories e vídeos com identidade consistente e comunicação alinhada ao posicionamento da marca.",
-    tags: ["Social Media", "Produção de Conteúdo", "Planejamento Mensal"],
-    instagram: "https://www.instagram.com/altemansbarbearia",
+      "A marca já tinha mercado. Faltava posicionamento que tornasse isso visível. Trabalhamos expansão de identidade visual, ensaios fotográficos e vídeos estratégicos com campanhas orientadas a alcance e reconhecimento de marca.",
+    link: "",
+    semLink: true,
+  },
+  {
+    nome: "Vetz",
+    foto: "/fotos/vetz-capa.jpg",
+    descricao:
+      "Captação audiovisual para mostrar o que uma clínica veterinária de verdade parece por dentro. Fotos e vídeos que comunicam cuidado, estrutura e competência, construindo presença digital que atrai tutores com intenção real.",
+    link: "",
+    semLink: true,
+  },
+  {
+    nome: "Harmonize Gold",
+    foto: "/fotos/harmonize-gold-capa.jpg",
+    descricao:
+      "Cobertura de workshops, eventos e treinamentos com produção voltada a posicionamento e autoridade. Fotos e vídeos institucionais que constroem presença de marca no mercado mineiro e consolidam a empresa como referência no segmento.",
+    link: "",
+    semLink: true,
+  },
+  {
+    nome: "Cervejaria Acuruí",
+    foto: "/fotos/cervejaria-acurui-capa.jpg",
+    descricao:
+      "Cobertura audiovisual de eventos com produção estratégica de fotos e vídeos. Conteúdo que reforça identidade, valoriza a experiência do público e amplia o alcance da marca nas redes.",
+    link: "",
+    semLink: true,
+  },
+  {
+    nome: "Altemans Barbearia",
+    foto: "/fotos/altemans-capa.jpg",
+    descricao:
+      "Gestão completa da presença digital: planejamento mensal, posts, stories e vídeos com identidade visual consolidada. Conteúdo que posiciona a barbearia como referência e atrai o cliente certo.",
+    link: "https://www.instagram.com/altemansbarbearia",
+    semLink: false,
   },
   {
     nome: "Prof. Marcelo Félix",
-    ramo: "Educação",
+    foto: "/fotos/marcelo-capa.jpg",
     descricao:
       "Posicionamento profissional e autoridade digital para especialista em urgência e emergência. Identidade de comunicação estruturada e canais de captação para cursos e formações.",
-    tags: ["Posicionamento", "Autoridade Digital", "Estratégia de Conteúdo"],
-    instagram: "https://www.instagram.com/prof.marcelofelix",
-  },
-  {
-    nome: "Ogarete Restaurante Árabe",
-    ramo: "Alimentação",
-    descricao:
-      "Reestruturação completa da presença digital. Identidade visual exclusiva, reconstrução do Instagram e gestão integral — captação, conteúdo, publicação e planejamento contínuo.",
-    tags: ["Social Media", "Identidade Visual", "Direção Criativa", "Gestão Completa"],
-    instagram: "https://www.instagram.com/ogarete.culinariaarabe",
-  },
-  {
-    nome: "Forno House",
-    ramo: "Alimentação",
-    descricao:
-      "Fortalecimento de marca e valorização de produtos via presença digital estratégica. Identidade visual, direção criativa e gestão contínua com comunicação alinhada ao posicionamento.",
-    tags: ["Social Media", "Identidade Visual", "Direção Criativa", "Produção de Conteúdo"],
-    instagram: "https://www.instagram.com/fornohouse",
-  },
-  {
-    nome: "Boizão BBQ",
-    ramo: "Alimentação",
-    descricao:
-      "Reformulação estratégica da presença digital. Nova identidade visual, planejamento de conteúdo e gestão completa do perfil — captação, produção e direção criativa contínua.",
-    tags: ["Social Media", "Identidade Visual", "Direção Criativa", "Gestão Completa"],
-    instagram: "https://www.instagram.com/boizaobarbque",
-  },
-  {
-    nome: "Actos Espaço Terapêutico",
-    ramo: "Saúde & Bem-estar",
-    descricao:
-      "Presença digital construída do zero. Identidade visual, linguagem de marca, organização do perfil e planejamento de conteúdo alinhados aos valores e ao propósito da Actos.",
-    tags: ["Branding", "Social Media", "Direção Criativa", "Gestão Completa"],
-    instagram: "https://www.instagram.com/actosespacoterapeutico",
-  },
-  {
-    nome: "Campanhas Políticas — Itabirito/MG",
-    ramo: "Marketing Político",
-    descricao:
-      "Quatro campanhas eleitorais gerenciadas de ponta a ponta — identidade visual, marketing digital, produção audiovisual e materiais gráficos. Dois candidatos a vereador eleitos.",
-    tags: ["Marketing Político", "Estratégia Eleitoral", "Produção Audiovisual", "Comunicação Integrada"],
-    instagram: null,
+    link: "",
+    semLink: true,
   },
 ];
 
@@ -446,11 +438,14 @@ export default function Home() {
                     fontFamily: "'Anton', sans-serif",
                   }}
                 >
-                  Projetos
+                  O método aplicado.
+                  <br />
+                  <span style={{ color: "#FF6B00" }}>Os resultados falam.</span>
                 </h2>
               </div>
               <p className="text-zinc-400 max-w-md leading-[1.6] text-[0.95rem]">
-                Marcas que estruturamos, posicionamos e fazemos crescer.
+                Cada projeto começa com diagnóstico. Cada entrega segue o mesmo
+                padrão de percepção, estrutura e presença.
               </p>
             </div>
 
@@ -461,102 +456,61 @@ export default function Home() {
               {projetos.map((projeto) => (
                 <div
                   key={projeto.nome}
-                  data-ramo={projeto.ramo}
-                  className="flex flex-col justify-between transition-shadow duration-300 hover:shadow-[0_0_0_1px_rgba(255,107,0,0.2)]"
+                  className="group flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-[0_0_0_1px_rgba(255,107,0,0.2)]"
                   style={{
                     background: "#111111",
                     border: "1px solid rgba(255,255,255,0.06)",
                     borderRadius: "12px",
-                    padding: "28px",
                   }}
                 >
-                  <div>
-                    <span
-                      className="inline-block px-3 py-1 uppercase"
-                      style={{
-                        background: "rgba(255,107,0,0.1)",
-                        color: "#FF6B00",
-                        fontSize: "11px",
-                        letterSpacing: "0.08em",
-                        fontFamily: "Poppins, sans-serif",
-                        borderRadius: "999px",
-                      }}
-                    >
-                      {projeto.ramo}
-                    </span>
+                  <div className="relative w-full aspect-[4/3] overflow-hidden">
+                    <Image
+                      src={projeto.foto}
+                      alt={projeto.nome}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+
+                  <div className="flex flex-col flex-1" style={{ padding: "20px 24px 24px" }}>
                     <h3
-                      className="text-white"
-                      style={{
-                        fontFamily: "'Anton', sans-serif",
-                        fontSize: "20px",
-                        marginTop: "12px",
-                        lineHeight: 1.2,
-                      }}
+                      className="text-white font-semibold text-base"
+                      style={{ fontFamily: "Poppins, sans-serif" }}
                     >
                       {projeto.nome}
                     </h3>
-                    <p
-                      style={{
-                        fontFamily: "Poppins, sans-serif",
-                        fontSize: "13px",
-                        color: "#999999",
-                        marginTop: "8px",
-                        lineHeight: 1.6,
-                      }}
-                    >
+                    <p className="text-gray-400 text-sm mt-2 leading-relaxed line-clamp-4">
                       {projeto.descricao}
                     </p>
-                  </div>
 
-                  <div
-                    style={{
-                      marginTop: "auto",
-                      paddingTop: "16px",
-                      borderTop: "1px solid rgba(255,255,255,0.04)",
-                    }}
-                  >
-                    <div className="flex flex-wrap gap-2">
-                      {projeto.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-3 py-1"
-                          style={{
-                            background: "rgba(255,255,255,0.05)",
-                            color: "#666666",
-                            fontSize: "11px",
-                            fontFamily: "Poppins, sans-serif",
-                            borderRadius: "999px",
-                          }}
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    {projeto.instagram !== null && (
+                    {projeto.semLink ? (
+                      <span
+                        className="inline-block"
+                        style={{
+                          marginTop: "14px",
+                          color: "#666666",
+                          fontSize: "11px",
+                          letterSpacing: "0.08em",
+                          fontFamily: "Poppins, sans-serif",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Projeto confidencial
+                      </span>
+                    ) : (
                       <a
-                        href={projeto.instagram}
+                        href={projeto.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2"
+                        className="inline-flex items-center gap-1"
                         style={{
-                          marginTop: "10px",
+                          marginTop: "14px",
                           color: "#FF6B00",
-                          fontSize: "12px",
+                          fontSize: "13px",
                           fontFamily: "Poppins, sans-serif",
                         }}
                       >
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <rect x="2" y="2" width="20" height="20" rx="5" stroke="#FF6B00" strokeWidth="2" />
-                          <circle cx="12" cy="12" r="4" stroke="#FF6B00" strokeWidth="2" />
-                          <circle cx="17.5" cy="6.5" r="1.2" fill="#FF6B00" />
-                        </svg>
-                        Ver perfil
+                        Ver projeto →
                       </a>
                     )}
                   </div>
