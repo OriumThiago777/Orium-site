@@ -6,6 +6,7 @@ import {
   STATUS_OPTIONS,
   type CalendarioClienteItem,
 } from '@/lib/clientes-calendario'
+import type { Roteiro } from '@/lib/roteiros-altemans'
 
 type Props = {
   slug: string
@@ -14,6 +15,7 @@ type Props = {
   onClose: () => void
   onSaved: () => void
   onDeleted: (id: string) => void
+  sugestoes?: Roteiro[]
 }
 
 const inputStyle: CSSProperties = {
@@ -85,7 +87,7 @@ function getCriadoPor(quemVaiFazer: string) {
   return quemVaiFazer === 'ORIUM' ? 'ORIUM' : 'Cliente'
 }
 
-export default function ModalConteudo({ slug, item, dataInicial, onClose, onSaved, onDeleted }: Props) {
+export default function ModalConteudo({ slug, item, dataInicial, onClose, onSaved, onDeleted, sugestoes }: Props) {
   const [ideiaRoteiro, setIdeiaRoteiro] = useState(item?.sobre || item?.titulo || '')
   const [tipoConteudo, setTipoConteudo] = useState<string>(item?.formato || FORMATO_OPTIONS[0])
   const [quemVaiFazer, setQuemVaiFazer] = useState<string>(item?.quemGrava || '')
@@ -93,6 +95,12 @@ export default function ModalConteudo({ slug, item, dataInicial, onClose, onSave
   const [status, setStatus] = useState<string>(item?.status || STATUS_OPTIONS[0])
   const [salvando, setSalvando] = useState(false)
   const [excluindo, setExcluindo] = useState(false)
+  const [painelAberto, setPainelAberto] = useState(false)
+  const [roteiroSelecionado, setRoteiroSelecionado] = useState<string>(item?.observacoes || '')
+
+  const pilares = sugestoes
+    ? Array.from(new Set(sugestoes.map(r => r.pilar)))
+    : []
 
   async function handleSalvar(e: FormEvent) {
     e.preventDefault()
@@ -108,7 +116,7 @@ export default function ModalConteudo({ slug, item, dataInicial, onClose, onSave
         sobre: ideiaRoteiro,
         criadoPor: getCriadoPor(quemVaiFazer),
         status,
-        observacoes: item?.observacoes ?? '',
+        observacoes: roteiroSelecionado ? roteiroSelecionado.slice(0, 1500) : (item?.observacoes ?? ''),
       }
       const url = item
         ? `/api/clientes/${slug}/calendario/${item.id}`
@@ -172,6 +180,109 @@ export default function ModalConteudo({ slug, item, dataInicial, onClose, onSave
             onFocus={focusOrange}
             onBlur={blurGray}
           />
+
+          {sugestoes && sugestoes.length > 0 && (
+            <>
+              <button
+                type="button"
+                onClick={() => setPainelAberto(prev => !prev)}
+                style={{ background: 'transparent', border: 'none', color: '#FF6B00', fontFamily: 'Poppins, sans-serif', fontSize: '0.72rem', cursor: 'pointer', padding: '6px 0 0', marginTop: '4px' }}
+              >
+                {painelAberto ? 'Fechar sugestões ↑' : 'Ver sugestões de roteiro ↓'}
+              </button>
+
+              {painelAberto && (
+                <div
+                  style={{
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: '6px',
+                    maxHeight: '260px',
+                    overflowY: 'auto',
+                    padding: '0.75rem',
+                    marginTop: '0.5rem',
+                  }}
+                >
+                  {pilares.map((pilar, pilarIdx) => (
+                    <div key={pilar}>
+                      <p
+                        style={{
+                          fontFamily: 'Poppins, sans-serif',
+                          fontSize: '0.65rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.1em',
+                          color: 'rgba(255,255,255,0.3)',
+                          margin: pilarIdx === 0 ? '0 0 4px' : '12px 0 4px',
+                        }}
+                      >
+                        {pilar}
+                      </p>
+                      {sugestoes
+                        .filter(r => r.pilar === pilar)
+                        .map(r => (
+                          <button
+                            key={r.id}
+                            type="button"
+                            onClick={() => {
+                              setIdeiaRoteiro(r.titulo)
+                              setRoteiroSelecionado(r.roteiro)
+                              setPainelAberto(false)
+                            }}
+                            style={{
+                              display: 'block',
+                              width: '100%',
+                              textAlign: 'left',
+                              background: 'transparent',
+                              border: 'none',
+                              borderRadius: '4px',
+                              color: 'rgba(255,255,255,0.7)',
+                              fontFamily: 'Poppins, sans-serif',
+                              fontSize: '0.78rem',
+                              padding: '5px 8px',
+                              cursor: 'pointer',
+                              transition: 'background 150ms, color 150ms',
+                            }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.background = 'rgba(255,107,0,0.1)'
+                              e.currentTarget.style.color = '#FF6B00'
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.background = 'transparent'
+                              e.currentTarget.style.color = 'rgba(255,255,255,0.7)'
+                            }}
+                          >
+                            {r.titulo}
+                          </button>
+                        ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {roteiroSelecionado !== '' && (
+            <div style={{ marginTop: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <label style={{ ...labelStyle, marginBottom: 0 }}>ROTEIRO DE REFERÊNCIA</label>
+                <button
+                  type="button"
+                  onClick={() => setRoteiroSelecionado('')}
+                  style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.3)', fontFamily: 'Poppins, sans-serif', fontSize: '0.7rem', cursor: 'pointer', padding: 0 }}
+                >
+                  × limpar
+                </button>
+              </div>
+              <textarea
+                value={roteiroSelecionado}
+                onChange={e => setRoteiroSelecionado(e.target.value)}
+                rows={8}
+                style={{ ...inputStyle, resize: 'vertical', fontFamily: 'Poppins, sans-serif', fontSize: '0.78rem', lineHeight: 1.5 }}
+                onFocus={focusOrange}
+                onBlur={blurGray}
+              />
+            </div>
+          )}
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.1rem' }}>

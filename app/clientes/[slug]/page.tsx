@@ -15,6 +15,7 @@ import {
   toISODate,
   type CalendarioClienteItem,
 } from '@/lib/clientes-calendario'
+import { ROTEIROS_ALTEMANS } from '@/lib/roteiros-altemans'
 import ModalConteudo from './components/ModalConteudo'
 
 const DIAS_SEMANA = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB']
@@ -609,6 +610,7 @@ export default function CalendarioClientePage() {
           onClose={() => setModalOpen(false)}
           onSaved={carregarItens}
           onDeleted={id => setItems(prev => prev.filter(i => i.id !== id))}
+          sugestoes={slug === 'altemans' ? ROTEIROS_ALTEMANS : undefined}
         />
       )}
       </>
