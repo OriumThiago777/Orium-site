@@ -13,6 +13,7 @@ type Props = {
   dataInicial: string
   onClose: () => void
   onSaved: () => void
+  onDeleted: (id: string) => void
 }
 
 const inputStyle: CSSProperties = {
@@ -84,7 +85,7 @@ function getCriadoPor(quemVaiFazer: string) {
   return quemVaiFazer === 'ORIUM' ? 'ORIUM' : 'Cliente'
 }
 
-export default function ModalConteudo({ slug, item, dataInicial, onClose, onSaved }: Props) {
+export default function ModalConteudo({ slug, item, dataInicial, onClose, onSaved, onDeleted }: Props) {
   const [ideiaRoteiro, setIdeiaRoteiro] = useState(item?.sobre || item?.titulo || '')
   const [tipoConteudo, setTipoConteudo] = useState<string>(item?.formato || FORMATO_OPTIONS[0])
   const [quemVaiFazer, setQuemVaiFazer] = useState<string>(item?.quemGrava || '')
@@ -136,7 +137,7 @@ export default function ModalConteudo({ slug, item, dataInicial, onClose, onSave
     try {
       const res = await fetch(`/api/clientes/${slug}/calendario/${item.id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Falha ao excluir conteúdo')
-      onSaved()
+      onDeleted(item.id)
       onClose()
     } catch (err) {
       console.error('Erro ao excluir conteúdo do calendário:', err)

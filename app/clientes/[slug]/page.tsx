@@ -608,6 +608,7 @@ export default function CalendarioClientePage() {
           dataInicial={dataModal}
           onClose={() => setModalOpen(false)}
           onSaved={carregarItens}
+          onDeleted={id => setItems(prev => prev.filter(i => i.id !== id))}
         />
       )}
       </>
