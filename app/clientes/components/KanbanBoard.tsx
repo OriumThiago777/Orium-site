@@ -33,12 +33,6 @@ const URGENCIA_COR: Record<'alta' | 'media' | 'baixa', string> = {
   baixa: '#555',
 }
 
-const URGENCIA_PREFIXO: Record<'alta' | 'media' | 'baixa', string> = {
-  alta: '⚡',
-  media: '→',
-  baixa: '·',
-}
-
 // ─── Kanban Card ─────────────────────────────────────────────────────────────
 function KanbanCard({ cliente, faseCor, faseNome, progresso, onProgressoLoaded, onSelect }: {
   cliente: Cliente
@@ -126,7 +120,7 @@ function KanbanCard({ cliente, faseCor, faseNome, progresso, onProgressoLoaded, 
               color: URGENCIA_COR[sugestao.urgencia], fontSize: '10px', fontFamily: 'Poppins, sans-serif',
               margin: '0.125rem 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>
-              {URGENCIA_PREFIXO[sugestao.urgencia]} {sugestao.acao}
+              {sugestao.acao}
             </p>
           )}
         </div>

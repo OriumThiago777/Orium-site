@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, type ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { authHeaders } from '@/lib/auth'
@@ -25,6 +25,36 @@ import { KanbanBoard } from './components/KanbanBoard'
 import { VistaTable } from './components/TabelaClientes'
 import { VistaLeads } from './components/VistaLeads'
 import { VistaCalendario } from './components/VistaCalendario'
+import { VistaPortais } from './components/VistaPortais'
+
+// ─── Portais dos Clientes ──────────────────────────────────────────────────────
+const PORTAIS = [
+  { nome: 'Altemans Barbearia', slug: 'altemans', cor: '#FF6B00' },
+  { nome: 'Prof. Marcelo Félix', slug: 'marcelo', cor: '#2563EB' },
+  { nome: 'Córtex Hub',         slug: 'cortex',   cor: '#16A34A' },
+  { nome: 'Ekipar Acessórios',  slug: 'ekipar',   cor: '#9333EA' },
+]
+
+function PortaisDosClientes() {
+  return (
+    <div style={{ marginBottom: '2rem' }}>
+      <p style={{ fontFamily: 'Poppins, sans-serif', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.3)', marginBottom: '0.75rem' }}>
+        PORTAIS DOS CLIENTES
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.75rem' }}>
+        {PORTAIS.map(p => (
+          <a key={p.slug} href={`/clientes/${p.slug}`} target="_blank" rel="noopener noreferrer"
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderLeft: `3px solid ${p.cor}`, borderRadius: '6px', padding: '0.85rem 1rem', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'background 150ms, border-color 150ms' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}>
+            <span style={{ fontFamily: 'Poppins, sans-serif', fontSize: '0.82rem', fontWeight: 500, color: '#fff' }}>{p.nome}</span>
+            <span style={{ color: p.cor, fontSize: '0.9rem' }}>↗</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────
 function Dashboard({ clientes, onFiltrarEntregas }: { clientes: Cliente[]; onFiltrarEntregas: () => void }) {
@@ -152,7 +182,7 @@ function Dashboard({ clientes, onFiltrarEntregas }: { clientes: Cliente[]; onFil
 function ClientesContent() {
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [loading, setLoading] = useState(false)
-  const [vistaAtiva, setVistaAtiva] = useState<'kanban' | 'table' | 'leads' | 'calendario'>('kanban')
+  const [vistaAtiva, setVistaAtiva] = useState<'kanban' | 'table' | 'leads' | 'calendario' | 'portais'>('kanban')
   const [modalNovo, setModalNovo] = useState(false)
   const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(null)
   const [busca, setBusca] = useState('')
@@ -173,7 +203,7 @@ function ClientesContent() {
 
   useEffect(() => {
     const vista = new URLSearchParams(window.location.search).get('vista')
-    if (vista === 'kanban' || vista === 'table' || vista === 'leads' || vista === 'calendario') {
+    if (vista === 'kanban' || vista === 'table' || vista === 'leads' || vista === 'calendario' || vista === 'portais') {
       setVistaAtiva(vista)
     }
   }, [])
@@ -330,17 +360,26 @@ function ClientesContent() {
         {/* Dashboard */}
         <Dashboard clientes={clientes} onFiltrarEntregas={handleFiltrarEntregas} />
 
+        {/* Portais dos Clientes */}
+        <PortaisDosClientes />
+
         {/* Abas de vista */}
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
           {([
-            { key: 'kanban' as const, label: 'QUADROS', icon: null as string | null },
-            { key: 'table' as const, label: 'TABELA', icon: null as string | null },
-            { key: 'leads' as const, label: 'LEADS', icon: '👤' },
-            { key: 'calendario' as const, label: 'CALENDÁRIO', icon: '📅' },
+            { key: 'kanban' as const, label: 'QUADROS', icon: null as ReactNode },
+            { key: 'table' as const, label: 'TABELA', icon: null as ReactNode },
+            { key: 'leads' as const, label: 'LEADS', icon: '👤' as ReactNode },
+            { key: 'calendario' as const, label: 'CALENDÁRIO', icon: '📅' as ReactNode },
+            { key: 'portais' as const, label: 'PORTAIS', icon: (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              </svg>
+            ) as ReactNode },
           ]).map(v => (
             <button key={v.key} onClick={() => setVistaAtiva(v.key)}
               style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1.25rem', borderRadius: '6px', border: `1px solid ${vistaAtiva === v.key ? '#FF6B00' : '#333'}`, background: vistaAtiva === v.key ? '#FF6B00' : 'transparent', color: vistaAtiva === v.key ? '#fff' : '#777', fontFamily: 'Anton, sans-serif', fontSize: '0.82rem', letterSpacing: '0.12em', cursor: 'pointer', transition: 'all 0.15s' }}>
-              {v.icon && <span style={{ fontSize: '0.9rem' }}>{v.icon}</span>}
+              {v.icon && <span style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>{v.icon}</span>}
               {v.label}
             </button>
           ))}
@@ -379,6 +418,8 @@ function ClientesContent() {
           <VistaLeads />
         ) : vistaAtiva === 'calendario' ? (
           <VistaCalendario />
+        ) : vistaAtiva === 'portais' ? (
+          <VistaPortais clientes={clientes} />
         ) : loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '5rem', color: '#444', fontSize: '0.9rem' }}>
             Carregando clientes...
