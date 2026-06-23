@@ -298,9 +298,11 @@ export default function CalendarioClientePage() {
               style={{ width: 'min(220px, 52vw)', height: 'auto', objectFit: 'contain' }}
             />
           )}
-          <h1 style={{ fontFamily: 'Anton, sans-serif', fontSize: '1.4rem', letterSpacing: '0.04em', margin: 0, textAlign: 'center' }}>
-            {nomeCliente.toUpperCase()}
-          </h1>
+          {!clienteLogo && (
+            <h1 style={{ fontFamily: 'Anton, sans-serif', fontSize: '1.4rem', letterSpacing: '0.04em', margin: 0, textAlign: 'center' }}>
+              {nomeCliente.toUpperCase()}
+            </h1>
+          )}
         </div>
         <div style={{ width: '120px' }} />
       </header>
