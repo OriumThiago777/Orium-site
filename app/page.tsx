@@ -19,6 +19,7 @@ const projetos = [
     descricao:
       "A marca já tinha mercado. Faltava posicionamento que tornasse isso visível. Trabalhamos expansão de identidade visual, ensaios fotográficos e vídeos estratégicos com campanhas orientadas a alcance e reconhecimento de marca.",
     link: "",
+    linkLabel: "",
     semLink: true,
   },
   {
@@ -26,8 +27,9 @@ const projetos = [
     foto: "/fotos/vetz-capa.jpg",
     descricao:
       "Captação audiovisual para mostrar o que uma clínica veterinária de verdade parece por dentro. Fotos e vídeos que comunicam cuidado, estrutura e competência, construindo presença digital que atrai tutores com intenção real.",
-    link: "",
-    semLink: true,
+    link: "https://www.instagram.com/clinicavetz/",
+    linkLabel: "Ver perfil →",
+    semLink: false,
   },
   {
     nome: "Harmonize Gold",
@@ -35,6 +37,7 @@ const projetos = [
     descricao:
       "Cobertura de workshops, eventos e treinamentos com produção voltada a posicionamento e autoridade. Fotos e vídeos institucionais que constroem presença de marca no mercado mineiro e consolidam a empresa como referência no segmento.",
     link: "",
+    linkLabel: "",
     semLink: true,
   },
   {
@@ -43,6 +46,7 @@ const projetos = [
     descricao:
       "Cobertura audiovisual de eventos com produção estratégica de fotos e vídeos. Conteúdo que reforça identidade, valoriza a experiência do público e amplia o alcance da marca nas redes.",
     link: "",
+    linkLabel: "",
     semLink: true,
   },
   {
@@ -51,6 +55,7 @@ const projetos = [
     descricao:
       "Gestão completa da presença digital: planejamento mensal, posts, stories e vídeos com identidade visual consolidada. Conteúdo que posiciona a barbearia como referência e atrai o cliente certo.",
     link: "https://www.instagram.com/altemansbarbearia",
+    linkLabel: "Ver projeto →",
     semLink: false,
   },
   {
@@ -59,6 +64,7 @@ const projetos = [
     descricao:
       "Posicionamento profissional e autoridade digital para especialista em urgência e emergência. Identidade de comunicação estruturada e canais de captação para cursos e formações.",
     link: "",
+    linkLabel: "",
     semLink: true,
   },
 ];
@@ -483,21 +489,7 @@ export default function Home() {
                       {projeto.descricao}
                     </p>
 
-                    {projeto.semLink ? (
-                      <span
-                        className="inline-block"
-                        style={{
-                          marginTop: "14px",
-                          color: "#666666",
-                          fontSize: "11px",
-                          letterSpacing: "0.08em",
-                          fontFamily: "Poppins, sans-serif",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        Projeto confidencial
-                      </span>
-                    ) : (
+                    {!projeto.semLink && (
                       <a
                         href={projeto.link}
                         target="_blank"
@@ -510,7 +502,7 @@ export default function Home() {
                           fontFamily: "Poppins, sans-serif",
                         }}
                       >
-                        Ver projeto →
+                        {projeto.linkLabel}
                       </a>
                     )}
                   </div>
