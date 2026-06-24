@@ -9,7 +9,7 @@ type Documento = { tipo: string; nome: string; data: string; linkDrive: string }
 type Entrega = { titulo: string; data: string; status: string; tipo: string };
 
 type PortalDados = {
-  cliente: { nome: string; faseAtual: string };
+  cliente: { nome: string; faseAtual: string; slug: string | null };
   progresso: { etapas: Etapa[]; total: number; concluidas: number; percentual: number };
   documentos: Documento[];
   proximasEntregas: Entrega[];
@@ -107,6 +107,31 @@ export default function PortalClientePage() {
           )}
           <div style={{ width: '60px', height: '2px', background: '#FF6B00', margin: '1.5rem auto 0' }} />
         </header>
+
+        {cliente.slug && (
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <a
+              href={`/clientes/${cliente.slug}`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: 'rgba(255,107,0,0.1)',
+                border: '1px solid rgba(255,107,0,0.35)',
+                borderRadius: '8px',
+                padding: '0.875rem 2rem',
+                color: '#FF6B00',
+                fontFamily: 'Anton, sans-serif',
+                fontSize: '0.85rem',
+                letterSpacing: '0.12em',
+                textDecoration: 'none',
+                textTransform: 'uppercase',
+              }}
+            >
+              VER CALENDÁRIO DE CONTEÚDO →
+            </a>
+          </div>
+        )}
 
         {/* Seção 1 — Fase atual */}
         <section style={{ marginBottom: '3rem' }}>

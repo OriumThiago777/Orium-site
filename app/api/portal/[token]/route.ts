@@ -14,6 +14,7 @@ type ClientePage = {
   properties: {
     Nome?: { title?: Array<{ plain_text: string }> }
     'Fase Atual'?: { select?: { name: string } | null }
+    Slug?: { rich_text?: Array<{ plain_text: string }> }
   }
 }
 
@@ -62,6 +63,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
 
     const nome = clientePage.properties.Nome?.title?.[0]?.plain_text?.trim() || ''
     const faseAtual = clientePage.properties['Fase Atual']?.select?.name || ''
+    const slug = clientePage.properties.Slug?.rich_text?.[0]?.plain_text?.trim() || null
     const hoje = new Date().toISOString().slice(0, 10)
 
     const [documentosResult, calendarioResult] = await Promise.allSettled([
@@ -126,7 +128,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
     if (calendarioResult.status === 'rejected') console.error('GET /api/portal/[token] — calendario:', calendarioResult.reason)
 
     return NextResponse.json({
-      cliente: { nome, faseAtual },
+      cliente: { nome, faseAtual, slug },
       progresso,
       documentos,
       proximasEntregas: calendario,
