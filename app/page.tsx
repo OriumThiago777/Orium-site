@@ -20,6 +20,7 @@ const projetos = [
       "Gestão mensal completa da presença digital. Planejamento de conteúdo, produção de posts, stories e vídeos com identidade consistente e comunicação alinhada ao posicionamento da marca.",
     tags: ["Social Media", "Produção de Conteúdo", "Planejamento Mensal"],
     instagram: "https://www.instagram.com/altemansbarbearia",
+    foto: "/fotos/altemans-capa.jpg",
   },
   {
     nome: "Prof. Marcelo Félix",
@@ -28,6 +29,7 @@ const projetos = [
       "Posicionamento profissional e autoridade digital para especialista em urgência e emergência. Identidade de comunicação estruturada e canais de captação para cursos e formações.",
     tags: ["Posicionamento", "Autoridade Digital", "Estratégia de Conteúdo"],
     instagram: "https://www.instagram.com/prof.marcelofelix",
+    foto: "/fotos/marcelo-capa.jpg",
   },
   {
     nome: "Ogarete Restaurante Árabe",
@@ -36,6 +38,7 @@ const projetos = [
       "Reestruturação completa da presença digital. Identidade visual exclusiva, reconstrução do Instagram e gestão integral — captação, conteúdo, publicação e planejamento contínuo.",
     tags: ["Social Media", "Identidade Visual", "Direção Criativa", "Gestão Completa"],
     instagram: "https://www.instagram.com/ogarete.culinariaarabe",
+    foto: "/fotos/ogarete-capa.jpg",
   },
   {
     nome: "Forno House",
@@ -44,6 +47,7 @@ const projetos = [
       "Fortalecimento de marca e valorização de produtos via presença digital estratégica. Identidade visual, direção criativa e gestão contínua com comunicação alinhada ao posicionamento.",
     tags: ["Social Media", "Identidade Visual", "Direção Criativa", "Produção de Conteúdo"],
     instagram: "https://www.instagram.com/fornohouse",
+    foto: "/fotos/forno-house-capa.jpg",
   },
   {
     nome: "Boizão BBQ",
@@ -52,6 +56,7 @@ const projetos = [
       "Reformulação estratégica da presença digital. Nova identidade visual, planejamento de conteúdo e gestão completa do perfil — captação, produção e direção criativa contínua.",
     tags: ["Social Media", "Identidade Visual", "Direção Criativa", "Gestão Completa"],
     instagram: "https://www.instagram.com/boizaobarbque",
+    foto: "/fotos/boizao-capa.jpg",
   },
   {
     nome: "Actos Espaço Terapêutico",
@@ -60,6 +65,7 @@ const projetos = [
       "Presença digital construída do zero. Identidade visual, linguagem de marca, organização do perfil e planejamento de conteúdo alinhados aos valores e ao propósito da Actos.",
     tags: ["Branding", "Social Media", "Direção Criativa", "Gestão Completa"],
     instagram: "https://www.instagram.com/actosespacoterapeutico",
+    foto: "/fotos/actos-capa.jpg",
   },
   {
     nome: "Campanhas Políticas — Itabirito/MG",
@@ -68,6 +74,47 @@ const projetos = [
       "Quatro campanhas eleitorais gerenciadas de ponta a ponta — identidade visual, marketing digital, produção audiovisual e materiais gráficos. Dois candidatos a vereador eleitos.",
     tags: ["Marketing Político", "Estratégia Eleitoral", "Produção Audiovisual", "Comunicação Integrada"],
     instagram: null,
+    foto: "/fotos/campanha-politica-capa.jpg",
+  },
+  {
+    nome: "Infinity",
+    ramo: "MODA & LIFESTYLE",
+    descricao:
+      "A marca já tinha mercado. Faltava posicionamento que tornasse isso visível. Trabalhamos expansão de identidade visual, ensaios fotográficos e vídeos estratégicos com campanhas orientadas a alcance e reconhecimento de marca.",
+    instagram: "",
+    semLink: true,
+    tags: ["Identidade Visual", "Produção de Conteúdo", "Direção Criativa"],
+    foto: "/fotos/infinity-capa.jpg",
+  },
+  {
+    nome: "Vetz",
+    ramo: "PET & SAÚDE ANIMAL",
+    descricao:
+      "Captação audiovisual para mostrar o que uma clínica veterinária de verdade parece por dentro. Fotos e vídeos que comunicam cuidado, estrutura e competência, construindo presença digital que atrai tutores com intenção real.",
+    instagram: "https://www.instagram.com/clinicavetz/",
+    semLink: false,
+    tags: ["Produção de Conteúdo", "Social Media"],
+    foto: "/fotos/vetz-capa.jpg",
+  },
+  {
+    nome: "Harmonize Gold",
+    ramo: "SAÚDE & ESTÉTICA",
+    descricao:
+      "Cobertura de workshops, eventos e treinamentos com produção voltada a posicionamento e autoridade. Fotos e vídeos institucionais que constroem presença de marca no mercado mineiro e consolidam a empresa como referência no segmento.",
+    instagram: "",
+    semLink: true,
+    tags: ["Produção de Conteúdo", "Direção Criativa"],
+    foto: "/fotos/harmonize-gold-capa.jpg",
+  },
+  {
+    nome: "Cervejaria Acuruí",
+    ramo: "ALIMENTAÇÃO & EVENTOS",
+    descricao:
+      "Cobertura audiovisual de eventos com produção estratégica de fotos e vídeos. Conteúdo que reforça identidade, valoriza a experiência do público e amplia o alcance da marca nas redes.",
+    instagram: "",
+    semLink: true,
+    tags: ["Produção de Conteúdo", "Direção Criativa"],
+    foto: "/fotos/cervejaria-acurui-capa.jpg",
   },
 ];
 
@@ -462,7 +509,7 @@ export default function Home() {
                 <div
                   key={projeto.nome}
                   data-ramo={projeto.ramo}
-                  className="flex flex-col justify-between transition-shadow duration-300 hover:shadow-[0_0_0_1px_rgba(255,107,0,0.2)]"
+                  className="group flex flex-col justify-between transition-shadow duration-300 hover:shadow-[0_0_0_1px_rgba(255,107,0,0.2)]"
                   style={{
                     background: "#111111",
                     border: "1px solid rgba(255,255,255,0.06)",
@@ -471,6 +518,16 @@ export default function Home() {
                   }}
                 >
                   <div>
+                    {projeto.foto && (
+                      <div className="relative w-full aspect-[4/3] overflow-hidden mb-4 rounded-lg">
+                        <Image
+                          src={projeto.foto}
+                          alt={projeto.nome}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      </div>
+                    )}
                     <span
                       className="inline-block px-3 py-1 uppercase"
                       style={{
@@ -532,7 +589,7 @@ export default function Home() {
                         </span>
                       ))}
                     </div>
-                    {projeto.instagram !== null && (
+                    {!projeto.semLink && projeto.instagram && (
                       <a
                         href={projeto.instagram}
                         target="_blank"
