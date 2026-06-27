@@ -31,7 +31,9 @@ type Classificacao = 'Crítico' | 'Atenção' | 'Sólido' | '';
 
 interface DimensaoData {
   classificacao: Classificacao;
-  observacao: string;
+  funcionando: string;
+  gap: string;
+  recomendacao: string;
 }
 
 interface FormState {
@@ -40,7 +42,9 @@ interface FormState {
   dataAnalise: string;
   dimensoes: DimensaoData[];
   investimento: string;
-  proximosPassos: string;
+  prioridade1: string;
+  prioridade2: string;
+  prioridade3: string;
 }
 
 const BADGE = {
@@ -104,6 +108,66 @@ function CharCounter({ value, max }: { value: string; max: number }) {
   );
 }
 
+const FORM_TESTE: FormState = {
+  nomeCliente: 'Temcafe',
+  segmentoCliente: 'Alimentação',
+  dataAnalise: new Date().toISOString().split('T')[0],
+  dimensoes: [
+    {
+      classificacao: 'Sólido',
+      funcionando: 'Foto de perfil com logomarca própria e legível. Bio estruturada com posicionamento emocional na primeira linha. Destaques com capas coesas.',
+      gap: 'Nome da marca não aparece com destaque suficiente na bio.',
+      recomendacao: 'Manter a identidade atual e reforçar o nome nos destaques.',
+    },
+    {
+      classificacao: 'Atenção',
+      funcionando: 'Bio comunica o atmosférico com clareza — refúgio com vista que acalma.',
+      gap: 'O para quem e o diferencial competitivo estão implícitos. Visitante novo não entende a extensão da oferta sem explorar os destaques.',
+      recomendacao: 'Adicionar uma linha na bio que deixe explícito o diferencial: café especial, jantar, eventos.',
+    },
+    {
+      classificacao: 'Atenção',
+      funcionando: 'Destaques visualmente coesos com ícones dourados sobre fundo escuro.',
+      gap: 'Feed inconsistente — fotos de alta qualidade misturadas com registros amadores. Paleta varia entre quente-dourado, verde natural e escuro sem grade unificada.',
+      recomendacao: 'Definir uma paleta editorial e parar de publicar registros pessoais no feed principal.',
+    },
+    {
+      classificacao: 'Sólido',
+      funcionando: 'Tagline com personalidade — evoca descanso e pertencimento. Posicionamento de experiência de pausa, não de lanchonete.',
+      gap: '',
+      recomendacao: 'Manter e reforçar o posicionamento atual em todo o conteúdo.',
+    },
+    {
+      classificacao: 'Atenção',
+      funcionando: 'Volume e base construída com 231 publicações e 10,4 mil seguidores.',
+      gap: 'Falta consistência na função de cada formato. Reels, carrosséis e stories sem arquitetura editorial definida.',
+      recomendacao: 'Criar grade editorial semanal com três pilares fixos: Experiência, Produto e Conversão.',
+    },
+    {
+      classificacao: 'Sólido',
+      funcionando: 'Google Meu Negócio ativo e completo. 5,0 estrelas com 137 avaliações. Linktree indexado no Google.',
+      gap: '',
+      recomendacao: 'Manter e solicitar avaliações regularmente.',
+    },
+    {
+      classificacao: 'Atenção',
+      funcionando: 'Endereço, horário e telefone facilmente encontrados via Google.',
+      gap: 'CTA nos posts é fraco ou ausente. Não há direcionamento claro para reservas, cestas ou eventos.',
+      recomendacao: 'Incluir CTA direto em pelo menos 50% dos posts. Criar story fixo de reservas.',
+    },
+    {
+      classificacao: 'Sólido',
+      funcionando: 'Ticket médio de R$ 40-60 compatível com o ambiente e oferta. Nota 5,0 valida a entrega.',
+      gap: 'Inconsistência do feed sinaliza preço menor do que o praticado.',
+      recomendacao: 'Corrigir a identidade visual do feed para sustentar o posicionamento premium.',
+    },
+  ],
+  investimento: 'R$ 2.500',
+  prioridade1: 'Criar grade editorial semanal com três pilares fixos — Experiência/Ambiente, Produto/Cardápio e Conversão/CTA — para dar função estratégica a cada formato publicado.',
+  prioridade2: 'Definir paleta editorial unificada e parar de publicar registros pessoais no feed. Separar conteúdo institucional de conteúdo pessoal.',
+  prioridade3: 'Adicionar CTA direto nos posts e criar um story fixo de reservas para cestas e eventos, que representam receita relevante.',
+};
+
 function RaioXPage() {
   const [gerando, setGerando] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
@@ -134,9 +198,11 @@ function RaioXPage() {
     nomeCliente: clienteParam || '',
     segmentoCliente: '',
     dataAnalise: new Date().toISOString().split('T')[0],
-    dimensoes: Array.from({ length: 8 }, () => ({ classificacao: '' as Classificacao, observacao: '' })),
+    dimensoes: Array.from({ length: 8 }, () => ({ classificacao: '' as Classificacao, funcionando: '', gap: '', recomendacao: '' })),
     investimento: '',
-    proximosPassos: '',
+    prioridade1: '',
+    prioridade2: '',
+    prioridade3: '',
   });
 
   const { draft, retomar, descartar, concluir } = useDraft(
@@ -263,7 +329,7 @@ function RaioXPage() {
 
       for (let i = 0; i < DIMENSOES.length; i++) {
         const dim = form.dimensoes[i];
-        if (!dim.classificacao && !dim.observacao.trim()) continue;
+        if (!dim.classificacao && !dim.funcionando.trim() && !dim.gap.trim() && !dim.recomendacao.trim()) continue;
 
         const co = dim.classificacao in BADGE
           ? BADGE[dim.classificacao as keyof typeof BADGE]
@@ -277,9 +343,20 @@ function RaioXPage() {
                <span style="color:#555;font-size:14px;${POPPINS}">Não avaliado</span>
              </div>`;
 
-        const obs = dim.observacao
-          ? dim.observacao.replace(/\n/g, '<br/>')
-          : '<span style="color:#333;font-style:italic;">Nenhuma observação registrada.</span>';
+        const blocos = [
+          { label: 'O QUE ESTÁ FUNCIONANDO', valor: dim.funcionando },
+          { label: 'PRINCIPAL GAP', valor: dim.gap },
+          { label: 'RECOMENDAÇÃO IMEDIATA', valor: dim.recomendacao },
+        ].filter(b => b.valor.trim());
+
+        const obsHtml = blocos.length
+          ? blocos.map(b => `
+              <div style="margin-bottom:20px;">
+                <div style="color:#FF6B00;font-size:10px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;font-family:'Poppins',Arial,sans-serif;">${b.label}</div>
+                <div style="color:#d0d0d0;font-size:15px;line-height:1.7;max-width:620px;font-family:'Poppins',Arial,sans-serif;">${b.valor.replace(/\n/g, '<br/>')}</div>
+              </div>
+            `).join('')
+          : '<span style="color:#333;font-style:italic;font-family:Poppins,Arial,sans-serif;">Nenhuma observação registrada.</span>';
 
         await addPage(`
           <div style="${POPPINS}width:${PX_W}px;height:${PX_H}px;background:#080808;padding:70px 70px 100px 70px;box-sizing:border-box;position:relative;">
@@ -293,7 +370,7 @@ function RaioXPage() {
             <div style="width:48px;height:2px;background:#FF6B00;margin-bottom:38px;"></div>
             <div>
               <div style="${LABEL}margin-bottom:16px;">ANÁLISE E OBSERVAÇÕES</div>
-              <div style="color:#d0d0d0;font-size:20px;line-height:2.0;max-width:620px;">${obs}</div>
+              <div>${obsHtml}</div>
             </div>
             <div style="position:absolute;bottom:36px;left:70px;right:70px;border-top:1px solid #1a1a1a;padding-top:16px;display:flex;justify-content:space-between;">
               <div style="color:#2a2a2a;font-size:13px;letter-spacing:2px;">ORIUM AGENCY · RAIO-X</div>
@@ -311,8 +388,8 @@ function RaioXPage() {
         ? top3.map(({ n, i }, rank) => {
             const cl = form.dimensoes[i].classificacao as keyof typeof BADGE;
             const co = BADGE[cl];
-            const obs = form.dimensoes[i].observacao;
-            const resumo = obs.length > 85 ? obs.slice(0, 85) + '…' : (obs || 'Sem observação');
+            const obs = form.dimensoes[i].gap || form.dimensoes[i].recomendacao || form.dimensoes[i].funcionando;
+            const resumo = obs.length > 120 ? obs.slice(0, 120) + '…' : (obs || 'Sem observação');
             return `
               <div style="display:flex;align-items:center;gap:16px;margin-bottom:10px;background:#0f0f0f;border:1px solid #1a1a1a;border-radius:10px;padding:14px 18px;">
                 <div style="${ANTON}font-size:34px;color:#FF6B00;min-width:38px;line-height:1;">${rank + 1}</div>
@@ -328,7 +405,24 @@ function RaioXPage() {
         : `<div style="color:#2a2a2a;font-style:italic;padding:16px 0;font-size:15px;${POPPINS}">Nenhuma prioridade crítica identificada.</div>`;
 
       const investimentoFormatado = formatarInvestimento(form.investimento);
-      const passosHtml = form.proximosPassos.replace(/\n/g, '<br/>');
+
+      const prioridades = [
+        { num: '01', texto: form.prioridade1 },
+        { num: '02', texto: form.prioridade2 },
+        { num: '03', texto: form.prioridade3 },
+      ].filter(p => p.texto.trim());
+
+      const prioridadesHtml = prioridades.length
+        ? `<div style="margin-bottom:24px;">
+            <div style="${LABEL}margin-bottom:14px;">PRÓXIMOS PASSOS</div>
+            ${prioridades.map(p => `
+              <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:14px;padding:14px 18px;background:#0f0f0f;border:1px solid #1a1a1a;border-radius:10px;">
+                <div style="${ANTON}font-size:28px;color:#FF6B00;min-width:32px;line-height:1;">${p.num}</div>
+                <div style="color:#d0d0d0;font-size:14px;line-height:1.65;${POPPINS}">${p.texto.replace(/\n/g, '<br/>')}</div>
+              </div>
+            `).join('')}
+          </div>`
+        : '';
 
       await addPage(`
         <div style="${POPPINS}width:${PX_W}px;height:${PX_H}px;background:#080808;padding:60px 70px 0 70px;box-sizing:border-box;position:relative;display:flex;flex-direction:column;">
@@ -346,11 +440,7 @@ function RaioXPage() {
             <div style="${LABEL}margin-bottom:10px;">INVESTIMENTO SUGERIDO</div>
             <div style="${ANTON}font-size:38px;color:#FF6B00;line-height:1;">${investimentoFormatado}</div>
           </div>
-          ${form.proximosPassos ? `
-          <div style="margin-bottom:24px;">
-            <div style="${LABEL}margin-bottom:10px;">PRÓXIMOS PASSOS</div>
-            <div style="color:#d0d0d0;font-size:17px;line-height:2.0;max-width:640px;${POPPINS}">${passosHtml}</div>
-          </div>` : ''}
+          ${prioridadesHtml}
           <div style="margin-top:auto;border-top:1px solid #1a1a1a;padding:16px 0 36px 0;display:flex;justify-content:space-between;">
             <div style="color:#2a2a2a;font-size:13px;letter-spacing:2px;">ORIUM AGENCY · RAIO-X</div>
             <div style="color:#2a2a2a;font-size:13px;">${dataFormatada}</div>
@@ -471,17 +561,43 @@ function RaioXPage() {
             })}
           </div>
           <div>
-            <label style={LB}>Observações</label>
+            <label style={LB}>O que está funcionando</label>
             <textarea
-              rows={10}
-              maxLength={500}
-              placeholder="Descreva os pontos observados nesta dimensão..."
-              value={dim.observacao}
-              onChange={e => setDimensao(di, 'observacao', e.target.value)}
+              rows={4}
+              maxLength={250}
+              placeholder="Descreva os pontos positivos desta dimensão..."
+              value={dim.funcionando}
+              onChange={e => setDimensao(di, 'funcionando', e.target.value)}
               onFocus={onF} onBlur={onB}
               style={{ ...IS, resize: 'none', lineHeight: 1.65 }}
             />
-            <CharCounter value={dim.observacao} max={500} />
+            <CharCounter value={dim.funcionando} max={250} />
+          </div>
+          <div>
+            <label style={LB}>Principal gap identificado</label>
+            <textarea
+              rows={4}
+              maxLength={250}
+              placeholder="Qual é o problema central ou oportunidade de melhoria?"
+              value={dim.gap}
+              onChange={e => setDimensao(di, 'gap', e.target.value)}
+              onFocus={onF} onBlur={onB}
+              style={{ ...IS, resize: 'none', lineHeight: 1.65 }}
+            />
+            <CharCounter value={dim.gap} max={250} />
+          </div>
+          <div>
+            <label style={LB}>Recomendação imediata</label>
+            <textarea
+              rows={3}
+              maxLength={200}
+              placeholder="O que deve ser feito primeiro nesta dimensão?"
+              value={dim.recomendacao}
+              onChange={e => setDimensao(di, 'recomendacao', e.target.value)}
+              onFocus={onF} onBlur={onB}
+              style={{ ...IS, resize: 'none', lineHeight: 1.65 }}
+            />
+            <CharCounter value={dim.recomendacao} max={200} />
           </div>
         </div>
       );
@@ -495,9 +611,19 @@ function RaioXPage() {
           <CharCounter value={form.investimento} max={30} />
         </div>
         <div>
-          <label style={LB}>Próximos Passos</label>
-          <textarea rows={8} maxLength={400} placeholder="Descreva as ações recomendadas para o cliente..." value={form.proximosPassos} onChange={e => setForm(p => ({ ...p, proximosPassos: e.target.value }))} onFocus={onF} onBlur={onB} style={{ ...IS, resize: 'none', lineHeight: 1.65 }} />
-          <CharCounter value={form.proximosPassos} max={400} />
+          <label style={LB}>Prioridade 1</label>
+          <textarea rows={3} maxLength={180} placeholder="Ação mais urgente recomendada..." value={form.prioridade1} onChange={e => setForm(p => ({ ...p, prioridade1: e.target.value }))} onFocus={onF} onBlur={onB} style={{ ...IS, resize: 'none', lineHeight: 1.65 }} />
+          <CharCounter value={form.prioridade1} max={180} />
+        </div>
+        <div>
+          <label style={LB}>Prioridade 2</label>
+          <textarea rows={3} maxLength={180} placeholder="Segunda ação recomendada..." value={form.prioridade2} onChange={e => setForm(p => ({ ...p, prioridade2: e.target.value }))} onFocus={onF} onBlur={onB} style={{ ...IS, resize: 'none', lineHeight: 1.65 }} />
+          <CharCounter value={form.prioridade2} max={180} />
+        </div>
+        <div>
+          <label style={LB}>Prioridade 3</label>
+          <textarea rows={3} maxLength={180} placeholder="Terceira ação recomendada..." value={form.prioridade3} onChange={e => setForm(p => ({ ...p, prioridade3: e.target.value }))} onFocus={onF} onBlur={onB} style={{ ...IS, resize: 'none', lineHeight: 1.65 }} />
+          <CharCounter value={form.prioridade3} max={180} />
         </div>
       </div>
     );
@@ -613,6 +739,15 @@ function RaioXPage() {
             </h2>
             <p style={{ color: '#555', fontSize: '0.95rem' }}>{STEP_SUBTITLES[step]}</p>
           </div>
+          <button
+            onClick={() => setForm(FORM_TESTE)}
+            style={{ background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '8px', padding: '0.875rem 1.25rem', color: '#333', fontSize: '0.72rem', fontFamily: 'Poppins, sans-serif', letterSpacing: '0.1em', cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap', flexShrink: 0 }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#666'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = '#1e1e1e'; e.currentTarget.style.color = '#333'; }}
+            title="Preencher formulário com dados de teste"
+          >
+            TESTE
+          </button>
           <button
             onClick={gerarPDF}
             disabled={gerando}

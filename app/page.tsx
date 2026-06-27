@@ -1063,6 +1063,14 @@ export default function Home() {
                   WhatsApp
                 </button>
                 <p className="text-zinc-500">Belo Horizonte - MG</p>
+                <a
+                  href="/manual"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-[#333] hover:text-[#FF6B00] transition-colors duration-200 underline underline-offset-4 mt-6 inline-block"
+                >
+                  Manual da Marca ORIUM™
+                </a>
               </div>
             </div>
           </div>

@@ -61,6 +61,48 @@ function novaFase(): Fase {
   return { nome: '', subtitulo: '', descricao: '', servicosSelecionados: [], objetivo: '', valor: '', prazo: '', aberta: true };
 }
 
+const FORM_TESTE: FormState = {
+  nomeCliente: 'Altemans Barbearia',
+  segmento: 'Barbearia',
+  dataProposta: new Date().toISOString().split('T')[0],
+  validadeProposta: '7 dias',
+  fases: [
+    {
+      nome: 'Estruturação Digital',
+      subtitulo: 'organização',
+      descricao: 'Organização completa da presença digital da marca, definindo identidade, posicionamento e canais de comunicação.',
+      servicosSelecionados: ['briefing-estrategico', 'direcao-percepcao', 'presenca-base', 'vitrine-estrategica', 'estruturacao-instagram', 'google-meu-negocio'],
+      objetivo: 'Consolidar a base digital',
+      valor: 'R$ 1.500,00',
+      prazo: '2 semanas',
+      aberta: false,
+    },
+    {
+      nome: 'Conteúdo e Comunicação',
+      subtitulo: 'presença contínua',
+      descricao: 'Planejamento e produção de conteúdo estratégico mensal com direção criativa alinhada ao posicionamento da marca.',
+      servicosSelecionados: ['planejamento-conteudo', 'conteudo-estrategico', 'stories-estrategicos', 'reels-videos'],
+      objetivo: 'Gerar presença e autoridade',
+      valor: 'R$ 900,00',
+      prazo: 'Mensal',
+      aberta: false,
+    },
+  ],
+  proximosPassos: [
+    { titulo: 'Aprovação da proposta', descricao: 'Confirmação do aceite e alinhamento das condições comerciais.' },
+    { titulo: 'Briefing Estratégico™', descricao: 'Sessão de levantamento profundo sobre o negócio, público e posicionamento.' },
+    { titulo: 'Reunião de alinhamento', descricao: 'Apresentação do planejamento detalhado e validação das entregas.' },
+    { titulo: 'Início da Estruturação Digital™', descricao: 'Execução das ações conforme o cronograma acordado.' },
+  ],
+  contato: {
+    responsavel: 'Thiago Duarte',
+    whatsapp: '(31) 99935-2065',
+    email: 'contato@oriumagencia.com.br',
+    instagram: '@orium.agc',
+  },
+  condicoesPagamento: '50% na aprovação · 50% na entrega final · PIX, boleto ou cartão',
+};
+
 const STEPS_PROPOSTA = ['DADOS DO CLIENTE', 'FASES DA PROPOSTA', 'PRÓXIMOS PASSOS', 'PAGAMENTO E CONTATO'];
 const STEP_SUBTITLES = [
   'Identifique o cliente e defina os dados da proposta.',
@@ -265,10 +307,10 @@ function PropostaPage() {
       ].map(m => `<div style="border-left:2px solid #FF6B00;padding-left:12px;"><div style="${A}font-size:10px;color:#fff;letter-spacing:1px;margin-bottom:3px;line-height:1.2;">${m.nome}</div><div style="color:#555;font-size:11px;line-height:1.5;${P}">${m.desc}</div></div>`).join('');
 
       const passosHtml = form.proximosPassos.map((p, i) => `
-        <div style="background:#0f0f0f;border:1px solid #1a1a1a;border-radius:10px;padding:18px;">
-          <div style="${A}font-size:28px;color:#FF6B00;line-height:1;margin-bottom:8px;">${String(i + 1).padStart(2, '0')}</div>
-          <div style="${P}color:#fff;font-size:14px;font-weight:700;margin-bottom:5px;">${p.titulo.trim()}</div>
-          <div style="${P}color:#666;font-size:13px;line-height:1.6;">${p.descricao.trim()}</div>
+        <div style="background:#0f0f0f;border:1px solid #1a1a1a;border-radius:10px;padding:12px 16px;">
+          <div style="${A}font-size:22px;color:#FF6B00;line-height:1;margin-bottom:4px;">${String(i + 1).padStart(2, '0')}</div>
+          <div style="${P}color:#fff;font-size:13px;font-weight:700;margin-bottom:3px;">${p.titulo.trim()}</div>
+          <div style="${P}color:#666;font-size:12px;line-height:1.5;">${p.descricao.trim()}</div>
         </div>
       `).join('');
 
@@ -331,7 +373,7 @@ function PropostaPage() {
         const fase = form.fases[i];
         const num = String(i + 1).padStart(2, '0');
         const servicosSel = fase.servicosSelecionados.map(id => TODOS_SERVICOS.find(s => s.id === id)).filter((s): s is Servico => !!s);
-        const entregasHtml = servicosSel.map(s => `<div style="margin-bottom:10px;padding:12px 16px;background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;"><div style="color:#fff;font-size:16px;font-weight:700;margin-bottom:4px;${P}">${s.nome}</div><div style="color:#666;font-size:14px;line-height:1.6;${P}">${s.descricao}</div></div>`).join('');
+        const entregasHtml = servicosSel.map(s => `<div style="margin-bottom:6px;padding:8px 12px;background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;"><div style="color:#fff;font-size:13px;font-weight:700;margin-bottom:2px;${P}">${s.nome}</div><div style="color:#666;font-size:12px;line-height:1.5;${P}">${s.descricao}</div></div>`).join('');
         const faseNome = fase.nome.trim() || `FASE ${i + 1}`;
         const faseValorFormatado = formatarValorPDF(fase.valor);
 
@@ -339,13 +381,13 @@ function PropostaPage() {
           <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;box-sizing:border-box;position:relative;display:flex;flex-direction:column;">
             <div style="${BAR}"></div>
             <div style="padding:30px 70px 18px 70px;border-bottom:1px solid #161616;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;">${logoXs}<div style="color:#2a2a2a;font-size:12px;letter-spacing:4px;text-transform:uppercase;${P}">PROPOSTA COMERCIAL</div></div>
-            <div style="padding:26px 70px;flex:1;position:relative;z-index:1;overflow:hidden;">
+            <div style="padding:20px 70px;flex:1;position:relative;z-index:1;overflow:hidden;">
               <div style="color:#FF6B00;font-size:13px;letter-spacing:6px;font-weight:700;margin-bottom:6px;${P}">FASE ${num}</div>
-              <div style="${A}font-size:54px;color:#fff;line-height:0.95;margin-bottom:10px;text-transform:uppercase;">${faseNome.toUpperCase()}</div>
-              ${fase.subtitulo.trim() ? `<div style="color:#FF6B00;font-size:16px;margin-bottom:18px;font-weight:600;${P}">${fase.subtitulo.trim()}</div>` : ''}
-              <div style="width:44px;height:2px;background:#FF6B00;margin-bottom:18px;"></div>
-              ${fase.descricao.trim() ? `<div style="color:#888;font-size:17px;line-height:2.0;margin-bottom:22px;max-width:600px;word-wrap:break-word;overflow-wrap:break-word;${P}">${fase.descricao.trim().replace(/\n/g, '<br/>')}</div>` : ''}
-              ${entregasHtml ? `<div><div style="color:#3a3a3a;font-size:13px;letter-spacing:4px;text-transform:uppercase;margin-bottom:10px;${P}">O QUE SERÁ DESENVOLVIDO</div>${entregasHtml}</div>` : ''}
+              <div style="${A}font-size:44px;color:#fff;line-height:0.95;margin-bottom:10px;text-transform:uppercase;">${faseNome.toUpperCase()}</div>
+              ${fase.subtitulo.trim() ? `<div style="color:#FF6B00;font-size:14px;margin-bottom:10px;font-weight:600;${P}">${fase.subtitulo.trim()}</div>` : ''}
+              <div style="width:44px;height:2px;background:#FF6B00;margin-bottom:10px;"></div>
+              ${fase.descricao.trim() ? `<div style="color:#888;font-size:14px;line-height:1.7;margin-bottom:14px;max-width:600px;word-wrap:break-word;overflow-wrap:break-word;${P}">${fase.descricao.trim().replace(/\n/g, '<br/>')}</div>` : ''}
+              ${entregasHtml ? `<div><div style="color:#3a3a3a;font-size:13px;letter-spacing:4px;text-transform:uppercase;margin-bottom:6px;${P}">O QUE SERÁ DESENVOLVIDO</div>${entregasHtml}</div>` : ''}
             </div>
             <div style="background:#FF6B00;padding:18px 70px;display:flex;justify-content:space-between;align-items:center;">
               <div><div style="${P}color:rgba(0,0,0,0.55);font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:3px;">INVESTIMENTO INICIAL</div><div style="${A}color:#000;font-size:26px;letter-spacing:2px;">${faseValorFormatado}</div></div>
@@ -360,10 +402,10 @@ function PropostaPage() {
           <div style="${BAR}"></div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;">${logoXs}<div style="color:#2a2a2a;font-size:12px;letter-spacing:4px;text-transform:uppercase;${P}">PROPOSTA COMERCIAL</div></div>
           <div style="margin-bottom:22px;"><div style="color:#FF6B00;font-size:12px;letter-spacing:6px;font-weight:700;margin-bottom:6px;${P}">CONTINUIDADE DE RESULTADOS</div><div style="${A}font-size:42px;color:#fff;line-height:1;margin-bottom:10px;">PRÓXIMOS PASSOS</div><div style="color:#555;font-size:14px;max-width:500px;line-height:1.75;${P}">Após a aprovação desta proposta, seguiremos um caminho estruturado para garantir que cada etapa seja executada com clareza e alinhamento estratégico.</div></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">${passosHtml}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">${passosHtml}</div>
           ${form.condicoesPagamento.trim() ? `<div style="border-top:1px solid #161616;padding:10px 0 14px 0;text-align:center;"><div style="${P}color:#2e2e2e;font-size:11px;letter-spacing:2px;">${form.condicoesPagamento.trim()}</div></div>` : ''}
-          <div style="background:linear-gradient(135deg,#0d0d0d,#0a0a00);border:1px solid #2a2000;border-radius:12px;padding:22px;margin-bottom:18px;"><div style="${A}font-size:13px;color:#FF6B00;letter-spacing:4px;margin-bottom:10px;">COMPROMISSO ORIUM</div><div style="color:#aaa;font-size:14px;line-height:2.0;max-width:560px;${P}">Nosso compromisso vai além das entregas. Trabalhamos para construir estrutura real que gera crescimento sustentável. Cada ação é pensada para fortalecer a percepção da sua marca e ampliar seus resultados ao longo do tempo.</div></div>
-          <div style="text-align:center;padding:14px 0;"><div style="${A}font-size:18px;color:#fff;letter-spacing:2px;margin-bottom:6px;">Aqui começa uma parceria estratégica</div><div style="color:#FF6B00;font-size:13px;letter-spacing:2px;${P}">focada em evolução constante.</div></div>
+          <div style="background:linear-gradient(135deg,#0d0d0d,#0a0a00);border:1px solid #2a2000;border-radius:12px;padding:14px 18px;margin-bottom:10px;"><div style="${A}font-size:13px;color:#FF6B00;letter-spacing:4px;margin-bottom:10px;">COMPROMISSO ORIUM</div><div style="color:#aaa;font-size:13px;line-height:1.7;max-width:560px;${P}">Nosso compromisso vai além das entregas. Trabalhamos para construir estrutura real que gera crescimento sustentável. Cada ação é pensada para fortalecer a percepção da sua marca e ampliar seus resultados ao longo do tempo.</div></div>
+          <div style="text-align:center;padding:14px 0;"><div style="${A}font-size:15px;color:#fff;letter-spacing:2px;margin-bottom:6px;">Aqui começa uma parceria estratégica</div><div style="color:#FF6B00;font-size:13px;letter-spacing:2px;${P}">focada em evolução constante.</div></div>
           <div style="margin-top:auto;border-top:1px solid #161616;padding:14px 0 28px 0;display:flex;justify-content:space-between;"><div style="color:#1e1e1e;font-size:12px;letter-spacing:2px;${P}">ORIUM AGENCY · PROPOSTA COMERCIAL</div><div style="color:#1e1e1e;font-size:12px;${P}">${form.nomeCliente.trim()} · ${dataFormatada}</div></div>
         </div>
       `);
@@ -491,7 +533,7 @@ function PropostaPage() {
                     <div><label className={labelClass}>Nome da Fase</label><input type="text" maxLength={35} placeholder="Ex: Estruturação Digital" value={fase.nome} onChange={e => setFase(i, 'nome', e.target.value)} className={inputClass} /><CharCounter value={fase.nome} max={35} /></div>
                     <div><label className={labelClass}>Subtítulo (laranja no PDF)</label><input type="text" maxLength={80} placeholder="Ex: Organização da base digital" value={fase.subtitulo} onChange={e => setFase(i, 'subtitulo', e.target.value)} className={inputClass} /><CharCounter value={fase.subtitulo} max={80} /></div>
                   </div>
-                  <div><label className={labelClass}>Descrição</label><textarea rows={3} maxLength={280} placeholder="Descreva o que esta fase contempla..." value={fase.descricao} onChange={e => setFase(i, 'descricao', e.target.value)} className={`${inputClass} resize-none`} /><CharCounter value={fase.descricao} max={280} /></div>
+                  <div><label className={labelClass}>Descrição</label><textarea rows={3} maxLength={200} placeholder="Descreva o que esta fase contempla..." value={fase.descricao} onChange={e => setFase(i, 'descricao', e.target.value)} className={`${inputClass} resize-none`} /><CharCounter value={fase.descricao} max={200} /><p style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'Poppins, sans-serif', marginTop: '0.25rem' }}>Textos curtos garantem melhor layout no PDF.</p></div>
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <label className={labelClass}>Serviços incluídos</label>
@@ -699,6 +741,15 @@ function PropostaPage() {
             </h2>
             <p style={{ color: '#555', fontSize: '0.95rem' }}>{STEP_SUBTITLES[step]}</p>
           </div>
+          <button
+            onClick={() => { setForm(FORM_TESTE); setStep(0); }}
+            style={{ background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '8px', padding: '0.875rem 1.25rem', color: '#333', fontSize: '0.72rem', fontFamily: 'Poppins, sans-serif', letterSpacing: '0.1em', cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap', flexShrink: 0 }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#666'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = '#1e1e1e'; e.currentTarget.style.color = '#333'; }}
+            title="Preencher formulário com dados de teste"
+          >
+            TESTE
+          </button>
           <button
             onClick={gerarPDF}
             disabled={gerando}
