@@ -122,7 +122,6 @@ export default function ExperienciaAltemansPage() {
   return (
     <div className={`${styles.page} ${oswald.variable} ${inter.variable}`}>
       <div className={styles.stage}>
-        <div className={styles.brandline}>Alteman&apos;s Barbearia</div>
         <div className={styles.frame}>
           {step.type === 'welcome' && (
             <div className={styles.centerScreen}>

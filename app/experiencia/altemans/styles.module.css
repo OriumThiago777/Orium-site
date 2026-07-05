@@ -18,10 +18,8 @@
   -webkit-tap-highlight-color:transparent;
   overflow-x:hidden;
 }
-.page button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;border:none;background:none;color:inherit;}
+.page button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .stage{width:100%;max-width:480px;min-height:min(680px,88dvh);display:flex;flex-direction:column;}
-
-.brandline{font-family:var(--font-oswald);font-weight:600;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--mist);text-align:center;margin-bottom:16px;}
 
 .frame{
   border:1px solid rgba(245,247,250,0.16);
