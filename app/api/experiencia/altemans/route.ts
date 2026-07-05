@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { notionCreate, NotionError } from '@/lib/notion';
+import { notionCreate, notionQuery, NotionError } from '@/lib/notion';
 
 interface Payload {
   geral?: number;
@@ -66,4 +66,71 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ ok: true });
+}
+
+type NotionRespostaPage = {
+  id: string;
+  properties: Record<string, {
+    title?: Array<{ plain_text: string }>;
+    rich_text?: Array<{ plain_text: string }>;
+    select?: { name: string } | null;
+    date?: { start: string } | null;
+    number?: number | null;
+    multi_select?: Array<{ name: string }>;
+    formula?: { type: string; number?: number | null; string?: string | null };
+  }>;
+};
+
+export async function GET() {
+  const databaseId = process.env.NOTION_DB_EXPERIENCIA_ALTEMANS;
+
+  if (!databaseId) {
+    console.error('NOTION_DB_EXPERIENCIA_ALTEMANS ausente no ambiente.');
+    return NextResponse.json({ error: 'Configuração ausente no servidor.' }, { status: 500 });
+  }
+
+  let data: { results?: NotionRespostaPage[] };
+  try {
+    data = await notionQuery(databaseId, {
+      sorts: [{ property: 'Data', direction: 'descending' }],
+      page_size: 100,
+    });
+  } catch (err) {
+    const message = err instanceof NotionError ? err.message : String(err);
+    console.error('Erro ao consultar Notion:', message);
+    return NextResponse.json({ error: 'Falha ao carregar respostas.' }, { status: 502 });
+  }
+
+  const respostas = (data.results ?? []).map((page) => {
+    const props = page.properties;
+    return {
+      id: page.id,
+      registro: props['Registro']?.title?.[0]?.plain_text || '',
+      data: props['Data']?.date?.start || '',
+      barbeiro: props['Barbeiro']?.select?.name || '',
+      notaGeral: props['Nota geral']?.number ?? null,
+      indice: props['Índice de Qualidade']?.formula?.number ?? null,
+      faixa: props['Faixa']?.formula?.string ?? null,
+      nps: props['NPS']?.number ?? null,
+      destaques: (props['Destaques']?.multi_select || []).map((d) => d.name),
+      mensagem: props['Mensagem']?.rich_text?.[0]?.plain_text || '',
+      status: props['Status']?.select?.name || '',
+    };
+  });
+
+  const indices = respostas.map((r) => r.indice).filter((n): n is number => typeof n === 'number');
+  const npsList = respostas.map((r) => r.nps).filter((n): n is number => typeof n === 'number');
+
+  const indiceMedio = indices.length ? Math.round(indices.reduce((a, b) => a + b, 0) / indices.length) : null;
+  const npsMedio = npsList.length ? Math.round((npsList.reduce((a, b) => a + b, 0) / npsList.length) * 10) / 10 : null;
+
+  const porFaixa: Record<string, number> = {};
+  respostas.forEach((r) => {
+    if (r.faixa) porFaixa[r.faixa] = (porFaixa[r.faixa] || 0) + 1;
+  });
+
+  return NextResponse.json({
+    summary: { total: respostas.length, indiceMedio, npsMedio, porFaixa },
+    respostas,
+  });
 }
