@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Oswald, Inter } from 'next/font/google';
 import AuthGate from '@/components/AuthGate';
 import styles from './styles.module.css';
@@ -48,6 +48,47 @@ function Faixa({ nome }: { nome: string | null }) {
   return <span className={`${styles.badge} ${cls ? styles[cls] : ''}`}>{nome}</span>;
 }
 
+function ThTip({ children, tip }: { children: React.ReactNode; tip?: string }) {
+  const ref = useRef<HTMLTableCellElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+
+  if (!tip) return <th>{children}</th>;
+
+  function show() {
+    const rect = ref.current?.getBoundingClientRect();
+    if (rect) setPos({ top: rect.top - 8, left: rect.left });
+  }
+
+  return (
+    <th ref={ref} onMouseEnter={show} onMouseLeave={() => setPos(null)}>
+      <span className={styles.thHint}>{children}</span>
+      {pos && (
+        <div className={styles.tooltipBox} style={{ top: pos.top, left: pos.left }}>
+          {tip}
+        </div>
+      )}
+    </th>
+  );
+}
+
+function exportarCSV(respostas: Resposta[]) {
+  const headers = ['Data', 'Barbeiro', 'Nota geral', 'Índice de Qualidade', 'Faixa', 'NPS', 'Destaques', 'Mensagem', 'Status'];
+  const escape = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const linhas = respostas.map((r) =>
+    [r.data, r.barbeiro, r.notaGeral, r.indice, r.faixa, r.nps, r.destaques.join('; '), r.mensagem, r.status]
+      .map(escape)
+      .join(';')
+  );
+  const csv = '﻿' + [headers.map(escape).join(';'), ...linhas].join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `experiencia-altemans-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function PainelContent() {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [error, setError] = useState(false);
@@ -84,6 +125,11 @@ function PainelContent() {
 
       {!loading && !error && data && data.respostas.length > 0 && (
         <>
+          <div className={styles.toolbar}>
+            <button className={styles.exportBtn} onClick={() => exportarCSV(data.respostas)}>
+              Exportar CSV
+            </button>
+          </div>
           <div className={styles.cards}>
             <div className={styles.card}>
               <p className={styles.cardLabel}>Total de respostas</p>
@@ -110,14 +156,14 @@ function PainelContent() {
               <thead>
                 <tr>
                   <th>Data</th>
-                  <th>Barbeiro</th>
-                  <th>Nota</th>
-                  <th>Índice</th>
-                  <th>Faixa</th>
-                  <th>NPS</th>
-                  <th>Destaques</th>
-                  <th>Mensagem</th>
-                  <th>Status</th>
+                  <ThTip tip="Quem realizou seu atendimento?">Barbeiro</ThTip>
+                  <ThTip tip="Como foi sua experiência hoje?">Nota</ThTip>
+                  <ThTip tip="Calculado a partir de Atendimento (40%), Serviço (30%) e Estrutura (30%), em escala de 0 a 100.">Índice</ThTip>
+                  <ThTip tip="95+ Excelência · 90+ Muito bom · 80+ Bom · 70+ Atenção · abaixo de 70 Ação imediata.">Faixa</ThTip>
+                  <ThTip tip="De 0 a 10, qual a chance de você indicar a Alteman's para um amigo?">NPS</ThTip>
+                  <ThTip tip="O que mais chamou sua atenção hoje?">Destaques</ThTip>
+                  <ThTip tip="Tem algo que a gente devia saber? (opcional)">Mensagem</ThTip>
+                  <ThTip tip="Uso interno: Novo, Revisado ou Ação necessária.">Status</ThTip>
                 </tr>
               </thead>
               <tbody>
