@@ -123,141 +123,142 @@ export default function ExperienciaAltemansPage() {
     <div className={`${styles.page} ${oswald.variable} ${inter.variable}`}>
       <div className={styles.stage}>
         <div className={styles.brandline}>Alteman&apos;s Barbearia</div>
-
-        {step.type === 'welcome' && (
-          <div className={styles.centerScreen}>
-            <img className={styles.mark} src="/logo-altemans.png" alt="Alteman's Barbearia" />
-            <h1>Avaliação da experiência</h1>
-            <p>Sua opinião ajuda a gente a melhorar o que não está visível pra você, mas está pro seu próximo corte. Leva menos de 2 minutos.</p>
-            <button className={styles.startBtn} onClick={goNext}>Avaliar agora</button>
-          </div>
-        )}
-
-        {step.type === 'thanks' && (
-          <div className={styles.centerScreen}>
-            <img className={styles.mark} src="/logo-altemans.png" alt="Alteman's Barbearia" />
-            <h1>Valeu!</h1>
-            <p>Sua avaliação já chegou pra gente. Até o próximo corte.</p>
-          </div>
-        )}
-
-        {step.type !== 'welcome' && step.type !== 'thanks' && (
-          <>
-            <div className={styles.topbar}>
-              <div className={styles.ticket}>
-                <span>Ficha</span>
-                <b>{String(questionIndex).padStart(2, '0')} / {String(TOTAL).padStart(2, '0')}</b>
-              </div>
-              <div className={styles.progressTrack}>
-                {questionSteps.map((_, i) => (
-                  <div className={styles.progressSeg} key={i}>
-                    <i className={i < questionIndex ? styles.filled : ''} />
-                  </div>
-                ))}
-              </div>
+        <div className={styles.frame}>
+          {step.type === 'welcome' && (
+            <div className={styles.centerScreen}>
+              <img className={styles.mark} src="/logo-altemans.png" alt="Alteman's Barbearia" />
+              <h1>Avaliação da experiência</h1>
+              <p>Sua opinião ajuda a gente a melhorar o que não está visível pra você, mas está pro seu próximo corte. Leva menos de 2 minutos.</p>
+              <button className={styles.startBtn} onClick={goNext}>Avaliar agora</button>
             </div>
+          )}
 
-            <div className={styles.content}>
-              <span className={styles.eyebrow}>{step.label}</span>
-              <h1 className={styles.question}>{step.question}</h1>
-              {step.hint && <span className={styles.hint}>{step.hint}</span>}
+          {step.type === 'thanks' && (
+            <div className={styles.centerScreen}>
+              <img className={styles.mark} src="/logo-altemans.png" alt="Alteman's Barbearia" />
+              <h1>Valeu!</h1>
+              <p>Sua avaliação já chegou pra gente. Até o próximo corte.</p>
+            </div>
+          )}
 
-              {step.type === 'rating' && (
-                <>
-                  <div className={styles.stars}>
-                    {[1, 2, 3, 4, 5].map((n) => {
-                      const val = answers[step.id as keyof Answers] as number | undefined;
-                      const lit = (val || 0) >= n;
-                      return (
-                        <button
-                          key={n}
-                          className={`${styles.starBtn} ${lit ? styles.lit : ''}`}
-                          onClick={() => selectAndAdvance(step.id as keyof Answers, n as never)}
-                        >
-                          <StarIcon />
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className={styles.scaleLabels}><span>Ruim</span><span>Excelente</span></div>
-                </>
-              )}
-
-              {step.type === 'choice' && (
-                <div className={styles.choiceList}>
-                  {step.options?.map((o) => (
-                    <button
-                      key={o}
-                      className={`${styles.choiceBtn} ${answers.barbeiro === o ? styles.selected : ''}`}
-                      onClick={() => selectAndAdvance('barbeiro', o)}
-                    >
-                      {o}
-                    </button>
+          {step.type !== 'welcome' && step.type !== 'thanks' && (
+            <>
+              <div className={styles.topbar}>
+                <div className={styles.ticket}>
+                  <span>Ficha</span>
+                  <b>{String(questionIndex).padStart(2, '0')} / {String(TOTAL).padStart(2, '0')}</b>
+                </div>
+                <div className={styles.progressTrack}>
+                  {questionSteps.map((_, i) => (
+                    <div className={styles.progressSeg} key={i}>
+                      <i className={i < questionIndex ? styles.filled : ''} />
+                    </div>
                   ))}
                 </div>
-              )}
+              </div>
 
-              {step.type === 'nps' && (
-                <>
-                  <div className={styles.npsGrid}>
-                    {Array.from({ length: 11 }, (_, n) => n).map((n) => (
+              <div className={styles.content}>
+                <span className={styles.eyebrow}>{step.label}</span>
+                <h1 className={styles.question}>{step.question}</h1>
+                {step.hint && <span className={styles.hint}>{step.hint}</span>}
+
+                {step.type === 'rating' && (
+                  <>
+                    <div className={styles.stars}>
+                      {[1, 2, 3, 4, 5].map((n) => {
+                        const val = answers[step.id as keyof Answers] as number | undefined;
+                        const lit = (val || 0) >= n;
+                        return (
+                          <button
+                            key={n}
+                            className={`${styles.starBtn} ${lit ? styles.lit : ''}`}
+                            onClick={() => selectAndAdvance(step.id as keyof Answers, n as never)}
+                          >
+                            <StarIcon />
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className={styles.scaleLabels}><span>Ruim</span><span>Excelente</span></div>
+                  </>
+                )}
+
+                {step.type === 'choice' && (
+                  <div className={styles.choiceList}>
+                    {step.options?.map((o) => (
                       <button
-                        key={n}
-                        className={`${styles.npsBtn} ${answers.nps === n ? styles.selected : ''}`}
-                        onClick={() => selectAndAdvance('nps', n)}
+                        key={o}
+                        className={`${styles.choiceBtn} ${answers.barbeiro === o ? styles.selected : ''}`}
+                        onClick={() => selectAndAdvance('barbeiro', o)}
                       >
-                        {n}
+                        {o}
                       </button>
                     ))}
                   </div>
-                  <div className={styles.npsLabels}><span>Nunca indicaria</span><span>Indicaria com certeza</span></div>
-                </>
-              )}
+                )}
 
-              {step.type === 'chips' && (
-                <div className={styles.chipGrid}>
-                  {step.options?.map((o) => (
-                    <button
-                      key={o}
-                      className={`${styles.chip} ${(answers.destaque || []).includes(o) ? styles.selected : ''}`}
-                      onClick={() => toggleChip(o)}
-                    >
-                      {o}
-                    </button>
-                  ))}
+                {step.type === 'nps' && (
+                  <>
+                    <div className={styles.npsGrid}>
+                      {Array.from({ length: 11 }, (_, n) => n).map((n) => (
+                        <button
+                          key={n}
+                          className={`${styles.npsBtn} ${answers.nps === n ? styles.selected : ''}`}
+                          onClick={() => selectAndAdvance('nps', n)}
+                        >
+                          {n}
+                        </button>
+                      ))}
+                    </div>
+                    <div className={styles.npsLabels}><span>Nunca indicaria</span><span>Indicaria com certeza</span></div>
+                  </>
+                )}
+
+                {step.type === 'chips' && (
+                  <div className={styles.chipGrid}>
+                    {step.options?.map((o) => (
+                      <button
+                        key={o}
+                        className={`${styles.chip} ${(answers.destaque || []).includes(o) ? styles.selected : ''}`}
+                        onClick={() => toggleChip(o)}
+                      >
+                        {o}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {step.type === 'text' && (
+                  <textarea
+                    className={styles.openField}
+                    placeholder="Escreva aqui, se quiser..."
+                    value={answers.mensagem || ''}
+                    onChange={(e) => setAnswers((a) => ({ ...a, mensagem: e.target.value }))}
+                  />
+                )}
+              </div>
+
+              {(step.type === 'chips' || step.type === 'text') && (
+                <div className={styles.nav}>
+                  {idx > 1 && <button className={styles.btnBack} onClick={goBack}>Voltar</button>}
+                  <button
+                    className={styles.btnPrimary}
+                    disabled={step.type === 'chips' && (answers.destaque || []).length === 0}
+                    onClick={step.id === 'mensagem' ? submitForm : goNext}
+                  >
+                    {step.id === 'mensagem' ? 'Enviar avaliação' : 'Continuar'}
+                  </button>
                 </div>
               )}
 
-              {step.type === 'text' && (
-                <textarea
-                  className={styles.openField}
-                  placeholder="Escreva aqui, se quiser..."
-                  value={answers.mensagem || ''}
-                  onChange={(e) => setAnswers((a) => ({ ...a, mensagem: e.target.value }))}
-                />
+              {step.type !== 'chips' && step.type !== 'text' && idx > 1 && (
+                <div className={styles.nav}>
+                  <button className={styles.btnBack} onClick={goBack}>Voltar</button>
+                </div>
               )}
-            </div>
-
-            {(step.type === 'chips' || step.type === 'text') && (
-              <div className={styles.nav}>
-                {idx > 1 && <button className={styles.btnBack} onClick={goBack}>Voltar</button>}
-                <button
-                  className={styles.btnPrimary}
-                  disabled={step.type === 'chips' && (answers.destaque || []).length === 0}
-                  onClick={step.id === 'mensagem' ? submitForm : goNext}
-                >
-                  {step.id === 'mensagem' ? 'Enviar avaliação' : 'Continuar'}
-                </button>
-              </div>
-            )}
-
-            {step.type !== 'chips' && step.type !== 'text' && idx > 1 && (
-              <div className={styles.nav}>
-                <button className={styles.btnBack} onClick={goBack}>Voltar</button>
-              </div>
-            )}
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
