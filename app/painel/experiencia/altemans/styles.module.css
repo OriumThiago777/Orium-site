@@ -69,3 +69,32 @@
   box-shadow:0 8px 20px rgba(0,0,0,0.5);
   pointer-events:none;
 }
+
+.tabs{display:flex;gap:8px;margin-bottom:28px;border-bottom:1px solid var(--line);}
+.tabBtn{padding:12px 4px;margin-right:20px;background:none;border:none;border-bottom:2px solid transparent;color:var(--mist);font-family:var(--font-oswald);font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;}
+.tabActive{color:var(--ice);border-bottom-color:var(--action);}
+
+.filterRow{display:flex;flex-wrap:wrap;gap:24px;margin-bottom:20px;}
+.filterGroup{display:flex;align-items:center;flex-wrap:wrap;gap:8px;}
+.filterLabel{font-size:12px;color:var(--mist);text-transform:uppercase;letter-spacing:.06em;margin-right:4px;}
+.filterChip{padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--mist);font-size:13px;cursor:pointer;}
+.filterChipActive{border-color:var(--glow);color:var(--ice);background:rgba(75,127,200,0.15);}
+
+.section{margin-bottom:32px;}
+.analysisGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:28px;}
+.panelTitle{font-family:var(--font-oswald);font-weight:600;font-size:14px;color:var(--ice);margin:0 0 16px;text-transform:uppercase;letter-spacing:.04em;}
+
+.chartPanel{background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:8px;padding:20px 22px;}
+.donutWrap{display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
+.donutLegend{display:flex;flex-direction:column;gap:8px;}
+.legendRow{display:flex;align-items:center;gap:8px;font-size:13px;}
+.legendDot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.legendLabel{color:var(--ice);min-width:110px;}
+.legendValue{color:var(--mist);}
+
+.barbeiroGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:20px;}
+.barbeiroCard{background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:8px;padding:20px 22px;}
+.barbeiroNome{font-family:var(--font-oswald);font-weight:600;font-size:16px;margin:0 0 14px;}
+.barbeiroMetric{display:flex;justify-content:space-between;font-size:13px;color:var(--mist);padding:6px 0;border-bottom:1px solid var(--line);}
+.barbeiroMetric:last-child{border-bottom:none;}
+.barbeiroMetric b{color:var(--ice);font-weight:600;}
