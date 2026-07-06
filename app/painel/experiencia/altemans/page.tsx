@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Oswald, Inter } from 'next/font/google';
-import AuthGate from '@/components/AuthGate';
+import AltemansAuthGate from './AltemansAuthGate';
 import styles from './styles.module.css';
 
 const oswald = Oswald({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-oswald' });
@@ -197,8 +197,8 @@ function PainelContent() {
 
 export default function PainelExperienciaAltemansPage() {
   return (
-    <AuthGate>
+    <AltemansAuthGate>
       <PainelContent />
-    </AuthGate>
+    </AltemansAuthGate>
   );
 }
