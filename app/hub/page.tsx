@@ -67,6 +67,12 @@ const FERRAMENTAS = [
     descricao: 'Templates e criações organizados por segmento.',
     href: '/biblioteca',
   },
+  {
+    tag: 'ÍNDICE',
+    titulo: 'LINKS',
+    descricao: 'Catálogo central de todas as URLs internas e externas.',
+    href: '/links',
+  },
 ];
 
 const EM_BREVE: { tag: string; titulo: string; descricao: string }[] = [];
