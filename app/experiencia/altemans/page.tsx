@@ -27,7 +27,7 @@ interface StepDef {
   options?: string[];
 }
 
-const steps: StepDef[] = [
+const FALLBACK_STEPS: StepDef[] = [
   { id: 'welcome', type: 'welcome' },
   { id: 'geral', type: 'rating', label: 'Nota geral', question: 'Como foi sua experiência hoje?' },
   { id: 'barbeiro', type: 'choice', label: 'Atendimento', question: 'Quem realizou seu atendimento?', options: ['Felipe Brandão', 'Hiago Martins', 'Vitor Pereira', 'Rian Fernando'] },
@@ -42,10 +42,55 @@ const steps: StepDef[] = [
   { id: 'thanks', type: 'thanks' },
 ];
 
-const questionSteps = steps.filter((s) => s.type !== 'welcome' && s.type !== 'thanks');
-const TOTAL = questionSteps.length;
 const RESET_DELAY_MS = 6000;
 const ADVANCE_DELAY_MS = 260;
+const CACHE_KEY = 'altemans_perguntas_cache_v1';
+
+interface PerguntaRemota {
+  ordem: number;
+  chave: string;
+  tipo: string;
+  rotulo: string;
+  pergunta: string;
+  dica: string;
+  opcoes: string[];
+  ativo: boolean;
+}
+
+function montarSteps(perguntas: PerguntaRemota[]): StepDef[] {
+  const dinamicos: StepDef[] = perguntas
+    .filter((p) => p.ativo)
+    .sort((a, b) => a.ordem - b.ordem)
+    .map((p) => ({
+      id: p.chave,
+      type: p.tipo as StepType,
+      label: p.rotulo,
+      question: p.pergunta,
+      hint: p.dica || undefined,
+      options: p.opcoes?.length ? p.opcoes : undefined,
+    }));
+
+  if (dinamicos.length === 0) return FALLBACK_STEPS;
+
+  return [{ id: 'welcome', type: 'welcome' }, ...dinamicos, { id: 'thanks', type: 'thanks' }];
+}
+
+function lerCache(): StepDef[] | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function salvarCache(steps: StepDef[]) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(steps));
+  } catch {
+    // localStorage indisponível (modo privado, etc.) — segue sem cache
+  }
+}
 
 interface Answers {
   geral?: number;
@@ -69,10 +114,30 @@ function StarIcon() {
 }
 
 export default function ExperienciaAltemansPage() {
+  const [steps, setSteps] = useState<StepDef[]>(FALLBACK_STEPS);
   const [idx, setIdx] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
 
   const step = steps[idx];
+
+  useEffect(() => {
+    const cache = lerCache();
+    if (cache) setSteps(cache);
+
+    fetch('/api/experiencia/altemans/perguntas')
+      .then((res) => {
+        if (!res.ok) throw new Error('Falha ao carregar perguntas');
+        return res.json();
+      })
+      .then((json: { perguntas: PerguntaRemota[] }) => {
+        const novosSteps = montarSteps(json.perguntas || []);
+        setSteps(novosSteps);
+        salvarCache(novosSteps);
+      })
+      .catch((err) => {
+        console.error('Não foi possível carregar perguntas do Notion, usando cache/padrão local:', err);
+      });
+  }, []);
 
   useEffect(() => {
     if (step.type !== 'thanks') return;
@@ -90,16 +155,24 @@ export default function ExperienciaAltemansPage() {
     setIdx((i) => Math.max(1, i - 1));
   }
 
+  const questionSteps = steps.filter((s) => s.type !== 'welcome' && s.type !== 'thanks');
+  const TOTAL = questionSteps.length;
+  const questionIndex = questionSteps.findIndex((s) => s.id === step.id) + 1;
+  const isLastQuestion = questionIndex === TOTAL;
+
   function selectAndAdvance<K extends keyof Answers>(key: K, value: Answers[K]) {
     setAnswers((a) => ({ ...a, [key]: value }));
-    setTimeout(goNext, ADVANCE_DELAY_MS);
+    setTimeout(() => {
+      if (isLastQuestion) submitForm();
+      else goNext();
+    }, ADVANCE_DELAY_MS);
   }
 
-  function toggleChip(value: string) {
+  function toggleChip(key: keyof Answers, value: string) {
     setAnswers((a) => {
-      const arr = a.destaque || [];
+      const arr = (a[key] as string[] | undefined) || [];
       const next = arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
-      return { ...a, destaque: next };
+      return { ...a, [key]: next };
     });
   }
 
@@ -116,8 +189,6 @@ export default function ExperienciaAltemansPage() {
       goNext();
     }
   }
-
-  const questionIndex = questionSteps.findIndex((s) => s.id === step.id) + 1;
 
   return (
     <div className={`${styles.page} ${oswald.variable} ${inter.variable}`}>
@@ -187,8 +258,8 @@ export default function ExperienciaAltemansPage() {
                     {step.options?.map((o) => (
                       <button
                         key={o}
-                        className={`${styles.choiceBtn} ${answers.barbeiro === o ? styles.selected : ''}`}
-                        onClick={() => selectAndAdvance('barbeiro', o)}
+                        className={`${styles.choiceBtn} ${answers[step.id as keyof Answers] === o ? styles.selected : ''}`}
+                        onClick={() => selectAndAdvance(step.id as keyof Answers, o as never)}
                       >
                         {o}
                       </button>
@@ -218,8 +289,8 @@ export default function ExperienciaAltemansPage() {
                     {step.options?.map((o) => (
                       <button
                         key={o}
-                        className={`${styles.chip} ${(answers.destaque || []).includes(o) ? styles.selected : ''}`}
-                        onClick={() => toggleChip(o)}
+                        className={`${styles.chip} ${((answers[step.id as keyof Answers] as string[]) || []).includes(o) ? styles.selected : ''}`}
+                        onClick={() => toggleChip(step.id as keyof Answers, o)}
                       >
                         {o}
                       </button>
@@ -231,8 +302,8 @@ export default function ExperienciaAltemansPage() {
                   <textarea
                     className={styles.openField}
                     placeholder="Escreva aqui, se quiser..."
-                    value={answers.mensagem || ''}
-                    onChange={(e) => setAnswers((a) => ({ ...a, mensagem: e.target.value }))}
+                    value={(answers[step.id as keyof Answers] as string) || ''}
+                    onChange={(e) => setAnswers((a) => ({ ...a, [step.id]: e.target.value }))}
                   />
                 )}
               </div>
@@ -242,10 +313,10 @@ export default function ExperienciaAltemansPage() {
                   {idx > 1 && <button className={styles.btnBack} onClick={goBack}>Voltar</button>}
                   <button
                     className={styles.btnPrimary}
-                    disabled={step.type === 'chips' && (answers.destaque || []).length === 0}
-                    onClick={step.id === 'mensagem' ? submitForm : goNext}
+                    disabled={step.type === 'chips' && ((answers[step.id as keyof Answers] as string[]) || []).length === 0}
+                    onClick={isLastQuestion ? submitForm : goNext}
                   >
-                    {step.id === 'mensagem' ? 'Enviar avaliação' : 'Continuar'}
+                    {isLastQuestion ? 'Enviar avaliação' : 'Continuar'}
                   </button>
                 </div>
               )}
