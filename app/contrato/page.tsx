@@ -108,6 +108,14 @@ const CONDICOES_PAGAMENTO = [
 
 const FORMAS_PAGAMENTO = ['Pix', 'Transferência bancária', 'Cartão de crédito', 'Boleto', 'Dinheiro', 'Outro'];
 
+// Parâmetros jurídicos fixos (decisão deliberada: não viram campos no wizard)
+const MULTA_ATRASO_PAGAMENTO = '2%';
+const JUROS_MORA_MENSAL = '1%';
+const DIAS_TOLERANCIA_SUSPENSAO = 10;
+const PRAZO_CONFIDENCIALIDADE_ANOS = 2;
+const MULTA_CANCELAMENTO_SEM_AVISO = '20%';
+const AVISO_PREVIO_PADRAO_DIAS = 15;
+
 const TIPOS_CONTRATACAO = [
   'Projeto pontual',
   'Serviço mensal recorrente',
@@ -192,14 +200,225 @@ function dataExtenso(iso: string): string {
   return new Date(iso + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
+// ── Cláusulas ─────────────────────────────────────────────────────────────────
+
+type Clausula = {
+  titulo: string;       // ex: 'DO OBJETO' (sem o prefixo "CLÁUSULA N —")
+  linhas: string[];     // parágrafos já formatados. '{N}' é substituído pelo número real da cláusula.
+  destaque?: boolean;   // true = cláusula que vira quote-box no PDF
+};
+
+function montarClausulas(f: FormState): Clausula[] {
+  const cl = f.clausulas;
+  const restante = calcRestante(f.valorTotal, f.entrada);
+  const parcela = calcParcela(restante, f.numeroParcelas);
+  const clausulas: Clausula[] = [];
+
+  clausulas.push({
+    titulo: 'DO OBJETO',
+    linhas: [`Este contrato tem por objeto a prestação de serviços de ${f.tipoContrato.trim() || 'serviços digitais'}, pela CONTRATADA à CONTRATANTE, conforme especificações detalhadas nas cláusulas seguintes.`],
+  });
+
+  {
+    const linhas: string[] = ['A CONTRATADA prestará os seguintes serviços:', ''];
+    if (f.servicosSelecionados.length > 0) {
+      const todos = GRUPOS_SERVICOS.flatMap(g => g.servicos);
+      f.servicosSelecionados.forEach((id, i) => {
+        const s = todos.find(x => x.id === id);
+        if (!s) return;
+        const desc = f.servicosDescricoes[id]?.trim();
+        linhas.push(`${i + 1}. ${s.nome}${desc ? ` — ${desc}` : ''}`);
+      });
+    } else { linhas.push('[Serviços a definir]'); }
+    clausulas.push({ titulo: 'DOS SERVIÇOS CONTRATADOS', linhas });
+  }
+
+  {
+    const linhas: string[] = [];
+    if (f.descricaoGeral.trim()) linhas.push(`{N}.1 Descrição geral: ${f.descricaoGeral.trim()}`);
+    if (f.objetivo.trim()) linhas.push(`{N}.2 Objetivo: ${f.objetivo.trim()}`);
+    if (f.entregaveis.trim()) linhas.push(`{N}.3 Entregáveis: ${f.entregaveis.trim()}`);
+    if (f.qtdPecas.trim()) linhas.push(`{N}.4 Quantidade de peças/designs: ${f.qtdPecas.trim()}`);
+    if (f.qtdReunioes.trim()) linhas.push(`{N}.5 Reuniões incluídas: ${f.qtdReunioes.trim()}`);
+    if (f.qtdRevisoes.trim()) linhas.push(`{N}.6 Revisões incluídas: ${f.qtdRevisoes.trim()}`);
+    if (f.plataformas.trim()) linhas.push(`{N}.7 Plataformas envolvidas: ${f.plataformas.trim()}`);
+    if (f.canais.trim()) linhas.push(`{N}.8 Canais envolvidos: ${f.canais.trim()}`);
+    if (f.naoIncluso.trim()) { linhas.push(''); linhas.push(`{N}.9 O seguinte NÃO está incluso no escopo: ${f.naoIncluso.trim()}`); }
+    if (f.materiaisCliente.trim()) { linhas.push(''); linhas.push(`{N}.10 Materiais a serem fornecidos pelo CONTRATANTE: ${f.materiaisCliente.trim()}`); }
+    clausulas.push({ titulo: 'DO ESCOPO E ENTREGÁVEIS', linhas });
+  }
+
+  {
+    const linhas: string[] = [];
+    if (f.dataInicio) linhas.push(`{N}.1 Data de início: ${dataExtenso(f.dataInicio)}`);
+    if (f.dataEntrega) linhas.push(`{N}.2 Data prevista de entrega: ${dataExtenso(f.dataEntrega)}`);
+    if (f.duracaoEstimada.trim()) linhas.push(`{N}.3 Duração estimada: ${f.duracaoEstimada.trim()}`);
+    if (f.prazoMateriais.trim()) linhas.push(`{N}.4 Prazo para envio de materiais: ${f.prazoMateriais.trim()}`);
+    if (f.prazoAprovacao.trim()) linhas.push(`{N}.5 Prazo para aprovação: ${f.prazoAprovacao.trim()}`);
+    if (f.tipoContratacao) { linhas.push(''); linhas.push(`{N}.6 Modalidade: ${f.tipoContratacao}`); }
+    if (f.tipoContratacao === 'Serviço mensal recorrente') {
+      if (f.diaVencimentoMensal.trim()) linhas.push(`{N}.7 Dia de vencimento mensal: ${f.diaVencimentoMensal.trim()}`);
+      if (f.periodoMinimo.trim()) linhas.push(`{N}.8 Período mínimo: ${f.periodoMinimo.trim()}`);
+      if (f.avisoPrevio.trim()) linhas.push(`{N}.9 Aviso prévio para cancelamento: ${f.avisoPrevio.trim()}`);
+    }
+    clausulas.push({ titulo: 'DOS PRAZOS', linhas });
+  }
+
+  {
+    const linhas: string[] = [`{N}.1 O valor total dos serviços é de R$ ${f.valorTotal.trim() || '0,00'}.`];
+    if (f.entrada.trim()) {
+      linhas.push(`{N}.2 Entrada: R$ ${f.entrada.trim()}`);
+      if (restante) linhas.push(`{N}.3 Valor restante: R$ ${restante}`);
+    }
+    if (f.numeroParcelas.trim() && parcela) linhas.push(`{N}.4 Parcelamento: ${f.numeroParcelas}x de R$ ${parcela}${f.diaVencimentoParcelas.trim() ? `, vencimento dia ${f.diaVencimentoParcelas.trim()}` : ''}.`);
+    linhas.push('');
+    linhas.push(`{N}.5 Condição de pagamento: ${f.condicaoPagamento}`);
+    if (f.formasPagamento.length > 0) linhas.push(`{N}.6 Formas de pagamento aceitas: ${f.formasPagamento.join(', ')}`);
+    linhas.push('');
+    linhas.push(`Em caso de atraso no pagamento, incidirão multa de ${MULTA_ATRASO_PAGAMENTO} sobre o valor em atraso e juros de mora de ${JUROS_MORA_MENSAL} ao mês, calculados pro rata die.`);
+    linhas.push(`Decorridos ${DIAS_TOLERANCIA_SUSPENSAO} dias corridos de atraso sem regularização, a CONTRATADA reserva-se o direito de suspender a execução dos serviços até a quitação do débito, sem prejuízo das demais penalidades previstas nesta cláusula.`);
+    clausulas.push({ titulo: 'DO VALOR E FORMA DE PAGAMENTO', linhas, destaque: true });
+  }
+
+  {
+    const linhas: string[] = [
+      f.numRevisoes.trim() ? `{N}.1 Estão incluídas ${f.numRevisoes.trim()} revisões no escopo deste contrato.` : '{N}.1 O número de revisões incluídas está definido no escopo contratado.',
+    ];
+    if (f.oQueContaRevisao.trim()) { linhas.push(''); linhas.push(`{N}.2 Considera-se revisão: ${f.oQueContaRevisao.trim()}`); }
+    if (f.valorRevisaoExtra.trim()) { linhas.push(''); linhas.push(`{N}.3 Revisões adicionais: R$ ${f.valorRevisaoExtra.trim()} cada.`); }
+    if (f.prazoRevisao.trim()) { linhas.push(''); linhas.push(`{N}.4 Prazo para solicitar revisão: ${f.prazoRevisao.trim()} após cada entrega.`); }
+    linhas.push('');
+    linhas.push('Não são consideradas revisões solicitações de conteúdo novo, mudança de escopo ou inclusão de itens não previstos no objeto deste contrato, tratadas como serviço adicional mediante orçamento e aprovação prévia.');
+    linhas.push('Caso o CONTRATANTE não solicite revisão dentro do prazo estipulado, a entrega correspondente será considerada tacitamente aprovada.');
+    clausulas.push({ titulo: 'DAS REVISÕES E ALTERAÇÕES', linhas });
+  }
+
+  {
+    const itens = ['executar os serviços conforme o escopo contratado', 'manter comunicação clara e profissional durante todo o projeto', 'cumprir os prazos estabelecidos, desde que o CONTRATANTE cumpra suas obrigações', 'preservar as informações confidenciais do CONTRATANTE', 'entregar os materiais combinados nas condições acordadas', 'informar previamente qualquer alteração relevante no cronograma'];
+    clausulas.push({ titulo: 'DAS RESPONSABILIDADES DA CONTRATADA', linhas: ['A CONTRATADA compromete-se a:', ...itens.map((v, i) => `${['I', 'II', 'III', 'IV', 'V', 'VI'][i]}. ${v};`)] });
+  }
+
+  {
+    const itens = ['fornecer informações completas e corretas', 'enviar os materiais necessários dentro dos prazos acordados', 'aprovar ou solicitar ajustes no prazo estipulado', 'efetuar os pagamentos nas datas acordadas', 'não solicitar entregas fora do escopo sem orçamento adicional', 'revisar os conteúdos antes da publicação', 'garantir que possui direito de uso sobre imagens, marcas, textos e materiais enviados', 'fornecer os acessos necessários às plataformas envolvidas'];
+    clausulas.push({ titulo: 'DAS RESPONSABILIDADES DO CONTRATANTE', linhas: ['O CONTRATANTE compromete-se a:', ...itens.map((v, i) => `${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][i]}. ${v};`)] });
+  }
+
+  clausulas.push({
+    titulo: 'DAS APROVAÇÕES E ATRASOS',
+    linhas: [
+      'Caso o CONTRATANTE atrase o envio de informações, materiais ou aprovações, os prazos de entrega poderão ser automaticamente ajustados proporcionalmente ao atraso, sem caracterizar descumprimento contratual por parte da CONTRATADA.',
+      '',
+      'Atrasos recorrentes na aprovação ou no envio de materiais por parte do CONTRATANTE (3 ou mais ocorrências) autorizam a CONTRATADA a suspender temporariamente a execução até a regularização, sem caracterizar descumprimento contratual.',
+    ],
+  });
+
+  clausulas.push({
+    titulo: 'DOS MATERIAIS, ACESSOS E ARQUIVOS EDITÁVEIS',
+    linhas: [
+      cl.arquivosEditaveis && !cl.semArquivosEditaveis
+        ? 'Os arquivos editáveis serão entregues à CONTRATANTE após a quitação integral do valor total previsto na cláusula de pagamento. A entrega de arquivos editáveis está condicionada ao pagamento completo de todas as parcelas contratadas.'
+        : 'Arquivos editáveis, links de Canva, arquivos fonte ou estruturas editáveis não serão entregues, salvo disposição expressa em contrário no escopo contratado.',
+    ],
+  });
+
+  if (cl.confidencialidade) {
+    clausulas.push({
+      titulo: 'DA CONFIDENCIALIDADE',
+      linhas: [
+        'As partes comprometem-se a manter sigilo sobre todas as informações confidenciais trocadas durante a vigência deste contrato, não as divulgando a terceiros sem consentimento expresso da outra parte.',
+        '',
+        `Esta obrigação de confidencialidade permanece válida por ${PRAZO_CONFIDENCIALIDADE_ANOS} anos após o encerramento deste contrato, independentemente do motivo da rescisão.`,
+      ],
+    });
+  }
+
+  clausulas.push({
+    titulo: 'DA PROPRIEDADE INTELECTUAL',
+    linhas: ['Os materiais desenvolvidos pela CONTRATADA no âmbito deste contrato permanecem de propriedade da CONTRATADA até a quitação integral do valor previsto neste contrato. Após a quitação integral, os direitos de uso sobre os materiais entregues são transferidos ao CONTRATANTE, ressalvado o direito da CONTRATADA de utilizá-los em portfólio e materiais de divulgação, conforme cláusula seguinte.'],
+    destaque: true,
+  });
+
+  clausulas.push({
+    titulo: 'DO USO EM PORTFÓLIO',
+    linhas: [
+      cl.portfolioAposLancamento
+        ? 'A utilização em portfólio pela CONTRATADA somente será permitida após o lançamento público do projeto.'
+        : cl.portfolioNaoPermitido
+          ? 'Os materiais desenvolvidos não poderão ser utilizados pela CONTRATADA em seu portfólio sem autorização expressa do CONTRATANTE.'
+          : 'A CONTRATADA fica autorizada a utilizar os materiais desenvolvidos neste projeto em seu portfólio e materiais de divulgação.',
+    ],
+  });
+
+  if (cl.gestaoAnuncios || cl.midiaSeparada) {
+    clausulas.push({
+      titulo: 'DOS ANÚNCIOS E INVESTIMENTO EM MÍDIA',
+      linhas: ['O investimento em mídia paga (Google Ads, Meta Ads ou similares) é de responsabilidade exclusiva do CONTRATANTE e não está incluso no valor de prestação de serviço objeto deste contrato, salvo disposição expressa em contrário.'],
+    });
+  }
+
+  {
+    const diasAviso = f.tipoContratacao === 'Serviço mensal recorrente'
+      ? (f.avisoPrevio.trim() || `${AVISO_PREVIO_PADRAO_DIAS} dias`)
+      : (cl.cancelamento30 ? '30 dias' : `${AVISO_PREVIO_PADRAO_DIAS} dias`);
+    const linhas: string[] = [];
+    if (f.tipoContratacao === 'Serviço mensal recorrente') {
+      linhas.push(`Este contrato tem vigência mínima de ${f.periodoMinimo.trim() || 'prazo definido no escopo'}.`);
+    }
+    linhas.push(`O cancelamento deste contrato poderá ser solicitado por qualquer das partes mediante aviso prévio de ${diasAviso}, por escrito.`);
+    linhas.push('Os valores já pagos até a data do cancelamento não serão reembolsados, correspondendo à remuneração pelos serviços já prestados ou reservados.');
+    linhas.push('As parcelas futuras, ainda não vencidas, não serão cobradas caso o aviso prévio estipulado seja respeitado.');
+    linhas.push(`Caso o cancelamento ocorra sem o cumprimento do aviso prévio estipulado, será devida multa de ${MULTA_CANCELAMENTO_SEM_AVISO} sobre o valor total do contrato, a título de indenização pelos prejuízos decorrentes da interrupção abrupta.`);
+    if (cl.entradaNaoReembolsavel) { linhas.push(''); linhas.push('O valor de entrada pago não será reembolsável após o início da execução dos serviços.'); }
+    clausulas.push({ titulo: 'DO CANCELAMENTO', linhas, destaque: true });
+  }
+
+  clausulas.push({
+    titulo: 'DA LIMITAÇÃO DE RESPONSABILIDADE',
+    linhas: ['A CONTRATADA não garante resultados específicos de vendas, crescimento, engajamento, alcance ou faturamento, pois tais resultados dependem de fatores externos, de mercado e do comportamento do público.'],
+  });
+
+  clausulas.push({
+    titulo: 'DA PUBLICAÇÃO',
+    linhas: [
+      cl.publicacaoOrium && !cl.publicacaoCliente
+        ? 'A publicação dos materiais desenvolvidos será realizada pela CONTRATADA conforme acordado.'
+        : 'A publicação dos materiais desenvolvidos será de responsabilidade exclusiva do CONTRATANTE.',
+    ],
+  });
+
+  clausulas.push({
+    titulo: 'DAS DISPOSIÇÕES GERAIS',
+    linhas: [
+      '{N}.1 Este contrato representa o acordo integral entre as partes, substituindo quaisquer negociações anteriores.',
+      '{N}.2 Qualquer alteração deverá ser feita por escrito e assinada por ambas as partes.',
+      '{N}.3 As partes elegem o foro da comarca de Belo Horizonte/MG para dirimir quaisquer controvérsias.',
+    ],
+  });
+
+  {
+    const p = f.prestador;
+    const c = f.cliente;
+    const linhas: string[] = [
+      'E por estarem assim justos e contratados, firmam o presente instrumento em duas vias de igual teor.',
+      '',
+      `Belo Horizonte, ${dataExtenso(new Date().toISOString().split('T')[0])}.`,
+      '', '',
+      '_________________________________', 'CONTRATADA', p.nome.trim(), p.responsavel.trim(),
+      '', '',
+      '_________________________________', 'CONTRATANTE', c.empresa.trim() || '[Nome do cliente]',
+    ];
+    if (c.responsavel.trim()) linhas.push(c.responsavel.trim());
+    clausulas.push({ titulo: 'DA ASSINATURA', linhas });
+  }
+
+  return clausulas;
+}
+
 // ── Gerador do contrato ───────────────────────────────────────────────────────
 
 function gerarContrato(f: FormState): string {
   const p = f.prestador;
   const c = f.cliente;
-  const cl = f.clausulas;
-  const restante = calcRestante(f.valorTotal, f.entrada);
-  const parcela = calcParcela(restante, f.numeroParcelas);
   const L: string[] = [];
   const add = (s: string) => L.push(s);
   const br = () => L.push('');
@@ -224,122 +443,14 @@ function gerarContrato(f: FormState): string {
   if (c.cidade.trim() || c.uf.trim()) add(`Cidade/UF: ${c.cidade.trim()} / ${c.uf.trim()}`);
   br();
   add('As partes acima identificadas têm entre si justo e contratado o presente Contrato de Prestação de Serviços Digitais, que se regerá pelas cláusulas e condições seguintes.');
-  br(); add('════════════════════════════════════════════════════════════════'); br();
-  add('CLÁUSULA 1 — DO OBJETO'); br();
-  add(`Este contrato tem por objeto a prestação de serviços de ${f.tipoContrato.trim() || 'serviços digitais'}, pela CONTRATADA à CONTRATANTE, conforme especificações detalhadas nas cláusulas seguintes.`);
-  br(); add('════════════════════════════════════════════════════════════════'); br();
-  add('CLÁUSULA 2 — DOS SERVIÇOS CONTRATADOS'); br();
-  add('A CONTRATADA prestará os seguintes serviços:'); br();
-  if (f.servicosSelecionados.length > 0) {
-    const todos = GRUPOS_SERVICOS.flatMap(g => g.servicos);
-    f.servicosSelecionados.forEach((id, i) => {
-      const s = todos.find(x => x.id === id);
-      if (!s) return;
-      const desc = f.servicosDescricoes[id]?.trim();
-      add(`${i + 1}. ${s.nome}${desc ? ` — ${desc}` : ''}`);
-    });
-  } else { add('[Serviços a definir]'); }
-  br(); add('════════════════════════════════════════════════════════════════'); br();
-  add('CLÁUSULA 3 — DO ESCOPO E ENTREGÁVEIS'); br();
-  if (f.descricaoGeral.trim()) add(`3.1 Descrição geral: ${f.descricaoGeral.trim()}`);
-  if (f.objetivo.trim()) add(`3.2 Objetivo: ${f.objetivo.trim()}`);
-  if (f.entregaveis.trim()) add(`3.3 Entregáveis: ${f.entregaveis.trim()}`);
-  if (f.qtdPecas.trim()) add(`3.4 Quantidade de peças/designs: ${f.qtdPecas.trim()}`);
-  if (f.qtdReunioes.trim()) add(`3.5 Reuniões incluídas: ${f.qtdReunioes.trim()}`);
-  if (f.qtdRevisoes.trim()) add(`3.6 Revisões incluídas: ${f.qtdRevisoes.trim()}`);
-  if (f.plataformas.trim()) add(`3.7 Plataformas envolvidas: ${f.plataformas.trim()}`);
-  if (f.canais.trim()) add(`3.8 Canais envolvidos: ${f.canais.trim()}`);
-  if (f.naoIncluso.trim()) { br(); add(`3.9 O seguinte NÃO está incluso no escopo: ${f.naoIncluso.trim()}`); }
-  if (f.materiaisCliente.trim()) { br(); add(`3.10 Materiais a serem fornecidos pelo CONTRATANTE: ${f.materiaisCliente.trim()}`); }
-  br(); add('════════════════════════════════════════════════════════════════'); br();
-  add('CLÁUSULA 4 — DOS PRAZOS'); br();
-  if (f.dataInicio) add(`4.1 Data de início: ${dataExtenso(f.dataInicio)}`);
-  if (f.dataEntrega) add(`4.2 Data prevista de entrega: ${dataExtenso(f.dataEntrega)}`);
-  if (f.duracaoEstimada.trim()) add(`4.3 Duração estimada: ${f.duracaoEstimada.trim()}`);
-  if (f.prazoMateriais.trim()) add(`4.4 Prazo para envio de materiais: ${f.prazoMateriais.trim()}`);
-  if (f.prazoAprovacao.trim()) add(`4.5 Prazo para aprovação: ${f.prazoAprovacao.trim()}`);
-  if (f.tipoContratacao) { br(); add(`4.6 Modalidade: ${f.tipoContratacao}`); }
-  if (f.tipoContratacao === 'Serviço mensal recorrente') {
-    if (f.diaVencimentoMensal.trim()) add(`4.7 Dia de vencimento mensal: ${f.diaVencimentoMensal.trim()}`);
-    if (f.periodoMinimo.trim()) add(`4.8 Período mínimo: ${f.periodoMinimo.trim()}`);
-    if (f.avisoPrevio.trim()) add(`4.9 Aviso prévio para cancelamento: ${f.avisoPrevio.trim()}`);
-  }
-  br(); add('════════════════════════════════════════════════════════════════'); br();
-  add('CLÁUSULA 5 — DO VALOR E FORMA DE PAGAMENTO'); br();
-  add(`5.1 O valor total dos serviços é de R$ ${f.valorTotal.trim() || '0,00'}.`);
-  if (f.entrada.trim()) { add(`5.2 Entrada: R$ ${f.entrada.trim()}`); if (restante) add(`5.3 Valor restante: R$ ${restante}`); }
-  if (f.numeroParcelas.trim() && parcela) add(`5.4 Parcelamento: ${f.numeroParcelas}x de R$ ${parcela}${f.diaVencimentoParcelas.trim() ? `, vencimento dia ${f.diaVencimentoParcelas.trim()}` : ''}.`);
-  br(); add(`5.5 Condição de pagamento: ${f.condicaoPagamento}`);
-  if (f.formasPagamento.length > 0) add(`5.6 Formas de pagamento aceitas: ${f.formasPagamento.join(', ')}`);
-  br(); add('════════════════════════════════════════════════════════════════'); br();
-  add('CLÁUSULA 6 — DAS REVISÕES E ALTERAÇÕES'); br();
-  add(f.numRevisoes.trim() ? `6.1 Estão incluídas ${f.numRevisoes.trim()} revisões no escopo deste contrato.` : '6.1 O número de revisões incluídas está definido no escopo contratado.');
-  if (f.oQueContaRevisao.trim()) { br(); add(`6.2 Considera-se revisão: ${f.oQueContaRevisao.trim()}`); }
-  if (f.valorRevisaoExtra.trim()) { br(); add(`6.3 Revisões adicionais: R$ ${f.valorRevisaoExtra.trim()} cada.`); }
-  if (f.prazoRevisao.trim()) { br(); add(`6.4 Prazo para solicitar revisão: ${f.prazoRevisao.trim()} após cada entrega.`); }
-  br(); add('════════════════════════════════════════════════════════════════'); br();
-  add('CLÁUSULA 7 — DAS RESPONSABILIDADES DA CONTRATADA'); br();
-  add('A CONTRATADA compromete-se a:');
-  ['executar os serviços conforme o escopo contratado', 'manter comunicação clara e profissional durante todo o projeto', 'cumprir os prazos estabelecidos, desde que o CONTRATANTE cumpra suas obrigações', 'preservar as informações confidenciais do CONTRATANTE', 'entregar os materiais combinados nas condições acordadas', 'informar previamente qualquer alteração relevante no cronograma'].forEach((v, i) => add(`${['I','II','III','IV','V','VI'][i]}. ${v};`));
-  br(); add('════════════════════════════════════════════════════════════════'); br();
-  add('CLÁUSULA 8 — DAS RESPONSABILIDADES DO CONTRATANTE'); br();
-  add('O CONTRATANTE compromete-se a:');
-  ['fornecer informações completas e corretas', 'enviar os materiais necessários dentro dos prazos acordados', 'aprovar ou solicitar ajustes no prazo estipulado', 'efetuar os pagamentos nas datas acordadas', 'não solicitar entregas fora do escopo sem orçamento adicional', 'revisar os conteúdos antes da publicação', 'garantir que possui direito de uso sobre imagens, marcas, textos e materiais enviados', 'fornecer os acessos necessários às plataformas envolvidas'].forEach((v, i) => add(`${['I','II','III','IV','V','VI','VII','VIII'][i]}. ${v};`));
-  br(); add('════════════════════════════════════════════════════════════════'); br();
-  add('CLÁUSULA 9 — DAS APROVAÇÕES E ATRASOS'); br();
-  add('Caso o CONTRATANTE atrase o envio de informações, materiais ou aprovações, os prazos de entrega poderão ser automaticamente ajustados proporcionalmente ao atraso, sem caracterizar descumprimento contratual por parte da CONTRATADA.');
-  br(); add('════════════════════════════════════════════════════════════════'); br();
-  add('CLÁUSULA 10 — DOS MATERIAIS, ACESSOS E ARQUIVOS EDITÁVEIS'); br();
-  add(cl.arquivosEditaveis && !cl.semArquivosEditaveis
-    ? 'Os arquivos editáveis serão entregues ao final do projeto, conforme acordado no escopo.'
-    : 'Arquivos editáveis, links de Canva, arquivos fonte ou estruturas editáveis não serão entregues, salvo disposição expressa em contrário no escopo contratado.');
-  if (cl.confidencialidade) {
+
+  montarClausulas(f).forEach((clausula, i) => {
+    const numero = i + 1;
     br(); add('════════════════════════════════════════════════════════════════'); br();
-    add('CLÁUSULA 11 — DA CONFIDENCIALIDADE'); br();
-    add('As partes comprometem-se a manter sigilo sobre todas as informações confidenciais trocadas durante a vigência deste contrato, não as divulgando a terceiros sem consentimento expresso da outra parte.');
-  }
-  br(); add('════════════════════════════════════════════════════════════════'); br();
-  add('CLÁUSULA 12 — DO USO EM PORTFÓLIO'); br();
-  add(cl.portfolioAposLancamento
-    ? 'A utilização em portfólio pela CONTRATADA somente será permitida após o lançamento público do projeto.'
-    : cl.portfolioNaoPermitido
-      ? 'Os materiais desenvolvidos não poderão ser utilizados pela CONTRATADA em seu portfólio sem autorização expressa do CONTRATANTE.'
-      : 'A CONTRATADA fica autorizada a utilizar os materiais desenvolvidos neste projeto em seu portfólio e materiais de divulgação.');
-  if (cl.gestaoAnuncios || cl.midiaSeparada) {
-    br(); add('════════════════════════════════════════════════════════════════'); br();
-    add('CLÁUSULA 13 — DOS ANÚNCIOS E INVESTIMENTO EM MÍDIA'); br();
-    add('O investimento em mídia paga (Google Ads, Meta Ads ou similares) é de responsabilidade exclusiva do CONTRATANTE e não está incluso no valor de prestação de serviço objeto deste contrato, salvo disposição expressa em contrário.');
-  }
-  br(); add('════════════════════════════════════════════════════════════════'); br();
-  add('CLÁUSULA 14 — DO CANCELAMENTO'); br();
-  if (f.tipoContratacao === 'Serviço mensal recorrente') {
-    add(`Este contrato tem vigência mínima de ${f.periodoMinimo.trim() || 'prazo definido no escopo'}. O cancelamento poderá ser solicitado após o período mínimo, mediante aviso prévio de ${f.avisoPrevio.trim() || '30 (trinta) dias'}, por escrito.`);
-  } else if (cl.cancelamento30) {
-    add('O cancelamento deste contrato poderá ser solicitado por qualquer das partes mediante aviso prévio de 30 (trinta) dias, por escrito.');
-  } else {
-    add('O cancelamento deste contrato deverá ser comunicado por escrito à outra parte com antecedência razoável.');
-  }
-  if (cl.entradaNaoReembolsavel) { br(); add('O valor de entrada pago não será reembolsável após o início da execução dos serviços.'); }
-  br(); add('════════════════════════════════════════════════════════════════'); br();
-  add('CLÁUSULA 15 — DA LIMITAÇÃO DE RESPONSABILIDADE'); br();
-  add('A CONTRATADA não garante resultados específicos de vendas, crescimento, engajamento, alcance ou faturamento, pois tais resultados dependem de fatores externos, de mercado e do comportamento do público.');
-  br(); add('════════════════════════════════════════════════════════════════'); br();
-  add('CLÁUSULA 16 — DA PUBLICAÇÃO'); br();
-  add(cl.publicacaoOrium && !cl.publicacaoCliente
-    ? 'A publicação dos materiais desenvolvidos será realizada pela CONTRATADA conforme acordado.'
-    : 'A publicação dos materiais desenvolvidos será de responsabilidade exclusiva do CONTRATANTE.');
-  br(); add('════════════════════════════════════════════════════════════════'); br();
-  add('CLÁUSULA 17 — DAS DISPOSIÇÕES GERAIS'); br();
-  add('17.1 Este contrato representa o acordo integral entre as partes, substituindo quaisquer negociações anteriores.');
-  add('17.2 Qualquer alteração deverá ser feita por escrito e assinada por ambas as partes.');
-  add('17.3 As partes elegem o foro da comarca de Belo Horizonte/MG para dirimir quaisquer controvérsias.');
-  br(); add('════════════════════════════════════════════════════════════════'); br();
-  add('CLÁUSULA 18 — DA ASSINATURA'); br();
-  add('E por estarem assim justos e contratados, firmam o presente instrumento em duas vias de igual teor.'); br();
-  add(`Belo Horizonte, ${dataExtenso(new Date().toISOString().split('T')[0])}.`); br(); br();
-  add('_________________________________'); add('CONTRATADA'); add(p.nome.trim()); add(p.responsavel.trim()); br(); br();
-  add('_________________________________'); add('CONTRATANTE'); add(c.empresa.trim() || '[Nome do cliente]');
-  if (c.responsavel.trim()) add(c.responsavel.trim());
+    add(`CLÁUSULA ${numero} — ${clausula.titulo}`); br();
+    clausula.linhas.forEach(linha => add(linha.replace(/\{N\}/g, String(numero))));
+  });
+
   return L.join('\n');
 }
 
@@ -544,61 +655,170 @@ function ContratoPage() {
       const { default: jsPDF } = await import('jspdf');
       const { default: html2canvas } = await import('html2canvas');
 
-      const texto = gerarContrato(form);
       const clientName = form.cliente.empresa || 'cliente';
       const hoje = new Date().toISOString().split('T')[0];
       const arquivo = `contrato-${clientName.toLowerCase().replace(/\s+/g, '-')}-${hoje}.pdf`;
-
-      const el = document.createElement('div');
-      el.style.cssText = `position:fixed;left:-9999px;top:0;width:734px;background:#080808;padding:60px;box-sizing:border-box;font-family:'Poppins',Arial,sans-serif;border-top:5px solid #FF6B00;`;
-
-      const linhas = texto.split('\n');
-      const htmlLinhas = linhas.map(linha => {
-        if (/^═+$/.test(linha)) return `<div style="height:1px;background:#1a1a1a;margin:14px 0;"></div>`;
-        if (/^CLÁUSULA \d+/.test(linha)) return `<div style="font-family:'Anton',Impact,sans-serif;color:#FF6B00;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-top:6px;margin-bottom:4px;">${linha}</div>`;
-        if (/^CONTRATO DE PRESTAÇÃO|^IDENTIFICAÇÃO DAS PARTES/.test(linha)) return `<div style="font-family:'Anton',Impact,sans-serif;color:#fff;font-size:16px;letter-spacing:2px;margin-bottom:8px;">${linha}</div>`;
-        if (/^CONTRATADA:|^CONTRATANTE:/.test(linha)) return `<div style="color:#fff;font-size:13px;font-weight:600;line-height:1.8;">${linha}</div>`;
-        if (!linha.trim()) return `<div style="height:6px;"></div>`;
-        return `<div style="color:#aaa;font-size:12.5px;line-height:1.85;margin-bottom:2px;">${linha}</div>`;
-      }).join('');
-
-      el.innerHTML = htmlLinhas;
-      document.body.appendChild(el);
-
-      const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#080808', logging: false });
-      document.body.removeChild(el);
+      const dataAssinatura = dataExtenso(hoje);
+      const p = form.prestador;
+      const c = form.cliente;
 
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const pageW = doc.internal.pageSize.getWidth();
-      const pageH = doc.internal.pageSize.getHeight();
-      const margin = 8;
-      const contentW = pageW - margin * 2;
-      const contentH = (canvas.height * contentW) / canvas.width;
+      const PX_W = 794;
+      const PX_H = 1123;
 
-      if (contentH <= pageH - margin * 2) {
-        doc.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', margin, margin, contentW, contentH);
-      } else {
-        let remainingH = contentH;
-        let srcY = 0;
-        const sliceH = pageH - margin * 2;
-        const sliceHPx = (sliceH * canvas.width) / contentW;
+      const loadImg = (src: string) => new Promise<string>(resolve => {
+        const img = new window.Image(); img.crossOrigin = 'anonymous';
+        img.onload = () => { const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height; cv.getContext('2d')!.drawImage(img, 0, 0); resolve(cv.toDataURL('image/png')); };
+        img.onerror = () => resolve('');
+        img.src = src;
+      });
 
-        while (remainingH > 0) {
-          if (srcY > 0) doc.addPage();
-          const thisSliceH = Math.min(sliceH, remainingH);
-          const thisSliceHPx = (thisSliceH * canvas.width) / contentW;
+      const logoBase64 = await loadImg('/lglaranja.png');
+      const logoLg = logoBase64 ? `<img src="${logoBase64}" style="height:64px;object-fit:contain;" />` : `<span style="font-family:'Anton',Impact,sans-serif;font-size:34px;color:#FF6B00;letter-spacing:6px;">ORIUM</span>`;
+      const logoXs = logoBase64 ? `<img src="${logoBase64}" style="height:26px;object-fit:contain;" />` : `<span style="font-family:'Anton',Impact,sans-serif;font-size:15px;color:#FF6B00;letter-spacing:4px;">ORIUM</span>`;
 
-          const sliceCanvas = document.createElement('canvas');
-          sliceCanvas.width = canvas.width;
-          sliceCanvas.height = Math.ceil(thisSliceHPx);
-          const ctx = sliceCanvas.getContext('2d');
-          if (ctx) ctx.drawImage(canvas, 0, srcY, canvas.width, thisSliceHPx, 0, 0, canvas.width, thisSliceHPx);
+      const P = "font-family:'Poppins',Arial,sans-serif;";
+      const A = "font-family:'Anton',Impact,sans-serif;";
+      const BAR = 'position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#FF6B00,#FF8C00 50%,#FF6B00);';
+      const BBAR = 'position:absolute;bottom:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#FF6B00,#FF8C00 50%,#FF6B00);';
 
-          doc.addImage(sliceCanvas.toDataURL('image/jpeg', 0.92), 'JPEG', margin, margin, contentW, thisSliceH);
-          srcY += sliceHPx;
-          remainingH -= sliceH;
+      let isFirst = true;
+      const addPage = async (html: string) => {
+        const el = document.createElement('div');
+        el.style.cssText = ['position:fixed', 'left:-9999px', 'top:0', `width:${PX_W}px`, `height:${PX_H}px`, 'background:#080808', 'overflow:hidden', "font-family:'Poppins',Arial,sans-serif", 'box-sizing:border-box'].join(';');
+        el.innerHTML = html;
+        document.body.appendChild(el);
+        try {
+          await new Promise(r => setTimeout(r, 100));
+          const canvas = await html2canvas(el, { backgroundColor: '#080808', scale: 2, useCORS: true, allowTaint: true, logging: false, width: PX_W, height: PX_H });
+          const imgData = canvas.toDataURL('image/jpeg', 0.93);
+          if (!isFirst) doc.addPage();
+          isFirst = false;
+          doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+        } finally {
+          document.body.removeChild(el);
         }
+      };
+
+      // ── Cláusulas → blocos HTML ───────────────────────────────────────────
+      const clausulas = montarClausulas(form);
+      const clausulasConteudo = clausulas.slice(0, -1); // exclui "DA ASSINATURA" — vira página própria
+
+      const CONTENT_W = PX_W - 140;
+      const HEADER_H = 92;
+      const FOOTER_H = 60;
+      const CONTENT_PAD_V = 48;
+      const USABLE_H = PX_H - HEADER_H - FOOTER_H - CONTENT_PAD_V;
+
+      function buildClausulaHtml(clausula: Clausula, numero: number): string {
+        const paragrafos = clausula.linhas
+          .map(l => l.replace(/\{N\}/g, String(numero)))
+          .filter(l => l.trim() !== '')
+          .map(l => `<div style="color:#aaa;font-size:12.5px;line-height:1.8;margin-bottom:6px;${P}">${l}</div>`)
+          .join('');
+        const corpo = clausula.destaque
+          ? `<div style="background:#0f0f0f;border-left:2px solid #FF6B00;padding:14px 16px;">${paragrafos}</div>`
+          : `<div>${paragrafos}</div>`;
+        return `<div style="margin-bottom:4px;"><div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px;"><div style="${A}font-size:24px;color:#FF6B00;line-height:1;">${String(numero).padStart(2, '0')}</div><div style="${A}font-size:15px;color:#fff;letter-spacing:1px;text-transform:uppercase;">${clausula.titulo}</div></div>${corpo}</div>`;
       }
+
+      const blocosHtml = clausulasConteudo.map((cls, i) => buildClausulaHtml(cls, i + 1));
+
+      // Medição real (não corte por altura de canvas) — evita cortar cláusula no meio
+      const medidor = document.createElement('div');
+      medidor.style.cssText = `position:fixed;left:-9999px;top:0;width:${CONTENT_W}px;font-family:'Poppins',Arial,sans-serif;`;
+      document.body.appendChild(medidor);
+      await document.fonts.ready;
+      const alturas = blocosHtml.map(html => {
+        const wrap = document.createElement('div');
+        wrap.innerHTML = html;
+        medidor.appendChild(wrap);
+        const h = wrap.getBoundingClientRect().height;
+        medidor.removeChild(wrap);
+        return h;
+      });
+      document.body.removeChild(medidor);
+
+      const paginas: string[][] = [];
+      let paginaAtual: string[] = [];
+      let acumulado = 0;
+      blocosHtml.forEach((html, i) => {
+        const h = alturas[i] + 18; // gap entre blocos
+        if (paginaAtual.length > 0 && acumulado + h > USABLE_H) {
+          paginas.push(paginaAtual);
+          paginaAtual = [];
+          acumulado = 0;
+        }
+        paginaAtual.push(html);
+        acumulado += h;
+      });
+      if (paginaAtual.length > 0) paginas.push(paginaAtual);
+
+      // ── Capa ───────────────────────────────────────────────────────────────
+      await addPage(`
+        <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px;box-sizing:border-box;">
+          <div style="${BAR}"></div><div style="${BBAR}"></div>
+          <div style="margin-bottom:36px;">${logoLg}</div>
+          <div style="color:#FF6B00;font-size:11px;letter-spacing:6px;text-transform:uppercase;margin-bottom:20px;font-weight:600;${P}">CONTRATO DE PRESTAÇÃO DE SERVIÇOS DIGITAIS</div>
+          <div style="${A}font-size:38px;color:#fff;letter-spacing:1px;line-height:1.1;text-align:center;margin-bottom:14px;text-transform:uppercase;">ORIUM <span style="color:#FF6B00;">×</span> ${(c.empresa.trim() || '[CLIENTE]').toUpperCase()}</div>
+          <div style="color:#555;font-size:12px;letter-spacing:5px;margin-bottom:44px;${P}">ESTRUTURA · PERCEPÇÃO · RESULTADOS</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:560px;margin-bottom:40px;">
+            <div style="background:#0d0d0d;border:1px solid #FF6B00;border-radius:12px;padding:20px;">
+              <div style="color:#FF6B00;font-size:10px;letter-spacing:3px;font-weight:700;margin-bottom:10px;${P}">CONTRATADA</div>
+              <div style="color:#fff;font-size:14px;font-weight:700;margin-bottom:6px;${P}">${p.nome.trim()}</div>
+              <div style="color:#888;font-size:11.5px;line-height:1.8;${P}">${p.responsavel.trim()}<br/>${p.email.trim()}<br/>${p.whatsapp.trim()}</div>
+            </div>
+            <div style="background:#0d0d0d;border:1px solid #1e1e1e;border-radius:12px;padding:20px;">
+              <div style="color:#888;font-size:10px;letter-spacing:3px;font-weight:700;margin-bottom:10px;${P}">CONTRATANTE</div>
+              <div style="color:#fff;font-size:14px;font-weight:700;margin-bottom:6px;${P}">${c.empresa.trim() || '[Nome do cliente]'}</div>
+              <div style="color:#888;font-size:11.5px;line-height:1.8;${P}">${c.responsavel.trim()}<br/>${c.email.trim()}<br/>${c.whatsapp.trim()}</div>
+            </div>
+          </div>
+          <div style="color:#2a2a2a;font-size:11px;letter-spacing:2px;${P}">${dataAssinatura}</div>
+        </div>
+      `);
+
+      // ── Páginas de conteúdo (dinâmicas, paginadas por medição real) ─────────
+      for (let i = 0; i < paginas.length; i++) {
+        await addPage(`
+          <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;box-sizing:border-box;position:relative;display:flex;flex-direction:column;">
+            <div style="${BAR}"></div>
+            <div style="padding:28px 70px 18px 70px;border-bottom:1px solid #161616;display:flex;justify-content:space-between;align-items:center;">${logoXs}<div style="color:#2a2a2a;font-size:11px;letter-spacing:3px;text-transform:uppercase;${P}">CONTRATO DE PRESTAÇÃO DE SERVIÇOS</div></div>
+            <div style="padding:24px 70px;flex:1;display:flex;flex-direction:column;gap:18px;overflow:hidden;">
+              ${paginas[i].join('')}
+            </div>
+            <div style="margin-top:auto;border-top:1px solid #1a1a1a;padding:12px 70px 20px;display:flex;justify-content:space-between;align-items:center;">
+              <div style="color:#2a2a2a;font-size:10px;letter-spacing:1px;${P}">Estruturamos o que gera percepção, presença e resultado.</div>
+              <div style="color:#2a2a2a;font-size:10px;letter-spacing:1px;${P}">Página ${i + 1} de ${paginas.length}</div>
+            </div>
+          </div>
+        `);
+      }
+
+      // ── Página de assinatura (sempre isolada, sempre a última) ─────────────
+      await addPage(`
+        <div style="${P}width:${PX_W}px;height:${PX_H}px;background:#080808;position:relative;display:flex;flex-direction:column;padding:70px 70px 60px;box-sizing:border-box;">
+          <div style="${BAR}"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:40px;">${logoXs}<div style="color:#2a2a2a;font-size:11px;letter-spacing:3px;text-transform:uppercase;${P}">CONTRATO DE PRESTAÇÃO DE SERVIÇOS</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+            <div style="${A}font-size:30px;color:#fff;margin-bottom:14px;">DA ASSINATURA</div>
+            <div style="color:#999;font-size:13px;line-height:1.8;max-width:560px;margin-bottom:8px;${P}">E por estarem assim justos e contratados, firmam o presente instrumento em duas vias de igual teor.</div>
+            <div style="color:#555;font-size:12.5px;margin-bottom:48px;${P}">Belo Horizonte, ${dataAssinatura}.</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;">
+              <div style="border-top:1px solid #FF6B00;padding-top:14px;min-height:48px;">
+                <div style="color:#fff;font-size:12px;font-weight:700;margin-bottom:4px;${P}">CONTRATADA</div>
+                <div style="color:#888;font-size:12px;${P}">${p.nome.trim()}</div>
+                <div style="color:#666;font-size:11.5px;${P}">${p.responsavel.trim()}</div>
+              </div>
+              <div style="border-top:1px solid #1e1e1e;padding-top:14px;min-height:48px;">
+                <div style="color:#fff;font-size:12px;font-weight:700;margin-bottom:4px;${P}">CONTRATANTE</div>
+                <div style="color:#888;font-size:12px;${P}">${c.empresa.trim() || '[Nome do cliente]'}</div>
+                ${c.responsavel.trim() ? `<div style="color:#666;font-size:11.5px;${P}">${c.responsavel.trim()}</div>` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      `);
 
       const pdfBlob = doc.output('blob');
 
