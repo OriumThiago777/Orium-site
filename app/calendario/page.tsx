@@ -56,6 +56,11 @@ function CalendarioSemanalPage() {
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState('')
   const savingRef = useRef(false)
+  // Incrementado a cada drag (handleDragEnd). Uma resposta de carregarEventos só é
+  // aplicada se o epoch capturado no início do fetch ainda for o atual — evita que a
+  // resposta de um poll disparado antes do drag (stale) sobrescreva o estado otimista
+  // pós-drag quando ela chega depois (race condition do poll de 18s).
+  const epochRef = useRef(0)
 
   const dias = gerarSemana(currentDate)
 
@@ -63,12 +68,21 @@ function CalendarioSemanalPage() {
     if (!silencioso) setLoading(true)
     const params = new URLSearchParams({ inicio: toISODate(diasAlvo[0]), fim: toISODate(diasAlvo[6]) })
     if (cliente !== 'todos') params.set('cliente', cliente)
+    const epoch = epochRef.current
     try {
       const res = await fetch(`/api/calendario/eventos?${params}`, { headers: authHeaders() })
+      if (!res.ok) {
+        // Falha real da API (ex.: Notion fora do ar, ver route.ts). Num poll silencioso
+        // isso não deve derrubar o que já está na tela — a próxima tentativa corrige.
+        // Num load visível (troca de semana/cliente/inicial), degrada como o resto do
+        // app (ver VistaCalendario.tsx: carregarItens -> .catch(() => setItems([]))).
+        if (!silencioso && epochRef.current === epoch) setEventos([])
+        return
+      }
       const data = await res.json()
-      setEventos(data.eventos ?? [])
+      if (epochRef.current === epoch) setEventos(data.eventos ?? [])
     } catch {
-      if (!silencioso) setEventos([])
+      if (!silencioso && epochRef.current === epoch) setEventos([])
     } finally {
       if (!silencioso) setLoading(false)
     }
@@ -99,6 +113,7 @@ function CalendarioSemanalPage() {
 
     const anterior = eventos
     setErro('')
+    epochRef.current += 1
     setEventos(es => es.map(e => e.id === eventoId ? { ...e, data: novaData } : e))
     savingRef.current = true
     try {

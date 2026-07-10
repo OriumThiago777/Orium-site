@@ -56,6 +56,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ eventos })
   } catch (err) {
     console.error('GET /api/calendario/eventos:', err)
-    return NextResponse.json({ eventos: [] })
+    return NextResponse.json({ eventos: [] }, { status: 500 })
   }
 }
