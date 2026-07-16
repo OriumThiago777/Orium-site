@@ -155,9 +155,8 @@ export default function BriefingAGPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <p className="text-white text-2xl uppercase tracking-wide mb-2">Briefing enviado</p>
-          <p className="text-[#8d8379] text-sm mb-8">As respostas foram registradas no Notion.</p>
-          <Link href="/hub" className="text-[#FF6B00] text-sm underline">Voltar ao hub</Link>
+          <p className="text-white text-2xl uppercase tracking-wide mb-2">Briefing recebido.</p>
+          <p className="text-[#8d8379] text-sm mb-8">Obrigado por dedicar esse tempo. As respostas que você compartilhou vão orientar diretamente o posicionamento, o conteúdo e a estratégia digital da AG com a ORIUM. Em breve retornamos com os próximos passos.</p>
         </div>
       </div>
     );
