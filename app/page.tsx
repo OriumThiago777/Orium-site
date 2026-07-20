@@ -23,15 +23,6 @@ const projetos = [
     foto: "/fotos/altemans-capa.jpg",
   },
   {
-    nome: "Prof. Marcelo Félix",
-    ramo: "Educação",
-    descricao:
-      "Posicionamento profissional e autoridade digital para especialista em urgência e emergência. Identidade de comunicação estruturada e canais de captação para cursos e formações.",
-    tags: ["Posicionamento", "Autoridade Digital", "Estratégia de Conteúdo"],
-    instagram: "https://www.instagram.com/prof.marcelofelix",
-    foto: "/fotos/marcelo-capa.jpg",
-  },
-  {
     nome: "Ogarete Restaurante Árabe",
     ramo: "Alimentação",
     descricao:
