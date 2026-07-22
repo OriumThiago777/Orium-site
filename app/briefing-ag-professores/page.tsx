@@ -72,9 +72,7 @@ export default function BriefingAgProfessoresPage() {
   const [depoimento_aluno, setDepoimentoAluno] = useState('');
 
   // Bloco 5 — Fotos e mídia
-  const [link_fotos, setLinkFotos] = useState('');
   const [foto_perfil_atual, setFotoPerfilAtual] = useState('');
-  const [link_videos, setLinkVideos] = useState('');
 
   // Bloco 6 — Redes e autorização
   const [instagram_pessoal, setInstagramPessoal] = useState('');
@@ -84,10 +82,6 @@ export default function BriefingAgProfessoresPage() {
   async function handleSubmit() {
     setError('');
 
-    if (!link_fotos.trim()) {
-      setError('O link de fotos é obrigatório.');
-      return;
-    }
     if (!autoriza_uso) {
       setError('É necessário responder se autoriza o uso de imagem e depoimento.');
       return;
@@ -103,7 +97,7 @@ export default function BriefingAgProfessoresPage() {
           como_comecou, momento_decisivo, o_que_mais_gosta,
           metodo_ensino, diferencial, frase_filosofia,
           situacao_resultado, certificacoes, depoimento_aluno,
-          link_fotos, foto_perfil_atual, link_videos,
+          foto_perfil_atual,
           instagram_pessoal, whatsapp, autoriza_uso,
         }),
       });
@@ -167,8 +161,8 @@ export default function BriefingAgProfessoresPage() {
     <div style={{ minHeight: '100vh', background: '#080808', fontFamily: FP, display: 'flex', position: 'relative' }}>
       <ToolBackground />
 
-      {/* Sidebar */}
-      <div style={{ position: 'sticky', top: 0, width: sidebarCollapsed ? '60px' : '260px', flexShrink: 0, height: '100vh', zIndex: 10, transition: 'width 0.3s ease' }}>
+      {/* Sidebar — escondida abaixo de lg (1024px), sem versão mobile própria ainda */}
+      <div className="hidden lg:block" style={{ position: 'sticky', top: 0, width: sidebarCollapsed ? '60px' : '260px', flexShrink: 0, height: '100vh', zIndex: 10, transition: 'width 0.3s ease' }}>
 
         {/* Toggle — círculo */}
         <button
@@ -257,7 +251,7 @@ export default function BriefingAgProfessoresPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, position: 'relative', zIndex: 1 }}>
 
         {/* Form */}
-        <main className="flex-1 px-6 md:px-16 py-10 md:py-12 max-w-[760px] w-full space-y-20">
+        <main className="flex-1 min-w-0 px-6 md:px-16 py-10 md:py-12 max-w-[760px] w-full space-y-20">
 
           {/* BLOCO 0 — Abertura */}
           <section>
@@ -311,21 +305,19 @@ export default function BriefingAgProfessoresPage() {
           {/* BLOCO 5 */}
           <section id="parte5">
             <PartHeader n={5} title="Fotos e mídia" />
+            <p style={{ fontFamily: FP, fontSize: '0.95rem', lineHeight: 1.75, color: '#d8d0c8', marginBottom: '2rem' }}>
+              Envie suas fotos e vídeos aqui:{' '}
+              <a href="https://forms.gle/zbp8sa5NnXNxdvZ48" target="_blank" rel="noopener noreferrer" style={{ color: '#FF6B00', textDecoration: 'underline' }}>
+                https://forms.gle/zbp8sa5NnXNxdvZ48
+              </a>
+              <br />
+              Não precisa gerar link nem ter cadastro em nada, é só selecionar os arquivos e enviar. Você só tem acesso ao que você mesmo enviar.
+            </p>
             <div className="space-y-5">
-              <div>
-                <label className={lbl}>Link (Google Drive, WeTransfer ou similar) com fotos suas em boa qualidade</label>
-                <input className={input} value={link_fotos} onChange={e => setLinkFotos(e.target.value)} placeholder="https://" />
-                {link_fotos && !isValidUrl(link_fotos) && <p className={errHint}>Formato de link inválido.</p>}
-              </div>
               <div>
                 <label className={lbl}>Tem uma foto de perfil que já usa nas redes e quer manter?</label>
                 <input className={input} value={foto_perfil_atual} onChange={e => setFotoPerfilAtual(e.target.value)} placeholder="https://" />
                 {foto_perfil_atual && !isValidUrl(foto_perfil_atual) && <p className={errHint}>Formato de link inválido.</p>}
-              </div>
-              <div>
-                <label className={lbl}>Tem vídeos curtos seus que possamos usar? (opcional)</label>
-                <input className={input} value={link_videos} onChange={e => setLinkVideos(e.target.value)} placeholder="https://" />
-                {link_videos && !isValidUrl(link_videos) && <p className={errHint}>Formato de link inválido.</p>}
               </div>
             </div>
           </section>

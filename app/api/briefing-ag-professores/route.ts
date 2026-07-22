@@ -19,9 +19,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Variáveis de ambiente não configuradas.' }, { status: 500 });
     }
 
-    if (!body.link_fotos) {
-      return NextResponse.json({ success: false, error: 'O link de fotos é obrigatório.' }, { status: 400 });
-    }
     if (!body.autoriza_uso) {
       return NextResponse.json({ success: false, error: 'É necessário responder se autoriza o uso de imagem e depoimento.' }, { status: 400 });
     }
@@ -32,7 +29,6 @@ export async function POST(req: Request) {
       },
       'Data de envio': { date: { start: new Date().toISOString() } },
       'Status do conteúdo': { select: { name: 'Recebido' } },
-      'Link de fotos': { url: body.link_fotos },
       'Autoriza uso de imagem e depoimento': { select: { name: body.autoriza_uso } },
     };
 
@@ -60,7 +56,6 @@ export async function POST(req: Request) {
 
     const urlFields: Record<string, string> = {
       'Foto de perfil atual': body.foto_perfil_atual,
-      'Link de vídeos': body.link_videos,
       'Instagram pessoal': body.instagram_pessoal,
     };
 
