@@ -13,8 +13,7 @@ const SIDEBAR_ITEMS = [
   { id: 'parte2', label: 'História' },
   { id: 'parte3', label: 'Método de ensino' },
   { id: 'parte4', label: 'Prova e resultado' },
-  { id: 'parte5', label: 'Fotos e mídia' },
-  { id: 'parte6', label: 'Redes e autorização' },
+  { id: 'parte5', label: 'Redes e autorização' },
 ];
 
 const SECTION_IDS = SIDEBAR_ITEMS.map(item => item.id);
@@ -71,12 +70,10 @@ export default function BriefingAgProfessoresPage() {
   const [certificacoes, setCertificacoes] = useState('');
   const [depoimento_aluno, setDepoimentoAluno] = useState('');
 
-  // Bloco 5 — Fotos e mídia
-  const [foto_perfil_atual, setFotoPerfilAtual] = useState('');
-
-  // Bloco 6 — Redes e autorização
+  // Bloco 5 — Redes e autorização
   const [instagram_pessoal, setInstagramPessoal] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
+  const [foto_perfil_atual, setFotoPerfilAtual] = useState('');
   const [autoriza_uso, setAutorizaUso] = useState('');
 
   async function handleSubmit() {
@@ -143,15 +140,25 @@ export default function BriefingAgProfessoresPage() {
   if (success) {
     return (
       <div className="min-h-screen bg-[#080808] flex items-center justify-center p-8" style={{ fontFamily: FP }}>
-        <div className="text-center">
-          <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-6">
-            <svg className="w-8 h-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 rounded-full bg-[#FF6B00]/10 flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-[#FF6B00]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <p className="text-white text-2xl uppercase tracking-wide mb-2">Formulário enviado</p>
-          <p className="text-[#8d8379] text-sm mb-8">As respostas foram registradas no Notion.</p>
-          <Link href="/hub" className="text-[#FF6B00] text-sm underline">Voltar ao hub</Link>
+          <p className="text-white text-2xl md:text-3xl uppercase tracking-wide mb-3">Passo 1 concluído.</p>
+          <p className="text-[#8d8379] text-sm mb-10">Agora falta o passo 2: envie suas fotos e vídeos.</p>
+          <a
+            href="https://forms.gle/zbp8sa5NnXNxdvZ48"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block w-full sm:w-auto px-8 py-3.5 bg-[#FF6B00] hover:bg-[#e55f00] text-white text-[0.88rem] uppercase tracking-[0.12em] rounded-lg transition-colors duration-200 shadow-[0_4px_16px_rgba(255,107,0,0.2)]"
+          >
+            Enviar fotos e vídeos →
+          </a>
+          <div className="mt-8">
+            <Link href="/hub" className="text-[#888888] text-xs uppercase tracking-widest underline hover:text-[#FF6B00] transition-colors">Voltar ao hub</Link>
+          </div>
         </div>
       </div>
     );
@@ -257,6 +264,8 @@ export default function BriefingAgProfessoresPage() {
           <section>
             <p style={{ fontFamily: FP, fontSize: '0.95rem', lineHeight: 1.75, color: '#d8d0c8' }}>
               A AG - Ensino Personalizado agora conta com a ORIUM na estruturação da presença digital da marca. Você, como parte do time de professores da AG, também vai aparecer nesse processo. Vamos criar conteúdo que mostra quem você é, como ensina e o resultado que já gera para seus alunos. Preencha o formulário abaixo. Leva menos de 10 minutos e é a base para os posts que vamos produzir sobre você e seu trabalho.
+              <br /><br />
+              Isso é feito em 2 passos: primeiro este formulário, depois o envio das suas fotos e vídeos — vamos te mostrar o link assim que você terminar aqui.
             </p>
           </section>
 
@@ -304,30 +313,15 @@ export default function BriefingAgProfessoresPage() {
 
           {/* BLOCO 5 */}
           <section id="parte5">
-            <PartHeader n={5} title="Fotos e mídia" />
-            <p style={{ fontFamily: FP, fontSize: '0.95rem', lineHeight: 1.75, color: '#d8d0c8', marginBottom: '2rem' }}>
-              Envie suas fotos e vídeos aqui:{' '}
-              <a href="https://forms.gle/zbp8sa5NnXNxdvZ48" target="_blank" rel="noopener noreferrer" style={{ color: '#FF6B00', textDecoration: 'underline' }}>
-                https://forms.gle/zbp8sa5NnXNxdvZ48
-              </a>
-              <br />
-              Não precisa gerar link nem ter cadastro em nada, é só selecionar os arquivos e enviar. Você só tem acesso ao que você mesmo enviar.
-            </p>
+            <PartHeader n={5} title="Redes e autorização" />
             <div className="space-y-5">
+              <div><label className={lbl}>Instagram pessoal (se tiver)</label><input className={input} value={instagram_pessoal} onChange={e => setInstagramPessoal(e.target.value)} placeholder="@usuario ou link" /></div>
+              <div><label className={lbl}>WhatsApp para contato</label><input className={input} value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="(31) 90000-0000" /></div>
               <div>
                 <label className={lbl}>Tem uma foto de perfil que já usa nas redes e quer manter?</label>
                 <input className={input} value={foto_perfil_atual} onChange={e => setFotoPerfilAtual(e.target.value)} placeholder="https://" />
                 {foto_perfil_atual && !isValidUrl(foto_perfil_atual) && <p className={errHint}>Formato de link inválido.</p>}
               </div>
-            </div>
-          </section>
-
-          {/* BLOCO 6 */}
-          <section id="parte6">
-            <PartHeader n={6} title="Redes e autorização" />
-            <div className="space-y-5">
-              <div><label className={lbl}>Instagram pessoal (se tiver)</label><input className={input} value={instagram_pessoal} onChange={e => setInstagramPessoal(e.target.value)} placeholder="@usuario ou link" /></div>
-              <div><label className={lbl}>WhatsApp para contato</label><input className={input} value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="(31) 90000-0000" /></div>
               <div>
                 <label className={lbl}>Autoriza o uso da sua imagem, história e depoimentos nos conteúdos da AG e da ORIUM?</label>
                 <Radios options={['Sim', 'Não']} value={autoriza_uso} onChange={setAutorizaUso} />
