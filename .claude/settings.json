@@ -28,6 +28,12 @@
             "statusMessage": "Verificando padrão visual CLAUDE.md..."
           }
         ]
+      },
+      {
+        "matcher": "Bash|PowerShell|Read|Grep|Glob|Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "node ./scripts/guard-project-scope.js" }
+        ]
       }
     ]
   }
