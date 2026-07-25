@@ -5,13 +5,29 @@ import Image from 'next/image';
 import {
   PLANOS_MENSAIS,
   NOTA_PLANOS,
+  VAGAS_MENSAIS,
   ESTRUTURACAO_INICIAL,
   SITE_INSTITUCIONAL,
+  BUNDLE_ESTRUTURACAO_SITE,
   ADDONS,
   type PlanoMensal,
   type ItemUnico,
   type AddOn,
 } from './data';
+
+const ITEM_CAPTACAO_AUTORIDADE = 'Gestão de tráfego pago (1 campanha)';
+
+function planoParaExibicao(plano: PlanoMensal, autoridadeComCaptacao: boolean): PlanoMensal {
+  if (plano.id !== 'autoridade' || plano.precoSemCaptacao === undefined || autoridadeComCaptacao) {
+    return plano;
+  }
+  return {
+    ...plano,
+    preco: plano.precoSemCaptacao,
+    incluso: plano.incluso.filter(item => item !== ITEM_CAPTACAO_AUTORIDADE),
+    naoIncluso: [ITEM_CAPTACAO_AUTORIDADE, ...plano.naoIncluso],
+  };
+}
 
 const WHATSAPP_NUMERO = '5531999352065';
 
@@ -124,11 +140,15 @@ function PlanoCard({
   plano,
   selecionado,
   onToggle,
+  captacao,
 }: {
   plano: PlanoMensal;
   selecionado: boolean;
   onToggle: () => void;
+  captacao?: { ativa: boolean; onToggle: () => void };
 }) {
+  const precoDiario = Math.round(plano.preco / 30);
+
   return (
     <div
       role="button"
@@ -185,9 +205,46 @@ function PlanoCard({
         {formatBRL(plano.preco)}
         <span style={{ fontSize: '0.9rem', color: '#777' }}>/mês</span>
       </p>
+      <p style={{ color: '#666', fontSize: '0.78rem', margin: '0.3rem 0 0' }}>
+        equivale a {formatBRL(precoDiario)}/dia
+      </p>
       <p style={{ color: '#999', fontSize: '0.9rem', margin: '0.75rem 0 0', lineHeight: 1.6 }}>
         {plano.descricao}
       </p>
+      {captacao && (
+        <div
+          role="button"
+          tabIndex={0}
+          aria-pressed={captacao.ativa}
+          onClick={e => {
+            e.stopPropagation();
+            captacao.onToggle();
+          }}
+          onKeyDown={e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              captacao.onToggle();
+            }
+          }}
+          style={{
+            cursor: 'pointer',
+            display: 'flex',
+            gap: '0.85rem',
+            alignItems: 'center',
+            marginTop: '1.25rem',
+            padding: '0.85rem 1rem',
+            background: 'rgba(255,255,255,0.02)',
+            border: '1px solid #1a1a1a',
+            borderRadius: '10px',
+          }}
+        >
+          <Switch checked={captacao.ativa} />
+          <span style={{ color: '#999', fontSize: '0.82rem', lineHeight: 1.5 }}>
+            Incluir tráfego pago (captação)
+          </span>
+        </div>
+      )}
       <ItemList incluso={plano.incluso} naoIncluso={plano.naoIncluso} />
     </div>
   );
@@ -348,6 +405,7 @@ export default function PacotesPage() {
   const [estruturacaoSelecionada, setEstruturacaoSelecionada] = useState(false);
   const [siteSelecionado, setSiteSelecionado] = useState(false);
   const [addonsSelecionados, setAddonsSelecionados] = useState<Set<string>>(new Set());
+  const [autoridadeComCaptacao, setAutoridadeComCaptacao] = useState(true);
 
   function toggleAddon(id: string) {
     setAddonsSelecionados(prev => {
@@ -358,14 +416,18 @@ export default function PacotesPage() {
     });
   }
 
-  const plano = PLANOS_MENSAIS.find(p => p.id === planoId) ?? null;
+  const planoBase = PLANOS_MENSAIS.find(p => p.id === planoId) ?? null;
+  const plano = planoBase ? planoParaExibicao(planoBase, autoridadeComCaptacao) : null;
   const addonsAtivos = ADDONS.filter(a => addonsSelecionados.has(a.id));
   const addonsUnicos = addonsAtivos.filter(a => !a.monthly);
   const addonsMensais = addonsAtivos.filter(a => a.monthly);
+  const bundleAtivo = estruturacaoSelecionada && siteSelecionado;
 
   const totalUnico =
-    (estruturacaoSelecionada ? ESTRUTURACAO_INICIAL.preco : 0) +
-    (siteSelecionado ? SITE_INSTITUCIONAL.preco : 0) +
+    (bundleAtivo
+      ? BUNDLE_ESTRUTURACAO_SITE.precoBundle
+      : (estruturacaoSelecionada ? ESTRUTURACAO_INICIAL.preco : 0) +
+        (siteSelecionado ? SITE_INSTITUCIONAL.preco : 0)) +
     addonsUnicos.reduce((soma, a) => soma + a.preco, 0);
 
   const totalMensal = (plano?.preco ?? 0) + addonsMensais.reduce((soma, a) => soma + a.preco, 0);
@@ -376,11 +438,17 @@ export default function PacotesPage() {
     const linhas: string[] = ['Olá! Vi a proposta da ORIUM e gostaria de avançar com:'];
 
     if (plano) linhas.push(`- ${plano.nome} (${formatBRL(plano.preco)}/mês)`);
-    if (estruturacaoSelecionada) {
-      linhas.push(`- ${ESTRUTURACAO_INICIAL.nome} (${formatBRL(ESTRUTURACAO_INICIAL.preco)})`);
-    }
-    if (siteSelecionado) {
-      linhas.push(`- ${SITE_INSTITUCIONAL.nome} (${formatBRL(SITE_INSTITUCIONAL.preco)})`);
+    if (bundleAtivo) {
+      linhas.push(
+        `- ${ESTRUTURACAO_INICIAL.nome} + ${SITE_INSTITUCIONAL.nome} (combo) (${formatBRL(BUNDLE_ESTRUTURACAO_SITE.precoBundle)})`
+      );
+    } else {
+      if (estruturacaoSelecionada) {
+        linhas.push(`- ${ESTRUTURACAO_INICIAL.nome} (${formatBRL(ESTRUTURACAO_INICIAL.preco)})`);
+      }
+      if (siteSelecionado) {
+        linhas.push(`- ${SITE_INSTITUCIONAL.nome} (${formatBRL(SITE_INSTITUCIONAL.preco)})`);
+      }
     }
     addonsAtivos.forEach(a => {
       linhas.push(`- ${a.nome} (${formatBRL(a.preco)}${a.monthly ? '/mês' : ''})`);
@@ -436,6 +504,10 @@ export default function PacotesPage() {
           </p>
         </header>
 
+        <p style={{ textAlign: 'center', color: '#555', fontSize: '0.78rem', marginBottom: '2.5rem', lineHeight: 1.6 }}>
+          Atendemos no máximo {VAGAS_MENSAIS.quantidade} novos clientes por mês para manter o padrão de entrega.
+        </p>
+
         <section style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
           <h1
             style={{
@@ -452,6 +524,9 @@ export default function PacotesPage() {
           <p style={{ color: '#999', fontSize: '1rem', marginTop: '1rem' }}>
             Escolha o nível de presença certo para agora.
           </p>
+          <p style={{ color: '#666', fontSize: '0.8rem', marginTop: '1.25rem' }}>
+            Método já aplicado em barbearia, educação em saúde, formação profissional e varejo de acessórios.
+          </p>
         </section>
 
         <section style={{ marginBottom: '3.5rem' }}>
@@ -466,9 +541,14 @@ export default function PacotesPage() {
             {PLANOS_MENSAIS.map(p => (
               <PlanoCard
                 key={p.id}
-                plano={p}
+                plano={planoParaExibicao(p, autoridadeComCaptacao)}
                 selecionado={planoId === p.id}
                 onToggle={() => setPlanoId(prev => (prev === p.id ? null : p.id))}
+                captacao={
+                  p.precoSemCaptacao !== undefined
+                    ? { ativa: autoridadeComCaptacao, onToggle: () => setAutoridadeComCaptacao(v => !v) }
+                    : undefined
+                }
               />
             ))}
           </div>
@@ -493,6 +573,11 @@ export default function PacotesPage() {
             selecionado={siteSelecionado}
             onToggle={() => setSiteSelecionado(v => !v)}
           />
+          {bundleAtivo && (
+            <p style={{ color: '#FF6B00', fontSize: '0.82rem', marginTop: '1rem', textAlign: 'center' }}>
+              Economia de {formatBRL(BUNDLE_ESTRUTURACAO_SITE.economia)} ao combinar Estruturação + Site
+            </p>
+          )}
         </section>
 
         <section style={{ marginBottom: '2rem' }}>

@@ -2,6 +2,7 @@ export interface PlanoMensal {
   id: string;
   nome: string;
   preco: number;
+  precoSemCaptacao?: number;
   descricao: string;
   recomendado?: boolean;
   incluso: string[];
@@ -48,6 +49,7 @@ export const PLANOS_MENSAIS: PlanoMensal[] = [
     id: 'autoridade',
     nome: 'Autoridade™',
     preco: 2400,
+    precoSemCaptacao: 1800,
     descricao: 'Referência no mercado com presença e tráfego pago.',
     recomendado: true,
     incluso: [
@@ -85,6 +87,11 @@ export const PLANOS_MENSAIS: PlanoMensal[] = [
 export const NOTA_PLANOS =
   'Gestão estratégica da campanha inclusa. Verba de mídia é custo separado, pago diretamente à plataforma (Meta/Google).';
 
+export const VAGAS_MENSAIS = {
+  quantidade: 2,
+  mesReferencia: 'julho de 2026', // Thiago atualiza manualmente todo mês
+};
+
 export const ESTRUTURACAO_INICIAL: ItemUnico = {
   id: 'estruturacao',
   nome: 'Estruturação Inicial',
@@ -105,6 +112,12 @@ export const SITE_INSTITUCIONAL: ItemUnico = {
   descricao:
     'Apresentação profissional da marca na web, identidade visual própria e seções estratégicas.',
   incluso: [],
+};
+
+export const BUNDLE_ESTRUTURACAO_SITE = {
+  precoIndividualSomado: 2499, // 1199 + 1300
+  precoBundle: 2350,
+  economia: 149,
 };
 
 export const ADDONS: AddOn[] = [
