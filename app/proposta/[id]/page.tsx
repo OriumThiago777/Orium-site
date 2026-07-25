@@ -36,7 +36,7 @@ interface PropostaDados {
   condicoesPagamento: string;
 }
 
-const WHATSAPP_NUMERO = '5531991207009';
+const WHATSAPP_NUMERO = '5531999352065';
 const MENSAGEM_WHATSAPP = 'Olá! Analisei a proposta da ORIUM e tenho interesse em avançar.';
 
 function formatarValor(valor: string): string {

@@ -13,7 +13,7 @@ import {
   type AddOn,
 } from './data';
 
-const WHATSAPP_NUMERO = '5531991207009';
+const WHATSAPP_NUMERO = '5531999352065';
 
 function formatBRL(valor: number): string {
   return valor.toLocaleString('pt-BR', {

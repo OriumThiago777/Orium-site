@@ -16,7 +16,7 @@ type PortalDados = {
   atualizadoEm: string;
 };
 
-const WHATSAPP_NUMERO = '5531991207009';
+const WHATSAPP_NUMERO = '5531999352065';
 const MENSAGEM_WHATSAPP = 'Olá! Estou acompanhando o progresso pelo portal e gostaria de falar com a ORIUM.';
 
 function formatarData(data: string): string {
