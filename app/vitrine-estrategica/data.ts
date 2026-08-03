@@ -17,6 +17,26 @@ export type Vitrine = {
   posts: [PostVitrine, PostVitrine, PostVitrine];
 };
 
+export type PostGenerico = {
+  id: string;
+  categoria: "o-que-fazem" | "o-que-vendem";
+  titulo: string;
+  descricao: string;
+};
+
+export const postsGenericos: PostGenerico[] = [
+  { id: "apresentacao", categoria: "o-que-fazem", titulo: "Apresentação do negócio", descricao: "Quem é, o que faz, há quanto tempo atua." },
+  { id: "atendimento", categoria: "o-que-fazem", titulo: "Como funciona o atendimento", descricao: "Passo a passo de como contratar ou agendar." },
+  { id: "bastidores", categoria: "o-que-fazem", titulo: "Bastidores do processo", descricao: "Como o serviço é feito ou entregue, na prática." },
+  { id: "diferencial", categoria: "o-que-fazem", titulo: "Diferencial de atuação", descricao: "O que separa a forma de trabalhar da concorrência." },
+  { id: "faq", categoria: "o-que-fazem", titulo: "Perguntas frequentes", descricao: "Respostas diretas às dúvidas mais comuns antes de contratar." },
+  { id: "catalogo", categoria: "o-que-vendem", titulo: "Catálogo organizado", descricao: "Lista dos principais produtos ou serviços disponíveis." },
+  { id: "destaque", categoria: "o-que-vendem", titulo: "Produto ou serviço em destaque", descricao: "Um item específico, com detalhe e condição se fizer sentido." },
+  { id: "prova", categoria: "o-que-vendem", titulo: "Prova de resultado", descricao: "Um case, antes e depois, ou entrega real já feita." },
+  { id: "disponibilidade", categoria: "o-que-vendem", titulo: "Localização e disponibilidade", descricao: "Onde encontrar, horário, estoque ou agenda." },
+  { id: "convite", categoria: "o-que-vendem", titulo: "Convite direto", descricao: "Chamada clara pra iniciar a compra ou contratação." },
+];
+
 export const vitrines: Vitrine[] = [
   {
     id: "direta",

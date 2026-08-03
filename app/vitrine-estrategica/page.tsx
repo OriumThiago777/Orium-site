@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import OriumInput from '@/components/OriumInput';
-import { vitrines, type Vitrine, type PostVitrine } from './data';
+import { vitrines, postsGenericos, type Vitrine, type PostVitrine } from './data';
 
 const WHATSAPP_NUMERO = '5531999352065';
+const TOTAL_ETAPAS = 4;
+const MINIMO_POSTS_GENERICOS = 3;
 
 type OpcaoId = 'A' | 'B' | 'C';
 
@@ -28,10 +30,10 @@ function ProgressoEtapas({ etapaAtual }: { etapaAtual: number }) {
           marginBottom: '0.85rem',
         }}
       >
-        Etapa {etapaAtual} de 3
+        Etapa {etapaAtual} de {TOTAL_ETAPAS}
       </p>
       <div style={{ display: 'flex', gap: '0.5rem', maxWidth: '320px', margin: '0 auto' }}>
-        {[1, 2, 3].map(n => (
+        {Array.from({ length: TOTAL_ETAPAS }, (_, i) => i + 1).map(n => (
           <div
             key={n}
             style={{
@@ -170,15 +172,60 @@ function PostBlock({
   );
 }
 
+function PostGenericoCard({
+  titulo,
+  descricao,
+  selecionado,
+  onToggle,
+}: {
+  titulo: string;
+  descricao: string;
+  selecionado: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-pressed={selecionado}
+      onClick={onToggle}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onToggle();
+        }
+      }}
+      style={{
+        cursor: 'pointer',
+        background: 'rgba(255,255,255,0.02)',
+        border: `1px solid ${selecionado ? '#FF6B00' : '#1a1a1a'}`,
+        borderRadius: '12px',
+        padding: '1.25rem 1.5rem',
+        transition: 'border-color 0.2s',
+      }}
+    >
+      <p style={{ color: '#fff', fontWeight: 600, fontSize: '0.95rem', margin: 0 }}>{titulo}</p>
+      <p style={{ color: '#999', fontSize: '0.82rem', margin: '0.35rem 0 0', lineHeight: 1.5 }}>{descricao}</p>
+    </div>
+  );
+}
+
+const CATEGORIAS_POSTS_GENERICOS: { id: 'o-que-fazem' | 'o-que-vendem'; titulo: string }[] = [
+  { id: 'o-que-fazem', titulo: 'O que vocês fazem' },
+  { id: 'o-que-vendem', titulo: 'O que vocês vendem' },
+];
+
 export default function VitrineEstrategicaPage() {
-  const [etapa, setEtapa] = useState<1 | 2 | 3>(1);
+  const [etapa, setEtapa] = useState<1 | 2 | 3 | 4>(1);
   const [vitrineId, setVitrineId] = useState<Vitrine['id'] | null>(null);
   const [selecoes, setSelecoes] = useState<Selecoes>({ post1: null, post2: null, post3: null });
+  const [postsGenericosEscolhidos, setPostsGenericosEscolhidos] = useState<Set<string>>(new Set());
   const [nome, setNome] = useState('');
   const [negocio, setNegocio] = useState('');
 
   const vitrineEscolhida = vitrines.find(v => v.id === vitrineId) ?? null;
   const posts3Preenchidos = !!(selecoes.post1 && selecoes.post2 && selecoes.post3);
+  const genericosMinimoOk = postsGenericosEscolhidos.size >= MINIMO_POSTS_GENERICOS;
 
   function selecionarVitrine(id: Vitrine['id']) {
     setVitrineId(id);
@@ -189,14 +236,30 @@ export default function VitrineEstrategicaPage() {
     setSelecoes(prev => ({ ...prev, [postKey]: id }));
   }
 
+  function togglePostGenerico(id: string) {
+    setPostsGenericosEscolhidos(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
   function montarMensagem(): string {
-    if (!vitrineEscolhida || !selecoes.post1 || !selecoes.post2 || !selecoes.post3) return '';
+    if (!vitrineEscolhida || !selecoes.post1 || !selecoes.post2 || !selecoes.post3 || !genericosMinimoOk) return '';
 
     const linhaPost = (index: number, opcaoId: OpcaoId) => {
       const post = vitrineEscolhida.posts[index];
       const opcao = post.opcoes.find(o => o.id === opcaoId)!;
       return `Post ${index + 1} (${post.titulo}): ${opcao.titulo}, ${opcao.descricao}`;
     };
+
+    const linhasPostsGenericos = [...postsGenericosEscolhidos]
+      .map(id => {
+        const post = postsGenericos.find(p => p.id === id)!;
+        return `- ${post.titulo}: ${post.descricao}`;
+      })
+      .join('\n');
 
     return `Olá! Simulei minha Vitrine Estratégica no site da ORIUM.
 
@@ -205,6 +268,9 @@ Vitrine escolhida: ${vitrineEscolhida.nome}
 ${linhaPost(0, selecoes.post1!)}
 ${linhaPost(1, selecoes.post2!)}
 ${linhaPost(2, selecoes.post3!)}
+
+Posts adicionais:
+${linhasPostsGenericos}
 
 Meu nome: ${nome || 'não informado'}
 Meu negócio: ${negocio || 'não informado'}
@@ -363,6 +429,106 @@ Quero entender como fica na prática.`;
           <section>
             <button
               onClick={() => setEtapa(2)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#666',
+                fontSize: '0.85rem',
+                fontFamily: 'Poppins, sans-serif',
+                cursor: 'pointer',
+                padding: 0,
+                marginBottom: '2rem',
+              }}
+            >
+              ← Voltar
+            </button>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <h2
+                style={{
+                  fontFamily: 'Anton, sans-serif',
+                  textTransform: 'uppercase',
+                  fontSize: 'clamp(1.5rem, 5vw, 2rem)',
+                  margin: 0,
+                }}
+              >
+                Escolha posts adicionais
+              </h2>
+              <p style={{ color: '#999', fontSize: '0.9rem', marginTop: '1rem', lineHeight: 1.6 }}>
+                Selecione quantos fizerem sentido para o seu negócio, no mínimo {MINIMO_POSTS_GENERICOS}.
+              </p>
+              <p
+                style={{
+                  color: genericosMinimoOk ? '#FF6B00' : '#666',
+                  fontSize: '0.8rem',
+                  marginTop: '0.75rem',
+                  letterSpacing: '0.05em',
+                }}
+              >
+                {postsGenericosEscolhidos.size} posts selecionados (mínimo {MINIMO_POSTS_GENERICOS})
+              </p>
+            </div>
+            {CATEGORIAS_POSTS_GENERICOS.map(categoria => (
+              <div key={categoria.id} style={{ marginBottom: '2.5rem' }}>
+                <h3
+                  style={{
+                    fontFamily: 'Anton, sans-serif',
+                    textTransform: 'uppercase',
+                    fontSize: '1.1rem',
+                    color: '#fff',
+                    margin: '0 0 1rem',
+                  }}
+                >
+                  {categoria.titulo}
+                </h3>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: '1rem',
+                  }}
+                >
+                  {postsGenericos
+                    .filter(post => post.categoria === categoria.id)
+                    .map(post => (
+                      <PostGenericoCard
+                        key={post.id}
+                        titulo={post.titulo}
+                        descricao={post.descricao}
+                        selecionado={postsGenericosEscolhidos.has(post.id)}
+                        onToggle={() => togglePostGenerico(post.id)}
+                      />
+                    ))}
+                </div>
+              </div>
+            ))}
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
+              <button
+                onClick={() => genericosMinimoOk && setEtapa(4)}
+                disabled={!genericosMinimoOk}
+                style={{
+                  background: genericosMinimoOk ? '#FF6B00' : '#1e1e1e',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.9rem 2.75rem',
+                  color: genericosMinimoOk ? '#fff' : '#555',
+                  fontFamily: 'Anton, sans-serif',
+                  fontSize: '0.9rem',
+                  letterSpacing: '0.1em',
+                  cursor: genericosMinimoOk ? 'pointer' : 'not-allowed',
+                  boxShadow: genericosMinimoOk ? '0 4px 20px rgba(255,107,0,0.25)' : 'none',
+                  transition: 'all 0.2s',
+                }}
+              >
+                CONTINUAR →
+              </button>
+            </div>
+          </section>
+        )}
+
+        {etapa === 4 && vitrineEscolhida && (
+          <section>
+            <button
+              onClick={() => setEtapa(3)}
               style={{
                 background: 'transparent',
                 border: 'none',
