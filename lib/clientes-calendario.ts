@@ -4,6 +4,7 @@ export type ClienteSlug =
   | 'marcelo-felix'
   | 'cortex'
   | 'ekipar'
+  | 'ag'
 
 export const CLIENTES_PORTAL: Record<ClienteSlug, string> = {
   altemans: 'Altemans Barbearia',
@@ -11,6 +12,7 @@ export const CLIENTES_PORTAL: Record<ClienteSlug, string> = {
   'marcelo-felix': 'Prof. Marcelo Félix',
   cortex: 'Córtex Hub',
   ekipar: 'Ekipar Acessórios',
+  ag: 'AG - Ensino Personalizado',
 }
 
 export function isClienteSlug(slug: string): slug is ClienteSlug {
