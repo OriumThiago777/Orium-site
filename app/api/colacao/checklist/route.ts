@@ -17,9 +17,9 @@ const FORMANDOS = [
 
 type Checklist = {
   individual: boolean;
-  grupo?: boolean;
   prioridade?: boolean;
   formandos: Record<string, boolean>;
+  acompanhantes: Record<string, boolean>;
 };
 
 type ChecklistPessoa = {
@@ -27,7 +27,6 @@ type ChecklistPessoa = {
   nomeCompleto: string;
   chamarDe: string;
   horarioChegada: string;
-  acompanhantes: string;
   fotoGarantida: string;
   autorizacao: 'Sim' | 'Não' | '';
   fotoUrl: string | null;
@@ -49,6 +48,18 @@ function extrairFotoUrl(files: any[] | undefined): string | null {
   return primeiro.file?.url ?? null;
 }
 
+function parsearAcompanhantes(texto: string): string[] {
+  const trimmed = texto.trim();
+  if (!trimmed) return [];
+
+  const comParenteses = trimmed.match(/[^,()]+\([^)]*\)/g);
+  if (comParenteses && comParenteses.length > 0) {
+    return comParenteses.map(item => item.trim()).filter(Boolean);
+  }
+
+  return trimmed.split(',').map(item => item.trim()).filter(Boolean);
+}
+
 function montarChecklist(
   checklistFotosRaw: string,
   acompanhantes: string,
@@ -67,13 +78,17 @@ function montarChecklist(
   const checklist: Checklist = {
     individual: Boolean(existente.individual),
     formandos: {},
+    acompanhantes: {},
   };
 
-  if (acompanhantes) checklist.grupo = Boolean(existente.grupo);
   if (fotoGarantida) checklist.prioridade = Boolean(existente.prioridade);
 
   for (const nome of fotosFormandos) {
     checklist.formandos[nome] = Boolean(existente.formandos?.[nome]);
+  }
+
+  for (const nome of parsearAcompanhantes(acompanhantes)) {
+    checklist.acompanhantes[nome] = Boolean(existente.acompanhantes?.[nome]);
   }
 
   return checklist;
@@ -115,7 +130,6 @@ export async function GET() {
         nomeCompleto: nome,
         chamarDe: '',
         horarioChegada: '',
-        acompanhantes: '',
         fotoGarantida: '',
         autorizacao: '',
         fotoUrl: null,
@@ -136,7 +150,6 @@ export async function GET() {
       nomeCompleto: nome,
       chamarDe: extrairTexto(props['Chamar de']?.rich_text),
       horarioChegada: extrairTexto(props['Horário de chegada']?.rich_text),
-      acompanhantes,
       fotoGarantida,
       autorizacao: (props['Autorização']?.select?.name ?? '') as 'Sim' | 'Não' | '',
       fotoUrl: extrairFotoUrl(props['Arquivos e mídia']?.files),

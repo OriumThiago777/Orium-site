@@ -42,9 +42,9 @@ function saveChecklistAuth() {
 
 type Checklist = {
   individual: boolean;
-  grupo?: boolean;
   prioridade?: boolean;
   formandos: Record<string, boolean>;
+  acompanhantes: Record<string, boolean>;
 };
 
 type ChecklistPessoa = {
@@ -52,7 +52,6 @@ type ChecklistPessoa = {
   nomeCompleto: string;
   chamarDe: string;
   horarioChegada: string;
-  acompanhantes: string;
   fotoGarantida: string;
   autorizacao: 'Sim' | 'Não' | '';
   fotoUrl: string | null;
@@ -64,7 +63,6 @@ type ChecklistPessoa = {
 type ItemView = {
   key: string;
   label: string;
-  sub?: string;
   checked: boolean;
   destaque: boolean;
 };
@@ -92,9 +90,9 @@ function iniciais(nome: string): string {
 
 function computeCompleto(checklist: Checklist): boolean {
   if (!checklist.individual) return false;
-  if (checklist.grupo !== undefined && !checklist.grupo) return false;
   if (checklist.prioridade !== undefined && !checklist.prioridade) return false;
-  return Object.values(checklist.formandos).every(Boolean);
+  if (!Object.values(checklist.formandos).every(Boolean)) return false;
+  return Object.values(checklist.acompanhantes).every(Boolean);
 }
 
 function buildItemsView(pessoa: ChecklistPessoa): ItemView[] {
@@ -102,16 +100,6 @@ function buildItemsView(pessoa: ChecklistPessoa): ItemView[] {
   const items: ItemView[] = [
     { key: 'individual', label: 'Foto individual', checked: pessoa.checklist.individual, destaque: false },
   ];
-
-  if (pessoa.checklist.grupo !== undefined) {
-    items.push({
-      key: 'grupo',
-      label: 'Foto em grupo',
-      sub: pessoa.acompanhantes,
-      checked: pessoa.checklist.grupo,
-      destaque: false,
-    });
-  }
 
   if (pessoa.checklist.prioridade !== undefined) {
     items.push({
@@ -121,6 +109,10 @@ function buildItemsView(pessoa: ChecklistPessoa): ItemView[] {
       destaque: true,
     });
   }
+
+  Object.entries(pessoa.checklist.acompanhantes).forEach(([nome, checked]) => {
+    items.push({ key: `acompanhante:${nome}`, label: `Foto com ${nome}`, checked, destaque: false });
+  });
 
   Object.entries(pessoa.checklist.formandos).forEach(([nome, checked]) => {
     items.push({ key: `formando:${nome}`, label: `Foto com ${nome}`, checked, destaque: false });
@@ -347,11 +339,6 @@ function ChecklistItemRow({ item, onToggle }: { item: ItemView; onToggle: () => 
           {item.destaque && <StarIcon filled={item.checked} />}
           {item.label}
         </span>
-        {item.sub && (
-          <span style={{ display: 'block', fontFamily: sansFont, fontSize: '0.78rem', color: '#888', marginTop: '0.15rem' }}>
-            {item.sub}
-          </span>
-        )}
       </span>
     </button>
   );
@@ -445,17 +432,19 @@ function ChecklistContent() {
     const novoChecklist: Checklist = {
       ...pessoa.checklist,
       formandos: { ...pessoa.checklist.formandos },
+      acompanhantes: { ...pessoa.checklist.acompanhantes },
     };
 
     if (itemKey === 'individual') {
       novoChecklist.individual = !novoChecklist.individual;
-    } else if (itemKey === 'grupo') {
-      novoChecklist.grupo = !novoChecklist.grupo;
     } else if (itemKey === 'prioridade') {
       novoChecklist.prioridade = !novoChecklist.prioridade;
     } else if (itemKey.startsWith('formando:')) {
       const nome = itemKey.slice('formando:'.length);
       novoChecklist.formandos[nome] = !novoChecklist.formandos[nome];
+    } else if (itemKey.startsWith('acompanhante:')) {
+      const nome = itemKey.slice('acompanhante:'.length);
+      novoChecklist.acompanhantes[nome] = !novoChecklist.acompanhantes[nome];
     }
 
     const completo = computeCompleto(novoChecklist);
