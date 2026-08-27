@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { notionQueryDatabase } from '@/lib/notion';
+import { type Checklist, extrairTexto, montarChecklist } from '@/lib/colacao-checklist';
 
 const NOTION_DB_COLACAO = process.env.NOTION_DB_COLACAO;
 
@@ -15,13 +16,6 @@ const FORMANDOS = [
   'Thiago Pedro',
 ];
 
-type Checklist = {
-  individual: boolean;
-  prioridade?: boolean;
-  formandos: Record<string, boolean>;
-  acompanhantes: Record<string, boolean>;
-};
-
 type ChecklistPessoa = {
   pageId: string | null;
   nomeCompleto: string;
@@ -36,11 +30,6 @@ type ChecklistPessoa = {
 };
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-function extrairTexto(richText: any[] | undefined): string {
-  if (!richText) return '';
-  return richText.map((t: any) => t.plain_text ?? '').join('');
-}
-
 function extrairFotoUrl(files: any[] | undefined): string | null {
   if (!files || files.length === 0) return null;
   const primeiro = files[0];
@@ -48,50 +37,36 @@ function extrairFotoUrl(files: any[] | undefined): string | null {
   return primeiro.file?.url ?? null;
 }
 
-function parsearAcompanhantes(texto: string): string[] {
-  const trimmed = texto.trim();
-  if (!trimmed) return [];
+function contarProgresso(items: ChecklistPessoa[]) {
+  let itensTotal = 0;
+  let itensMarcados = 0;
+  let formandosConcluidos = 0;
 
-  const comParenteses = trimmed.match(/[^,()]+\([^)]*\)/g);
-  if (comParenteses && comParenteses.length > 0) {
-    return comParenteses.map(item => item.trim()).filter(Boolean);
-  }
+  for (const pessoa of items) {
+    if (pessoa.status === 'sem_resposta' || !pessoa.checklist) continue;
 
-  return trimmed.split(',').map(item => item.trim()).filter(Boolean);
-}
+    itensTotal += 1;
+    if (pessoa.checklist.individual) itensMarcados += 1;
 
-function montarChecklist(
-  checklistFotosRaw: string,
-  acompanhantes: string,
-  fotoGarantida: string,
-  fotosFormandos: string[],
-): Checklist {
-  let existente: any = {};
-  if (checklistFotosRaw) {
-    try {
-      existente = JSON.parse(checklistFotosRaw);
-    } catch {
-      existente = {};
+    if (pessoa.checklist.prioridade !== undefined) {
+      itensTotal += 1;
+      if (pessoa.checklist.prioridade) itensMarcados += 1;
     }
+
+    for (const marcado of Object.values(pessoa.checklist.formandos)) {
+      itensTotal += 1;
+      if (marcado) itensMarcados += 1;
+    }
+
+    for (const marcado of Object.values(pessoa.checklist.acompanhantes)) {
+      itensTotal += 1;
+      if (marcado) itensMarcados += 1;
+    }
+
+    if (pessoa.fotografado) formandosConcluidos += 1;
   }
 
-  const checklist: Checklist = {
-    individual: Boolean(existente.individual),
-    formandos: {},
-    acompanhantes: {},
-  };
-
-  if (fotoGarantida) checklist.prioridade = Boolean(existente.prioridade);
-
-  for (const nome of fotosFormandos) {
-    checklist.formandos[nome] = Boolean(existente.formandos?.[nome]);
-  }
-
-  for (const nome of parsearAcompanhantes(acompanhantes)) {
-    checklist.acompanhantes[nome] = Boolean(existente.acompanhantes?.[nome]);
-  }
-
-  return checklist;
+  return { itensTotal, itensMarcados, formandosTotal: items.length, formandosConcluidos };
 }
 
 export async function GET() {
@@ -165,5 +140,5 @@ export async function GET() {
     return a.horarioChegada.localeCompare(b.horarioChegada);
   });
 
-  return NextResponse.json({ items });
+  return NextResponse.json({ items, progress: contarProgresso(items) });
 }

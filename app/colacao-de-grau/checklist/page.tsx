@@ -1,7 +1,10 @@
 'use client';
 
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Cormorant_Garamond, Inter } from 'next/font/google';
+import { type Checklist, calcularCompleto } from '@/lib/colacao-checklist';
+
+const POLL_INTERVAL_MS = 20000;
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -39,13 +42,6 @@ function isChecklistAuthenticated(): boolean {
 function saveChecklistAuth() {
   localStorage.setItem(AUTH_KEY, JSON.stringify({ authenticated: true, timestamp: Date.now() }));
 }
-
-type Checklist = {
-  individual: boolean;
-  prioridade?: boolean;
-  formandos: Record<string, boolean>;
-  acompanhantes: Record<string, boolean>;
-};
 
 type ChecklistPessoa = {
   pageId: string | null;
@@ -88,13 +84,6 @@ function iniciais(nome: string): string {
   return primeiras.join('');
 }
 
-function computeCompleto(checklist: Checklist): boolean {
-  if (!checklist.individual) return false;
-  if (checklist.prioridade !== undefined && !checklist.prioridade) return false;
-  if (!Object.values(checklist.formandos).every(Boolean)) return false;
-  return Object.values(checklist.acompanhantes).every(Boolean);
-}
-
 function buildItemsView(pessoa: ChecklistPessoa): ItemView[] {
   if (!pessoa.checklist) return [];
   const items: ItemView[] = [
@@ -111,14 +100,111 @@ function buildItemsView(pessoa: ChecklistPessoa): ItemView[] {
   }
 
   Object.entries(pessoa.checklist.acompanhantes).forEach(([nome, checked]) => {
-    items.push({ key: `acompanhante:${nome}`, label: `Foto com ${nome}`, checked, destaque: false });
+    items.push({ key: `acompanhantes:${nome}`, label: `Foto com ${nome}`, checked, destaque: false });
   });
 
   Object.entries(pessoa.checklist.formandos).forEach(([nome, checked]) => {
-    items.push({ key: `formando:${nome}`, label: `Foto com ${nome}`, checked, destaque: false });
+    items.push({ key: `formandos:${nome}`, label: `Foto com ${nome}`, checked, destaque: false });
   });
 
   return items;
+}
+
+function getValorItem(checklist: Checklist, itemKey: string): boolean {
+  if (itemKey === 'individual') return checklist.individual;
+  if (itemKey === 'prioridade') return Boolean(checklist.prioridade);
+  if (itemKey.startsWith('formandos:')) return Boolean(checklist.formandos[itemKey.slice('formandos:'.length)]);
+  if (itemKey.startsWith('acompanhantes:')) return Boolean(checklist.acompanhantes[itemKey.slice('acompanhantes:'.length)]);
+  return false;
+}
+
+function aplicarItemLocal(checklist: Checklist, itemKey: string, value: boolean): Checklist {
+  if (itemKey === 'individual') return { ...checklist, individual: value };
+  if (itemKey === 'prioridade') return { ...checklist, prioridade: value };
+  if (itemKey.startsWith('formandos:')) {
+    const nome = itemKey.slice('formandos:'.length);
+    return { ...checklist, formandos: { ...checklist.formandos, [nome]: value } };
+  }
+  if (itemKey.startsWith('acompanhantes:')) {
+    const nome = itemKey.slice('acompanhantes:'.length);
+    return { ...checklist, acompanhantes: { ...checklist.acompanhantes, [nome]: value } };
+  }
+  return checklist;
+}
+
+/** Mescla o resultado de um poll/refetch com o estado atual, preservando os
+ * itens que a pessoa está no meio de clicar (evita "piscar" um item recém-marcado
+ * enquanto o toggle otimista ainda não voltou do servidor). */
+function mergeItems(atual: ChecklistPessoa[], novo: ChecklistPessoa[], pendentes: Set<string>): ChecklistPessoa[] {
+  return novo.map(novaPessoa => {
+    const pessoaAtual = atual.find(p => p.pageId === novaPessoa.pageId);
+    if (!pessoaAtual?.checklist || !novaPessoa.checklist) return novaPessoa;
+
+    const chaves = new Set([
+      ...Object.keys(novaPessoa.checklist.formandos),
+      ...Object.keys(pessoaAtual.checklist.formandos),
+    ]);
+    const acompChaves = new Set([
+      ...Object.keys(novaPessoa.checklist.acompanhantes),
+      ...Object.keys(pessoaAtual.checklist.acompanhantes),
+    ]);
+
+    const checklistMerged: Checklist = {
+      individual: pendentes.has(`${novaPessoa.pageId}:individual`) ? pessoaAtual.checklist.individual : novaPessoa.checklist.individual,
+      formandos: {},
+      acompanhantes: {},
+    };
+
+    if (novaPessoa.checklist.prioridade !== undefined || pessoaAtual.checklist.prioridade !== undefined) {
+      checklistMerged.prioridade = pendentes.has(`${novaPessoa.pageId}:prioridade`)
+        ? pessoaAtual.checklist.prioridade
+        : novaPessoa.checklist.prioridade;
+    }
+
+    chaves.forEach(nome => {
+      const pendente = pendentes.has(`${novaPessoa.pageId}:formandos:${nome}`);
+      checklistMerged.formandos[nome] = pendente ? Boolean(pessoaAtual.checklist!.formandos[nome]) : Boolean(novaPessoa.checklist!.formandos[nome]);
+    });
+
+    acompChaves.forEach(nome => {
+      const pendente = pendentes.has(`${novaPessoa.pageId}:acompanhantes:${nome}`);
+      checklistMerged.acompanhantes[nome] = pendente ? Boolean(pessoaAtual.checklist!.acompanhantes[nome]) : Boolean(novaPessoa.checklist!.acompanhantes[nome]);
+    });
+
+    return { ...novaPessoa, checklist: checklistMerged, fotografado: calcularCompleto(checklistMerged) };
+  });
+}
+
+function computeProgress(items: ChecklistPessoa[]) {
+  let itensTotal = 0;
+  let itensMarcados = 0;
+  let formandosConcluidos = 0;
+
+  for (const pessoa of items) {
+    if (pessoa.status === 'sem_resposta' || !pessoa.checklist) continue;
+
+    itensTotal += 1;
+    if (pessoa.checklist.individual) itensMarcados += 1;
+
+    if (pessoa.checklist.prioridade !== undefined) {
+      itensTotal += 1;
+      if (pessoa.checklist.prioridade) itensMarcados += 1;
+    }
+
+    for (const marcado of Object.values(pessoa.checklist.formandos)) {
+      itensTotal += 1;
+      if (marcado) itensMarcados += 1;
+    }
+
+    for (const marcado of Object.values(pessoa.checklist.acompanhantes)) {
+      itensTotal += 1;
+      if (marcado) itensMarcados += 1;
+    }
+
+    if (pessoa.fotografado) formandosConcluidos += 1;
+  }
+
+  return { itensTotal, itensMarcados, formandosTotal: items.length, formandosConcluidos };
 }
 
 function AuthScreen({ onAuth }: { onAuth: () => void }) {
@@ -406,77 +492,95 @@ function ChecklistContent() {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState(false);
   const [filtro, setFiltro] = useState<'todos' | 'pendentes'>('todos');
+  const pendentesRef = useRef<Set<string>>(new Set());
+  const itemsRef = useRef<ChecklistPessoa[]>([]);
+  itemsRef.current = items;
 
   useEffect(() => {
     carregar();
   }, []);
 
-  async function carregar() {
-    setLoading(true);
+  useEffect(() => {
+    function handleVisibility() {
+      if (document.visibilityState === 'visible') carregar({ silent: true });
+    }
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') carregar({ silent: true });
+    }, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, []);
+
+  async function carregar(opts?: { silent?: boolean }) {
+    const silent = opts?.silent ?? false;
+    if (!silent) setLoading(true);
     setErro(false);
     try {
       const res = await fetch('/api/colacao/checklist');
       if (!res.ok) throw new Error('Falha ao carregar');
       const data = await res.json();
-      setItems(data.items ?? []);
+      const novos: ChecklistPessoa[] = data.items ?? [];
+      setItems(silent && itemsRef.current.length > 0 ? mergeItems(itemsRef.current, novos, pendentesRef.current) : novos);
     } catch {
-      setErro(true);
+      if (!silent) setErro(true);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
   function handleToggleItem(pessoa: ChecklistPessoa, itemKey: string) {
     if (!pessoa.pageId || !pessoa.checklist) return;
 
-    const novoChecklist: Checklist = {
-      ...pessoa.checklist,
-      formandos: { ...pessoa.checklist.formandos },
-      acompanhantes: { ...pessoa.checklist.acompanhantes },
-    };
-
-    if (itemKey === 'individual') {
-      novoChecklist.individual = !novoChecklist.individual;
-    } else if (itemKey === 'prioridade') {
-      novoChecklist.prioridade = !novoChecklist.prioridade;
-    } else if (itemKey.startsWith('formando:')) {
-      const nome = itemKey.slice('formando:'.length);
-      novoChecklist.formandos[nome] = !novoChecklist.formandos[nome];
-    } else if (itemKey.startsWith('acompanhante:')) {
-      const nome = itemKey.slice('acompanhante:'.length);
-      novoChecklist.acompanhantes[nome] = !novoChecklist.acompanhantes[nome];
-    }
-
-    const completo = computeCompleto(novoChecklist);
+    const pageId = pessoa.pageId;
+    const chavePendente = `${pageId}:${itemKey}`;
     const checklistAnterior = pessoa.checklist;
     const fotografadoAnterior = pessoa.fotografado;
 
-    setItems(prev => prev.map(p => (p.pageId === pessoa.pageId ? { ...p, checklist: novoChecklist, fotografado: completo } : p)));
+    const novoValor = !getValorItem(pessoa.checklist, itemKey);
+    const novoChecklist = aplicarItemLocal(pessoa.checklist, itemKey, novoValor);
+    const completoOtimista = calcularCompleto(novoChecklist);
+
+    pendentesRef.current.add(chavePendente);
+    setItems(prev => prev.map(p => (p.pageId === pageId ? { ...p, checklist: novoChecklist, fotografado: completoOtimista } : p)));
 
     fetch('/api/colacao/checklist/toggle', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pageId: pessoa.pageId, checklist: novoChecklist, completo }),
+      body: JSON.stringify({ pageId, itemKey, value: novoValor }),
     })
-      .then(res => {
+      .then(async res => {
         if (!res.ok) throw new Error('Falha ao atualizar');
+        const data = await res.json();
+        setItems(prev => prev.map(p => (p.pageId === pageId ? { ...p, checklist: data.checklist, fotografado: data.fotografado } : p)));
       })
       .catch(() => {
-        setItems(prev => prev.map(p => (p.pageId === pessoa.pageId ? { ...p, checklist: checklistAnterior, fotografado: fotografadoAnterior } : p)));
+        setItems(prev => prev.map(p => (p.pageId === pageId ? { ...p, checklist: checklistAnterior, fotografado: fotografadoAnterior } : p)));
+      })
+      .finally(() => {
+        pendentesRef.current.delete(chavePendente);
       });
   }
 
   const itensVisiveis = filtro === 'pendentes' ? items.filter(i => !i.fotografado) : items;
+  const progress = computeProgress(items);
+  const percent = progress.itensTotal > 0 ? Math.round((progress.itensMarcados / progress.itensTotal) * 100) : 0;
 
   return (
     <div style={{ minHeight: '100vh', background: '#fafaf9', padding: 'clamp(1.25rem, 5vw, 2.5rem) 1rem', boxSizing: 'border-box' }}>
       <div style={{ maxWidth: '480px', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <p style={{ fontFamily: serifFont, fontStyle: 'italic', fontWeight: 500, fontSize: '28px', color: '#111', margin: '0 0 0.4rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          <p style={{ fontFamily: serifFont, fontStyle: 'italic', fontWeight: 500, fontSize: '28px', color: '#111', margin: '0 0 1rem' }}>
             Checklist — Colação de Grau
           </p>
-          <p style={{ fontFamily: sansFont, fontSize: '0.85rem', color: '#777', margin: 0 }}>
-            {items.filter(i => i.fotografado).length} de {items.length} fotografados
+          <div style={{ width: '100%', height: '6px', background: '#e6e6e0', borderRadius: '999px', overflow: 'hidden' }}>
+            <div style={{ width: `${percent}%`, height: '100%', background: '#0a0a0a', borderRadius: '999px', transition: 'width 0.2s' }} />
+          </div>
+          <p style={{ fontFamily: sansFont, fontSize: '0.85rem', color: '#777', margin: '0.6rem 0 0' }}>
+            {progress.formandosConcluidos} de {progress.formandosTotal} formandos concluídos
           </p>
         </div>
 
@@ -513,7 +617,7 @@ function ChecklistContent() {
 
         {erro && !loading && (
           <p style={{ fontFamily: sansFont, fontSize: '0.9rem', color: '#b00020', textAlign: 'center' }}>
-            Não foi possível carregar os dados. <button type="button" onClick={carregar} style={{ background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer', fontFamily: sansFont, color: '#b00020' }}>Tentar de novo</button>
+            Não foi possível carregar os dados. <button type="button" onClick={() => carregar()} style={{ background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer', fontFamily: sansFont, color: '#b00020' }}>Tentar de novo</button>
           </p>
         )}
 
