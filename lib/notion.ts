@@ -75,7 +75,7 @@ export async function notionQueryDatabase(databaseId: string, body: object = {})
   return results
 }
 
-/** PATCH /v1/pages/{id} — atualiza uma única propriedade checkbox */
-export async function notionUpdatePageCheckbox(pageId: string, propertyName: string, value: boolean): Promise<any> {
-  return notionPatch(pageId, { properties: { [propertyName]: { checkbox: value } } })
+/** PATCH /v1/pages/{id} — atualiza múltiplas propriedades de uma vez */
+export async function notionUpdatePageProperties(pageId: string, properties: Record<string, unknown>): Promise<any> {
+  return notionPatch(pageId, { properties })
 }

@@ -15,20 +15,25 @@ const FORMANDOS = [
   'Thiago Pedro',
 ];
 
-type ChecklistItem = {
+type Checklist = {
+  individual: boolean;
+  grupo?: boolean;
+  prioridade?: boolean;
+  formandos: Record<string, boolean>;
+};
+
+type ChecklistPessoa = {
   pageId: string | null;
   nomeCompleto: string;
   chamarDe: string;
-  whatsapp: string;
-  instagram: string;
   horarioChegada: string;
   acompanhantes: string;
   fotoGarantida: string;
-  fotosFormandos: string[];
   autorizacao: 'Sim' | 'Não' | '';
   fotoUrl: string | null;
   fotografado: boolean;
   status: 'ok' | 'sem_resposta';
+  checklist: Checklist | null;
 };
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -42,6 +47,36 @@ function extrairFotoUrl(files: any[] | undefined): string | null {
   const primeiro = files[0];
   if (primeiro.type === 'external') return primeiro.external?.url ?? null;
   return primeiro.file?.url ?? null;
+}
+
+function montarChecklist(
+  checklistFotosRaw: string,
+  acompanhantes: string,
+  fotoGarantida: string,
+  fotosFormandos: string[],
+): Checklist {
+  let existente: any = {};
+  if (checklistFotosRaw) {
+    try {
+      existente = JSON.parse(checklistFotosRaw);
+    } catch {
+      existente = {};
+    }
+  }
+
+  const checklist: Checklist = {
+    individual: Boolean(existente.individual),
+    formandos: {},
+  };
+
+  if (acompanhantes) checklist.grupo = Boolean(existente.grupo);
+  if (fotoGarantida) checklist.prioridade = Boolean(existente.prioridade);
+
+  for (const nome of fotosFormandos) {
+    checklist.formandos[nome] = Boolean(existente.formandos?.[nome]);
+  }
+
+  return checklist;
 }
 
 export async function GET() {
@@ -72,41 +107,42 @@ export async function GET() {
     maisRecentePorNome.set(nomeCompleto, { page, enviadoEm });
   }
 
-  const items: ChecklistItem[] = FORMANDOS.map(nome => {
+  const items: ChecklistPessoa[] = FORMANDOS.map(nome => {
     const entrada = maisRecentePorNome.get(nome);
     if (!entrada) {
       return {
         pageId: null,
         nomeCompleto: nome,
         chamarDe: '',
-        whatsapp: '',
-        instagram: '',
         horarioChegada: '',
         acompanhantes: '',
         fotoGarantida: '',
-        fotosFormandos: [],
         autorizacao: '',
         fotoUrl: null,
         fotografado: false,
         status: 'sem_resposta',
+        checklist: null,
       };
     }
 
     const props = entrada.page.properties ?? {};
+    const acompanhantes = extrairTexto(props['Acompanhantes']?.rich_text);
+    const fotoGarantida = extrairTexto(props['Foto garantida']?.rich_text);
+    const fotosFormandos: string[] = (props['Fotos com formandos']?.multi_select ?? []).map((o: any) => o.name);
+    const checklistFotosRaw = extrairTexto(props['Checklist Fotos']?.rich_text);
+
     return {
       pageId: entrada.page.id,
       nomeCompleto: nome,
       chamarDe: extrairTexto(props['Chamar de']?.rich_text),
-      whatsapp: extrairTexto(props['WhatsApp']?.rich_text),
-      instagram: extrairTexto(props['Instagram']?.rich_text),
       horarioChegada: extrairTexto(props['Horário de chegada']?.rich_text),
-      acompanhantes: extrairTexto(props['Acompanhantes']?.rich_text),
-      fotoGarantida: extrairTexto(props['Foto garantida']?.rich_text),
-      fotosFormandos: (props['Fotos com formandos']?.multi_select ?? []).map((o: any) => o.name),
+      acompanhantes,
+      fotoGarantida,
       autorizacao: (props['Autorização']?.select?.name ?? '') as 'Sim' | 'Não' | '',
       fotoUrl: extrairFotoUrl(props['Arquivos e mídia']?.files),
       fotografado: Boolean(props['Fotografado']?.checkbox),
       status: 'ok',
+      checklist: montarChecklist(checklistFotosRaw, acompanhantes, fotoGarantida, fotosFormandos),
     };
   });
 

@@ -40,20 +40,33 @@ function saveChecklistAuth() {
   localStorage.setItem(AUTH_KEY, JSON.stringify({ authenticated: true, timestamp: Date.now() }));
 }
 
-type ChecklistItem = {
+type Checklist = {
+  individual: boolean;
+  grupo?: boolean;
+  prioridade?: boolean;
+  formandos: Record<string, boolean>;
+};
+
+type ChecklistPessoa = {
   pageId: string | null;
   nomeCompleto: string;
   chamarDe: string;
-  whatsapp: string;
-  instagram: string;
   horarioChegada: string;
   acompanhantes: string;
   fotoGarantida: string;
-  fotosFormandos: string[];
   autorizacao: 'Sim' | 'Não' | '';
   fotoUrl: string | null;
   fotografado: boolean;
   status: 'ok' | 'sem_resposta';
+  checklist: Checklist | null;
+};
+
+type ItemView = {
+  key: string;
+  label: string;
+  sub?: string;
+  checked: boolean;
+  destaque: boolean;
 };
 
 const underlineInputStyle: CSSProperties = {
@@ -77,9 +90,43 @@ function iniciais(nome: string): string {
   return primeiras.join('');
 }
 
-function whatsappHref(numero: string): string {
-  const digitos = numero.replace(/\D/g, '');
-  return `https://wa.me/${digitos}`;
+function computeCompleto(checklist: Checklist): boolean {
+  if (!checklist.individual) return false;
+  if (checklist.grupo !== undefined && !checklist.grupo) return false;
+  if (checklist.prioridade !== undefined && !checklist.prioridade) return false;
+  return Object.values(checklist.formandos).every(Boolean);
+}
+
+function buildItemsView(pessoa: ChecklistPessoa): ItemView[] {
+  if (!pessoa.checklist) return [];
+  const items: ItemView[] = [
+    { key: 'individual', label: 'Foto individual', checked: pessoa.checklist.individual, destaque: false },
+  ];
+
+  if (pessoa.checklist.grupo !== undefined) {
+    items.push({
+      key: 'grupo',
+      label: 'Foto em grupo',
+      sub: pessoa.acompanhantes,
+      checked: pessoa.checklist.grupo,
+      destaque: false,
+    });
+  }
+
+  if (pessoa.checklist.prioridade !== undefined) {
+    items.push({
+      key: 'prioridade',
+      label: `Prioridade — foto com ${pessoa.fotoGarantida}`,
+      checked: pessoa.checklist.prioridade,
+      destaque: true,
+    });
+  }
+
+  Object.entries(pessoa.checklist.formandos).forEach(([nome, checked]) => {
+    items.push({ key: `formando:${nome}`, label: `Foto com ${nome}`, checked, destaque: false });
+  });
+
+  return items;
 }
 
 function AuthScreen({ onAuth }: { onAuth: () => void }) {
@@ -178,29 +225,31 @@ function AuthScreen({ onAuth }: { onAuth: () => void }) {
   );
 }
 
-function Avatar({ item }: { item: ChecklistItem }) {
+function FotoGrande({ pessoa }: { pessoa: ChecklistPessoa }) {
   const base: CSSProperties = {
-    width: '56px',
-    height: '56px',
-    minWidth: '56px',
-    borderRadius: '50%',
-    overflow: 'hidden',
+    width: '100%',
+    aspectRatio: '4 / 5',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    border: '1px solid #000',
+    overflow: 'hidden',
+    borderBottom: '1px solid #000',
   };
-  if (item.fotoUrl) {
+
+  if (pessoa.fotoUrl) {
     return (
       <div style={base}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={item.fotoUrl} alt={item.nomeCompleto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <img src={pessoa.fotoUrl} alt={pessoa.nomeCompleto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       </div>
     );
   }
+
   return (
     <div style={{ ...base, background: '#e6e6e0' }}>
-      <span style={{ fontFamily: sansFont, fontWeight: 600, fontSize: '1rem', color: '#111' }}>{iniciais(item.nomeCompleto)}</span>
+      <span style={{ fontFamily: serifFont, fontStyle: 'italic', fontWeight: 600, fontSize: '3rem', color: '#999' }}>
+        {iniciais(pessoa.nomeCompleto)}
+      </span>
     </div>
   );
 }
@@ -228,141 +277,137 @@ function AutorizacaoBadge({ valor }: { valor: 'Sim' | 'Não' | '' }) {
   );
 }
 
-function Chip({ children }: { children: React.ReactNode }) {
+function CheckSquare({ checked }: { checked: boolean }) {
   return (
     <span
       style={{
-        display: 'inline-block',
-        fontFamily: sansFont,
-        fontSize: '0.75rem',
-        color: '#333',
-        background: '#f2f2ec',
-        border: '1px solid #e0e0d8',
-        borderRadius: '999px',
-        padding: '0.2rem 0.65rem',
-        marginRight: '0.4rem',
-        marginBottom: '0.4rem',
+        width: '20px',
+        height: '20px',
+        minWidth: '20px',
+        border: '1px solid #000',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: checked ? '#000' : 'transparent',
+        marginTop: '0.1rem',
+        transition: 'background 0.15s',
       }}
     >
-      {children}
+      {checked && (
+        <svg width="12" height="10" viewBox="0 0 11 9" fill="none">
+          <path d="M1 4.5L4 7.5L10 1" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
     </span>
   );
 }
 
+function StarIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill={filled ? '#000' : 'none'} stroke="#000" strokeWidth="1.5" style={{ marginRight: '0.35rem', flexShrink: 0 }}>
+      <path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.8-6.3 3.8 1.7-7-5.4-4.7 7.1-.6L12 2z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ChecklistItemRow({ item, onToggle }: { item: ItemView; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: '0.75rem',
+        width: '100%',
+        textAlign: 'left',
+        padding: item.destaque ? '0.75rem 0.85rem' : '0.65rem 0.15rem',
+        margin: item.destaque ? '0.5rem 0' : 0,
+        border: item.destaque ? '2px solid #000' : 'none',
+        borderBottom: item.destaque ? '2px solid #000' : '1px solid #ececE6',
+        background: item.destaque ? '#f5f0e2' : 'transparent',
+        cursor: 'pointer',
+        font: 'inherit',
+      }}
+    >
+      <CheckSquare checked={item.checked} />
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            fontFamily: sansFont,
+            fontSize: '0.92rem',
+            fontWeight: item.destaque ? 600 : 400,
+            color: '#111',
+            textDecoration: item.checked ? 'line-through' : 'none',
+            opacity: item.checked ? 0.55 : 1,
+          }}
+        >
+          {item.destaque && <StarIcon filled={item.checked} />}
+          {item.label}
+        </span>
+        {item.sub && (
+          <span style={{ display: 'block', fontFamily: sansFont, fontSize: '0.78rem', color: '#888', marginTop: '0.15rem' }}>
+            {item.sub}
+          </span>
+        )}
+      </span>
+    </button>
+  );
+}
+
 function Card({
-  item,
-  onToggle,
+  pessoa,
+  onToggleItem,
 }: {
-  item: ChecklistItem;
-  onToggle: (item: ChecklistItem) => void;
+  pessoa: ChecklistPessoa;
+  onToggleItem: (pessoa: ChecklistPessoa, itemKey: string) => void;
 }) {
-  const semResposta = item.status === 'sem_resposta';
+  const semResposta = pessoa.status === 'sem_resposta';
+  const itens = buildItemsView(pessoa);
 
   return (
     <div
       style={{
-        display: 'flex',
-        gap: '1rem',
         background: '#fff',
         border: '1px solid #000',
-        padding: '1.1rem 1.25rem',
-        marginBottom: '0.9rem',
-        opacity: semResposta ? 0.55 : item.fotografado ? 0.6 : 1,
+        marginBottom: '1.5rem',
+        opacity: semResposta ? 0.55 : 1,
         transition: 'opacity 0.15s',
       }}
     >
-      <Avatar item={item} />
+      <FotoGrande pessoa={pessoa} />
 
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <p
-            style={{
-              fontFamily: serifFont,
-              fontWeight: 600,
-              fontSize: '1.15rem',
-              color: '#111',
-              margin: 0,
-              textDecoration: item.fotografado && !semResposta ? 'line-through' : 'none',
-            }}
-          >
-            {item.nomeCompleto}
-            {item.chamarDe && item.chamarDe !== item.nomeCompleto && (
-              <span style={{ fontFamily: sansFont, fontWeight: 400, fontSize: '0.85rem', color: '#777' }}> ({item.chamarDe})</span>
+      <div style={{ padding: '1.1rem 1.25rem 1.4rem' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+          <p style={{ fontFamily: serifFont, fontWeight: 600, fontSize: '1.4rem', color: '#111', margin: 0 }}>
+            {pessoa.nomeCompleto}
+            {pessoa.chamarDe && pessoa.chamarDe !== pessoa.nomeCompleto && (
+              <span style={{ fontFamily: sansFont, fontWeight: 400, fontSize: '0.85rem', color: '#777' }}> ({pessoa.chamarDe})</span>
             )}
           </p>
-          {!semResposta && item.horarioChegada && (
-            <span style={{ fontFamily: sansFont, fontWeight: 600, fontSize: '0.95rem', color: '#111' }}>
-              {item.horarioChegada}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+          <AutorizacaoBadge valor={pessoa.autorizacao} />
+          {!semResposta && pessoa.horarioChegada && (
+            <span style={{ fontFamily: sansFont, fontWeight: 600, fontSize: '1rem', color: '#111' }}>
+              {pessoa.horarioChegada}
             </span>
           )}
         </div>
 
         {semResposta ? (
-          <p style={{ fontFamily: sansFont, fontStyle: 'italic', fontSize: '0.85rem', color: '#999', margin: '0.5rem 0 0' }}>
+          <p style={{ fontFamily: sansFont, fontStyle: 'italic', fontSize: '0.9rem', color: '#999', margin: 0 }}>
             Ainda não respondeu
           </p>
         ) : (
-          <>
-            <div style={{ margin: '0.45rem 0 0.6rem' }}>
-              <AutorizacaoBadge valor={item.autorizacao} />
-            </div>
-
-            {item.fotoGarantida && (
-              <p style={{ fontFamily: sansFont, fontSize: '0.85rem', color: '#111', margin: '0 0 0.5rem' }}>
-                <strong>Foto garantida:</strong> {item.fotoGarantida}
-              </p>
-            )}
-
-            {item.fotosFormandos.length > 0 && (
-              <div style={{ margin: '0 0 0.5rem' }}>
-                <p style={{ fontFamily: sansFont, fontSize: '0.75rem', color: '#777', margin: '0 0 0.35rem' }}>Quer fotos com:</p>
-                <div>
-                  {item.fotosFormandos.map(nome => <Chip key={nome}>{nome}</Chip>)}
-                </div>
-              </div>
-            )}
-
-            {item.acompanhantes && (
-              <p style={{ fontFamily: sansFont, fontSize: '0.78rem', color: '#888', margin: '0 0 0.5rem' }}>
-                Acompanhantes: {item.acompanhantes}
-              </p>
-            )}
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
-              {item.whatsapp ? (
-                <a
-                  href={whatsappHref(item.whatsapp)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ fontFamily: sansFont, fontSize: '0.78rem', color: '#111', textDecoration: 'underline' }}
-                >
-                  {item.whatsapp}
-                </a>
-              ) : <span />}
-
-              <button
-                type="button"
-                onClick={() => onToggle(item)}
-                disabled={!item.pageId}
-                style={{
-                  fontFamily: sansFont,
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  padding: '0.55rem 1rem',
-                  border: '1px solid #000',
-                  background: item.fotografado ? '#000' : 'transparent',
-                  color: item.fotografado ? '#fff' : '#000',
-                  cursor: item.pageId ? 'pointer' : 'not-allowed',
-                  opacity: item.pageId ? 1 : 0.4,
-                  transition: 'background 0.15s, color 0.15s',
-                }}
-              >
-                {item.fotografado ? '✓ Fotografado' : 'Marcar como fotografado'}
-              </button>
-            </div>
-          </>
+          <div>
+            {itens.map(item => (
+              <ChecklistItemRow key={item.key} item={item} onToggle={() => onToggleItem(pessoa, item.key)} />
+            ))}
+          </div>
         )}
       </div>
     </div>
@@ -370,7 +415,7 @@ function Card({
 }
 
 function ChecklistContent() {
-  const [items, setItems] = useState<ChecklistItem[]>([]);
+  const [items, setItems] = useState<ChecklistPessoa[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState(false);
   const [filtro, setFiltro] = useState<'todos' | 'pendentes'>('todos');
@@ -394,27 +439,49 @@ function ChecklistContent() {
     }
   }
 
-  async function handleToggle(item: ChecklistItem) {
-    if (!item.pageId) return;
-    const novoValor = !item.fotografado;
-    setItems(prev => prev.map(i => (i.pageId === item.pageId ? { ...i, fotografado: novoValor } : i)));
-    try {
-      const res = await fetch('/api/colacao/checklist/toggle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pageId: item.pageId, fotografado: novoValor }),
-      });
-      if (!res.ok) throw new Error('Falha ao atualizar');
-    } catch {
-      setItems(prev => prev.map(i => (i.pageId === item.pageId ? { ...i, fotografado: !novoValor } : i)));
+  function handleToggleItem(pessoa: ChecklistPessoa, itemKey: string) {
+    if (!pessoa.pageId || !pessoa.checklist) return;
+
+    const novoChecklist: Checklist = {
+      ...pessoa.checklist,
+      formandos: { ...pessoa.checklist.formandos },
+    };
+
+    if (itemKey === 'individual') {
+      novoChecklist.individual = !novoChecklist.individual;
+    } else if (itemKey === 'grupo') {
+      novoChecklist.grupo = !novoChecklist.grupo;
+    } else if (itemKey === 'prioridade') {
+      novoChecklist.prioridade = !novoChecklist.prioridade;
+    } else if (itemKey.startsWith('formando:')) {
+      const nome = itemKey.slice('formando:'.length);
+      novoChecklist.formandos[nome] = !novoChecklist.formandos[nome];
     }
+
+    const completo = computeCompleto(novoChecklist);
+    const checklistAnterior = pessoa.checklist;
+    const fotografadoAnterior = pessoa.fotografado;
+
+    setItems(prev => prev.map(p => (p.pageId === pessoa.pageId ? { ...p, checklist: novoChecklist, fotografado: completo } : p)));
+
+    fetch('/api/colacao/checklist/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pageId: pessoa.pageId, checklist: novoChecklist, completo }),
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Falha ao atualizar');
+      })
+      .catch(() => {
+        setItems(prev => prev.map(p => (p.pageId === pessoa.pageId ? { ...p, checklist: checklistAnterior, fotografado: fotografadoAnterior } : p)));
+      });
   }
 
   const itensVisiveis = filtro === 'pendentes' ? items.filter(i => !i.fotografado) : items;
 
   return (
     <div style={{ minHeight: '100vh', background: '#fafaf9', padding: 'clamp(1.25rem, 5vw, 2.5rem) 1rem', boxSizing: 'border-box' }}>
-      <div style={{ maxWidth: '640px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '480px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <p style={{ fontFamily: serifFont, fontStyle: 'italic', fontWeight: 500, fontSize: '28px', color: '#111', margin: '0 0 0.4rem' }}>
             Checklist — Colação de Grau
@@ -461,8 +528,8 @@ function ChecklistContent() {
           </p>
         )}
 
-        {!loading && !erro && itensVisiveis.map(item => (
-          <Card key={item.nomeCompleto} item={item} onToggle={handleToggle} />
+        {!loading && !erro && itensVisiveis.map(pessoa => (
+          <Card key={pessoa.nomeCompleto} pessoa={pessoa} onToggleItem={handleToggleItem} />
         ))}
       </div>
     </div>
