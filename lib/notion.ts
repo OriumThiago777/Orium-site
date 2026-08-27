@@ -62,3 +62,20 @@ export async function notionGetPage(pageId: string): Promise<any> {
 export async function notionGetDatabase(databaseId: string): Promise<any> {
   return notionFetch(`databases/${databaseId}`)
 }
+
+/** POST /v1/databases/{id}/query, paginando até esgotar has_more. Retorna todas as páginas. */
+export async function notionQueryDatabase(databaseId: string, body: object = {}): Promise<any[]> {
+  const results: any[] = []
+  let cursor: string | undefined
+  do {
+    const data = await notionQuery(databaseId, cursor ? { ...body, start_cursor: cursor } : body)
+    results.push(...(data.results ?? []))
+    cursor = data.has_more ? data.next_cursor : undefined
+  } while (cursor)
+  return results
+}
+
+/** PATCH /v1/pages/{id} — atualiza uma única propriedade checkbox */
+export async function notionUpdatePageCheckbox(pageId: string, propertyName: string, value: boolean): Promise<any> {
+  return notionPatch(pageId, { properties: { [propertyName]: { checkbox: value } } })
+}
