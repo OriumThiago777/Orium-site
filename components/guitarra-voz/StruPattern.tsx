@@ -46,7 +46,7 @@ export default function StruPattern({ strokes, label }: StruPatternProps) {
                       : 'var(--gv-amber, #CF6A0A)',
               }}
             >
-              {STROKE_SYMBOL[stroke] || '·'}
+              {STROKE_SYMBOL[stroke] ?? '·'}
             </span>
             <span style={{ fontSize: '0.65rem', color: 'var(--gv-muted, #676767)', marginTop: '0.35rem' }}>
               {BEAT_LABELS[i] ?? ''}
