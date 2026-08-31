@@ -93,7 +93,7 @@ export default function ChordDiagram({
           x2={GRID_RIGHT}
           y1={NUT_Y + row * FRET_HEIGHT}
           y2={NUT_Y + row * FRET_HEIGHT}
-          stroke="var(--gv-border, rgba(240,235,227,0.2))"
+          stroke="var(--gv-border, rgba(240,235,227,0.07))"
           strokeWidth={0.5}
         />
       ))}

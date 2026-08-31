@@ -21,8 +21,9 @@ export default function StruPattern({ strokes, label }: StruPatternProps) {
         <p
           style={{
             fontSize: '0.72rem',
-            letterSpacing: '0.1em',
+            letterSpacing: '0.2em',
             textTransform: 'uppercase',
+            fontWeight: 600,
             color: 'var(--gv-muted, #676767)',
             margin: '0 0 0.5rem',
           }}

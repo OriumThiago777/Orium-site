@@ -106,7 +106,7 @@ export default function GuitarraVozLanding() {
         <Reveal>
           <h2 className={styles.gvHeading}>9 módulos progressivos</h2>
         </Reveal>
-        <div className={styles.gvGrid} style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginTop: '2rem' }}>
+        <div className={styles.gvGrid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', marginTop: '2rem' }}>
           {MODULOS_PREVIEW.map((modulo, i) => (
             <Reveal key={modulo.numero} delay={i * 0.03}>
               <div className={styles.gvCard}>
@@ -167,8 +167,8 @@ export default function GuitarraVozLanding() {
           <ChordDiagram name="Am" frets={[-1, 0, 2, 2, 1, 0]} fingers={[0, 0, 2, 3, 1, 0]} size="md" />
           <ChordDiagram
             name="F"
-            frets={[1, 1, 2, 3, 3, 1]}
-            fingers={[1, 1, 2, 3, 4, 1]}
+            frets={[1, 3, 3, 2, 1, 1]}
+            fingers={[1, 3, 4, 2, 1, 1]}
             barre={{ fret: 1, fromString: 0, toString: 5, finger: 1 }}
             size="md"
           />

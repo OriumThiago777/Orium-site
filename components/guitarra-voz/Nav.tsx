@@ -54,6 +54,7 @@ export default function Nav() {
                 href={link.href}
                 className={styles.gvLabel}
                 style={{ color: active ? 'var(--gv-amber)' : 'var(--gv-muted)' }}
+                aria-current={active ? 'page' : undefined}
               >
                 {link.label}
               </Link>

@@ -1,8 +1,8 @@
 export type ProgressState = 'nao-dominado' | 'em-desenvolvimento' | 'dominado';
 
 const STATE_CONFIG: Record<ProgressState, { label: string; color: string; bg: string }> = {
-  'nao-dominado': { label: 'Não dominado', color: '#676767', bg: 'rgba(103,103,103,0.12)' },
-  'em-desenvolvimento': { label: 'Em desenvolvimento', color: '#CF6A0A', bg: 'rgba(207,106,10,0.12)' },
+  'nao-dominado': { label: 'Não dominado', color: 'var(--gv-muted, #676767)', bg: 'rgba(103,103,103,0.12)' },
+  'em-desenvolvimento': { label: 'Em desenvolvimento', color: 'var(--gv-amber, #CF6A0A)', bg: 'rgba(207,106,10,0.12)' },
   dominado: { label: 'Dominado', color: '#4CAF6D', bg: 'rgba(76,175,109,0.12)' },
 };
 
