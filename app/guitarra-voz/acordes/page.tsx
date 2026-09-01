@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import ChordDiagram from '@/components/guitarra-voz/ChordDiagram';
-import { getAcordes, type CategoriaAcorde } from '@/lib/guitarra-voz-content';
+import { CATEGORIA_ORDEM, getAcordes, type CategoriaAcorde } from '@/lib/guitarra-voz-content';
 import styles from '../guitarra-voz.module.css';
 
 const CATEGORIA_LABEL: Record<CategoriaAcorde, string> = {
@@ -18,7 +18,10 @@ type Filtro = CategoriaAcorde | typeof FILTRO_TODOS;
 export default function AcordesPage() {
   const [filtro, setFiltro] = useState<Filtro>(FILTRO_TODOS);
   const acordes = getAcordes();
-  const categorias = useMemo(() => Array.from(new Set(acordes.map((a) => a.categoria))), [acordes]);
+  const categorias = useMemo(
+    () => CATEGORIA_ORDEM.filter((categoria) => acordes.some((a) => a.categoria === categoria)),
+    [acordes],
+  );
   const acordesFiltrados = filtro === FILTRO_TODOS ? acordes : acordes.filter((a) => a.categoria === filtro);
 
   return (

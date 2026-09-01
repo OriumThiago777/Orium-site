@@ -6,6 +6,8 @@ import musicasRaw from '@/content/guitarra-voz/musicas.json';
 
 export type CategoriaAcorde = 'maior' | 'menor' | 'setima' | 'suspenso';
 
+export const CATEGORIA_ORDEM: CategoriaAcorde[] = ['maior', 'menor', 'setima', 'suspenso'];
+
 export interface Acorde {
   slug: string;
   name: string;
@@ -96,3 +98,55 @@ const escalas: Escala[] = escalasRaw as Escala[];
 export function getEscalas(): Escala[] {
   return escalas;
 }
+
+function validateContent(): void {
+  const acordeSlugs = new Set<string>();
+  for (const acorde of acordes) {
+    if (!CATEGORIA_ORDEM.includes(acorde.categoria)) {
+      throw new Error(
+        `content/guitarra-voz/acordes.json: categoria inválida "${acorde.categoria}" no acorde "${acorde.slug}"`,
+      );
+    }
+    if (acordeSlugs.has(acorde.slug)) {
+      throw new Error(`content/guitarra-voz/acordes.json: slug duplicado "${acorde.slug}"`);
+    }
+    acordeSlugs.add(acorde.slug);
+  }
+
+  const moduloNumeros = new Set<number>();
+  for (const modulo of modulos) {
+    if (moduloNumeros.has(modulo.numero)) {
+      throw new Error(`content/guitarra-voz/modulos.json: numero duplicado ${modulo.numero}`);
+    }
+    moduloNumeros.add(modulo.numero);
+  }
+
+  const musicaSlugs = new Set<string>();
+  for (const musica of musicas) {
+    if (!DIFICULDADE_ORDEM.includes(musica.dificuldade)) {
+      throw new Error(
+        `content/guitarra-voz/musicas.json: dificuldade inválida "${musica.dificuldade}" na música "${musica.slug}"`,
+      );
+    }
+    if (musicaSlugs.has(musica.slug)) {
+      throw new Error(`content/guitarra-voz/musicas.json: slug duplicado "${musica.slug}"`);
+    }
+    musicaSlugs.add(musica.slug);
+  }
+
+  const categoriasEscalaValidas: CategoriaEscala[] = ['diatonica', 'pentatonica', 'blues', 'simetrica', 'modo-grego'];
+  const escalaSlugs = new Set<string>();
+  for (const escala of escalas) {
+    if (!categoriasEscalaValidas.includes(escala.categoria)) {
+      throw new Error(
+        `content/guitarra-voz/escalas-modos.json: categoria inválida "${escala.categoria}" na escala "${escala.slug}"`,
+      );
+    }
+    if (escalaSlugs.has(escala.slug)) {
+      throw new Error(`content/guitarra-voz/escalas-modos.json: slug duplicado "${escala.slug}"`);
+    }
+    escalaSlugs.add(escala.slug);
+  }
+}
+
+validateContent();
