@@ -1,0 +1,23 @@
+[
+  {
+    "slug": "pentatonica-menor",
+    "nome": "Pentatônica Menor",
+    "categoria": "pentatonica",
+    "intervalos": ["1", "b3", "4", "5", "b7"],
+    "descricao": "Escala de 5 notas, base da maior parte dos solos de blues e rock."
+  },
+  {
+    "slug": "jonio",
+    "nome": "Jônio (Maior)",
+    "categoria": "modo-grego",
+    "intervalos": ["1", "2", "3", "4", "5", "6", "7"],
+    "descricao": "Primeiro modo grego, idêntico à escala maior — soa estável e resolutivo."
+  },
+  {
+    "slug": "blues",
+    "nome": "Escala de Blues",
+    "categoria": "blues",
+    "intervalos": ["1", "b3", "4", "b5", "5", "b7"],
+    "descricao": "Pentatônica menor com a blue note (b5) adicionada."
+  }
+]

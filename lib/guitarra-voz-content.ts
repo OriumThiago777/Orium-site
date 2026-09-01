@@ -1,5 +1,6 @@
 import type { ChordDiagramProps } from '@/components/guitarra-voz/ChordDiagram';
 import acordesRaw from '@/content/guitarra-voz/acordes.json';
+import escalasRaw from '@/content/guitarra-voz/escalas-modos.json';
 import modulosRaw from '@/content/guitarra-voz/modulos.json';
 import musicasRaw from '@/content/guitarra-voz/musicas.json';
 
@@ -77,4 +78,21 @@ export function getMusicas(): Musica[] {
 
 export function getMusicaBySlug(slug: string): Musica | undefined {
   return musicas.find((m) => m.slug === slug);
+}
+
+export type CategoriaEscala = 'diatonica' | 'pentatonica' | 'blues' | 'simetrica' | 'modo-grego';
+
+export interface Escala {
+  slug: string;
+  nome: string;
+  categoria: CategoriaEscala;
+  intervalos: string[];
+  descricao: string;
+}
+
+// JSON values are widened to string by resolveJsonModule, breaking satisfies on CategoriaEscala literal union; cast is necessary.
+const escalas: Escala[] = escalasRaw as Escala[];
+
+export function getEscalas(): Escala[] {
+  return escalas;
 }
