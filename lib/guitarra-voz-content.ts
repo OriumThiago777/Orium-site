@@ -1,5 +1,6 @@
 import type { ChordDiagramProps } from '@/components/guitarra-voz/ChordDiagram';
 import acordesRaw from '@/content/guitarra-voz/acordes.json';
+import modulosRaw from '@/content/guitarra-voz/modulos.json';
 
 export type CategoriaAcorde = 'maior' | 'menor' | 'setima' | 'suspenso';
 
@@ -13,7 +14,7 @@ export interface Acorde {
   categoria: CategoriaAcorde;
 }
 
-const acordes: Acorde[] = acordesRaw satisfies Acorde[];
+const acordes: Acorde[] = acordesRaw as Acorde[];
 
 export function getAcordes(): Acorde[] {
   return acordes;
@@ -21,4 +22,24 @@ export function getAcordes(): Acorde[] {
 
 export function getAcordeBySlug(slug: string): Acorde | undefined {
   return acordes.find((a) => a.slug === slug);
+}
+
+export interface Modulo {
+  numero: number;
+  slug: string;
+  titulo: string;
+  topicos: string[];
+  acordesIntroduzidos: string[];
+  conquistaFinal: string;
+  preRequisito: number | null;
+}
+
+const modulos: Modulo[] = modulosRaw satisfies Modulo[];
+
+export function getModulos(): Modulo[] {
+  return [...modulos].sort((a, b) => a.numero - b.numero);
+}
+
+export function getModuloByNumero(numero: number): Modulo | undefined {
+  return modulos.find((m) => m.numero === numero);
 }

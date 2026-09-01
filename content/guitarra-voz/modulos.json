@@ -1,0 +1,30 @@
+[
+  {
+    "numero": 1,
+    "slug": "primeiros-contatos",
+    "titulo": "Primeiros Contatos com a Guitarra",
+    "topicos": [
+      "Partes da guitarra",
+      "Postura e empunhadura",
+      "Afinação básica",
+      "Primeiros acordes abertos"
+    ],
+    "acordesIntroduzidos": ["am", "c"],
+    "conquistaFinal": "Trocar entre Am e C sem parar o ritmo",
+    "preRequisito": null
+  },
+  {
+    "numero": 2,
+    "slug": "ritmo-e-coordenacao",
+    "titulo": "Ritmo e Coordenação",
+    "topicos": [
+      "Batida para baixo",
+      "Batida para cima",
+      "Contagem em 4 tempos",
+      "Independência da mão direita"
+    ],
+    "acordesIntroduzidos": ["f"],
+    "conquistaFinal": "Tocar o padrão D DU UDU em Am, C e F sem travar",
+    "preRequisito": 1
+  }
+]
