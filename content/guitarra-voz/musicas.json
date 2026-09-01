@@ -1,0 +1,22 @@
+[
+  {
+    "slug": "pais-e-filhos",
+    "titulo": "Pais e Filhos",
+    "artista": "Legião Urbana",
+    "dificuldade": "muito-facil",
+    "bpm": 92,
+    "acordes": ["am", "c", "f"],
+    "estrategiaEstudo": "Treine a troca Am→C isolada por 5 minutos antes de tentar a música inteira no tempo.",
+    "linkCifraClub": "https://www.cifraclub.com.br/legiao-urbana/pais-e-filhos/"
+  },
+  {
+    "slug": "wish-you-were-here",
+    "titulo": "Wish You Were Here",
+    "artista": "Pink Floyd",
+    "dificuldade": "intermediaria",
+    "bpm": 108,
+    "acordes": ["am", "c", "f"],
+    "estrategiaEstudo": "Foque primeiro no dedilhado da introdução isolado, só depois junte com a voz.",
+    "linkCifraClub": "https://www.cifraclub.com.br/pink-floyd/wish-you-were-here/"
+  }
+]
