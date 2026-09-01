@@ -14,6 +14,7 @@ export interface Acorde {
   categoria: CategoriaAcorde;
 }
 
+// JSON values are widened to string by resolveJsonModule, breaking satisfies on CategoriaAcorde literal union; cast is necessary.
 const acordes: Acorde[] = acordesRaw as Acorde[];
 
 export function getAcordes(): Acorde[] {
