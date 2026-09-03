@@ -145,3 +145,21 @@
   border-color: var(--gv-amber);
   color: var(--gv-amber);
 }
+
+.gvAcordesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5px;
+  background: var(--gv-border);
+  border: 1.5px solid var(--gv-border);
+}
+
+.gvAcordesGrid > * {
+  background: var(--gv-surface);
+}
+
+@media (min-width: 720px) {
+  .gvAcordesGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
