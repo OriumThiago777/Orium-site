@@ -1,614 +1,169 @@
-'use client';
+'use client'
 
-import { useState, useRef, useEffect, useCallback, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
-import { clearAuth, authHeaders } from '@/lib/auth';
-import { useDraft, loadDraft } from '@/lib/draft';
-import { loadDuplicado } from '@/lib/duplicar-documento';
-import DraftBanner from '@/components/DraftBanner';
-import DuplicadoBanner from '@/components/DuplicadoBanner';
-import ClienteSelector from '@/components/ClienteSelector';
-import ImportarBriefing, { BriefingImportado } from '@/components/ImportarBriefing';
-import AuthGate from '@/components/AuthGate';
-import ToolBackground from '@/components/ToolBackground';
-import WizardFooter from '@/components/WizardFooter';
-import OriumInput, { ORIUM_INPUT_STYLE } from '@/components/OriumInput';
+import { useState, useEffect, useRef, type CSSProperties } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import type { DragEndEvent } from '@dnd-kit/core'
+import { clearAuth, authHeaders } from '@/lib/auth'
+import AuthGate from '@/components/AuthGate'
+import ToolBackground from '@/components/ToolBackground'
+import { WeekGrid } from './components/WeekGrid'
+import { CLIENTES_CALENDARIO, type EventoCalendario } from './types'
 
-// ─── Tipos ───────────────────────────────────────────────────────────────────
+const MESES_ABREV = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 
-interface Post {
-  numero: string;
-  diaSemana: string;
-  formato: string;
-  tema: string;
-  titulo: string;
-  legenda: string;
-  hashtags: string;
+function toISODate(d: Date) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
-interface Semana {
-  numero: number;
-  titulo: string;
-  posts: Post[];
+function startOfWeekMonday(d: Date) {
+  const r = new Date(d)
+  const diaSemana = r.getDay()
+  const diff = diaSemana === 0 ? -6 : 1 - diaSemana
+  r.setDate(r.getDate() + diff)
+  r.setHours(0, 0, 0, 0)
+  return r
 }
 
-interface Calendario {
-  semanas: Semana[];
+function gerarSemana(base: Date): Date[] {
+  const inicio = startOfWeekMonday(base)
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(inicio)
+    d.setDate(d.getDate() + i)
+    return d
+  })
 }
 
-// ─── Constantes ──────────────────────────────────────────────────────────────
-
-const MESES = [
-  'Janeiro 2026', 'Fevereiro 2026', 'Março 2026', 'Abril 2026',
-  'Maio 2026', 'Junho 2026', 'Julho 2026', 'Agosto 2026',
-  'Setembro 2026', 'Outubro 2026', 'Novembro 2026', 'Dezembro 2026',
-  'Janeiro 2027', 'Fevereiro 2027', 'Março 2027', 'Abril 2027',
-  'Maio 2027', 'Junho 2027', 'Julho 2027', 'Agosto 2027',
-  'Setembro 2027', 'Outubro 2027', 'Novembro 2027', 'Dezembro 2027',
-];
-
-const SEGMENTOS = ['Barbearia', 'Saúde e Bem-estar', 'Alimentação', 'Moda e Beleza', 'Educação', 'Consultoria', 'Tecnologia', 'Varejo', 'Serviços', 'Outro'];
-const OBJETIVOS = ['Gerar autoridade', 'Atrair novos clientes', 'Fidelizar clientes atuais', 'Lançar produto ou serviço', 'Aumentar engajamento', 'Fortalecer identidade da marca'];
-const TONS = ['Profissional e sério', 'Descontraído e próximo', 'Inspirador e motivacional', 'Educativo e informativo', 'Premium e sofisticado', 'Direto e objetivo'];
-const FREQUENCIAS = ['2x por semana', '3x por semana', '4x por semana', '5x por semana'];
-const FORMATOS = ['Post estático', 'Carrossel', 'Reels', 'Stories', 'Story com enquete', 'Story com CTA'];
-const TEMAS = ['Bastidores', 'Antes e depois', 'Depoimento de cliente', 'Dica rápida', 'Curiosidade do segmento', 'Promoção ou oferta', 'Produto ou serviço em destaque', 'Humanização da marca', 'Conteúdo educativo', 'Novidade ou lançamento', 'Pergunta para engajamento', 'Post motivacional'];
-
-const LOADING_TEXTS = [
-  'Analisando o negócio...',
-  'Estruturando o calendário...',
-  'Gerando conteúdo estratégico...',
-  'Finalizando...',
-];
-
-// ─── Helpers de estilo ────────────────────────────────────────────────────────
-
-const TEXTAREA_STYLE: React.CSSProperties = {
-  ...ORIUM_INPUT_STYLE,
-  resize: 'none',
-  lineHeight: 1.65,
-};
-
-const SELECT_STYLE: React.CSSProperties = {
-  ...ORIUM_INPUT_STYLE,
-  cursor: 'pointer',
-  appearance: 'none',
-  WebkitAppearance: 'none',
-};
-
-function toggleBtn(active: boolean): React.CSSProperties {
-  return {
-    padding: '0.625rem 1.25rem',
-    borderRadius: '8px',
-    border: `1px solid ${active ? '#FF6B00' : '#1e1e1e'}`,
-    background: active ? 'rgba(255,107,0,0.15)' : 'rgba(255,255,255,0.03)',
-    color: active ? '#fff' : '#777',
-    fontSize: '0.88rem',
-    fontFamily: 'Poppins, sans-serif',
-    cursor: 'pointer',
-    transition: 'all 0.15s',
-  };
+function tituloSemana(dias: Date[]) {
+  const ini = dias[0]
+  const fim = dias[6]
+  const diaIni = String(ini.getDate()).padStart(2, '0')
+  const diaFim = String(fim.getDate()).padStart(2, '0')
+  if (ini.getMonth() === fim.getMonth()) {
+    return `${diaIni} – ${diaFim} ${MESES_ABREV[fim.getMonth()]} ${fim.getFullYear()}`
+  }
+  return `${diaIni} ${MESES_ABREV[ini.getMonth()]} – ${diaFim} ${MESES_ABREV[fim.getMonth()]} ${fim.getFullYear()}`
 }
 
-// ─── Componente principal ─────────────────────────────────────────────────────
+function CalendarioSemanalPage() {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [currentDate, setCurrentDate] = useState(() => new Date())
+  const [selectedCliente, setSelectedCliente] = useState('todos')
+  const [eventos, setEventos] = useState<EventoCalendario[]>([])
+  const [loading, setLoading] = useState(true)
+  const [erro, setErro] = useState('')
+  const savingRef = useRef(false)
+  // Incrementado a cada drag (handleDragEnd). Uma resposta de carregarEventos só é
+  // aplicada se o epoch capturado no início do fetch ainda for o atual — evita que a
+  // resposta de um poll disparado antes do drag (stale) sobrescreva o estado otimista
+  // pós-drag quando ela chega depois (race condition do poll de 18s).
+  const epochRef = useRef(0)
 
-function CalendarioPage() {
-  const [step, setStep] = useState(0);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const dias = gerarSemana(currentDate)
 
-  useEffect(() => {
-    if (contentRef.current) contentRef.current.scrollTop = 0;
-  }, [step]);
-
-  const searchParams = useSearchParams();
-  const clienteParam = searchParams.get('cliente');
-  const segmentoParam = searchParams.get('segmento');
-
-  const [form, setForm] = useState<Record<string, string>>({
-    nomeCliente: clienteParam || '',
-    instagram: '',
-    segmento: segmentoParam || '',
-    mes: '',
-    objetivo: '',
-    tomVoz: '',
-    diferencial: '',
-    publico: '',
-    frequencia: '',
-    datasEspeciais: '',
-    observacoes: '',
-  });
-  const [multi, setMulti] = useState<Record<string, string[]>>({
-    formatos: [],
-    temas: [],
-  });
-
-  const [gerando, setGerando] = useState(false);
-  const [loadingTextIndex, setLoadingTextIndex] = useState(0);
-  const [calendario, setCalendario] = useState<Calendario | null>(null);
-  const [erroGeracao, setErroGeracao] = useState('');
-  const [documentoId, setDocumentoId] = useState('');
-  const [copiado, setCopiado] = useState(false);
-  const [duplicado, setDuplicado] = useState(false);
-
-  // Rascunho: restaura no máximo até o step 2 — entrar direto no step 3
-  // dispararia a geração via IA automaticamente
-  const { draft, retomar, descartar, concluir } = useDraft(
-    'calendario',
-    { step, form, multi },
-    d => { setForm(d.form); setMulti(d.multi); setStep(Math.min(d.step, 2)); },
-    true,
-  );
-
-  // Pré-preenchimento via "Duplicar" na Biblioteca — não sobrescreve rascunho existente
-  useEffect(() => {
-    if (loadDraft('calendario')) return;
-    const dup = loadDuplicado<{ form: Record<string, string>; formatos: string[]; temas: string[] }>('calendario');
-    if (!dup) return;
-    setForm(prev => ({ ...prev, ...dup.form }));
-    setMulti({ formatos: dup.formatos || [], temas: dup.temas || [] });
-    setDuplicado(true);
-  }, []);
-
-  // Rotacionar textos de loading
-  useEffect(() => {
-    if (!gerando) return;
-    const id = setInterval(() => {
-      setLoadingTextIndex(i => (i + 1) % LOADING_TEXTS.length);
-    }, 2500);
-    return () => clearInterval(id);
-  }, [gerando]);
-
-  const set = (name: string, value: string) =>
-    setForm(prev => ({ ...prev, [name]: value }));
-
-  const toggleMulti = (name: string, value: string) => {
-    setMulti(prev => {
-      const current = prev[name] || [];
-      return {
-        ...prev,
-        [name]: current.includes(value)
-          ? current.filter(v => v !== value)
-          : [...current, value],
-      };
-    });
-  };
-
-  const isChecked = (name: string, value: string) =>
-    (multi[name] || []).includes(value);
-
-  // ─── Geração ──────────────────────────────────────────────────────────────
-
-  const gerarCalendario = useCallback(async () => {
-    setGerando(true);
-    setErroGeracao('');
-    setLoadingTextIndex(0);
+  async function carregarEventos(diasAlvo: Date[], cliente: string, silencioso = false) {
+    if (!silencioso) setLoading(true)
+    const params = new URLSearchParams({ inicio: toISODate(diasAlvo[0]), fim: toISODate(diasAlvo[6]) })
+    if (cliente !== 'todos') params.set('cliente', cliente)
+    const epoch = epochRef.current
     try {
-      const res = await fetch('/api/calendario', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nomeCliente: form.nomeCliente,
-          instagram: form.instagram,
-          segmento: form.segmento,
-          mes: form.mes,
-          objetivo: form.objetivo,
-          tomVoz: form.tomVoz,
-          diferencial: form.diferencial,
-          publico: form.publico,
-          frequencia: form.frequencia,
-          formatos: multi.formatos || [],
-          temas: multi.temas || [],
-          datasEspeciais: form.datasEspeciais,
-          observacoes: form.observacoes,
-        }),
-      });
-      const data = await res.json();
-      if (data.error) {
-        setErroGeracao(data.error);
-      } else {
-        setCalendario(data);
-        const docId = documentoId || crypto.randomUUID();
-        fetch('/api/documentos', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify({
-            id: docId,
-            tipo: 'Calendário',
-            nome: `Calendário — ${form.nomeCliente} — ${form.mes}`,
-            cliente: form.nomeCliente,
-            dados: { form, formatos: multi.formatos || [], temas: multi.temas || [], calendario: data },
-          }),
-        }).then(() => setDocumentoId(docId)).catch(console.error);
-        concluir();
+      const res = await fetch(`/api/calendario/eventos?${params}`, { headers: authHeaders() })
+      if (!res.ok) {
+        // Falha real da API (ex.: Notion fora do ar, ver route.ts). Num poll silencioso
+        // isso não deve derrubar o que já está na tela — a próxima tentativa corrige.
+        // Num load visível (troca de semana/cliente/inicial), degrada como o resto do
+        // app (ver VistaCalendario.tsx: carregarItens -> .catch(() => setItems([]))).
+        if (!silencioso && epochRef.current === epoch) setEventos([])
+        return
       }
+      const data = await res.json()
+      if (epochRef.current === epoch) setEventos(data.eventos ?? [])
     } catch {
-      setErroGeracao('Erro ao gerar calendário. Tente novamente.');
+      if (!silencioso && epochRef.current === epoch) setEventos([])
     } finally {
-      setGerando(false);
+      if (!silencioso) setLoading(false)
     }
-  }, [form, multi, documentoId]);
+  }
 
   useEffect(() => {
-    if (step === 3 && !calendario && !gerando) {
-      gerarCalendario();
+    const timer = setTimeout(() => { carregarEventos(gerarSemana(currentDate), selectedCliente) }, 300)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDate.getTime(), selectedCliente])
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (savingRef.current) return
+      carregarEventos(gerarSemana(currentDate), selectedCliente, true)
+    }, 18000)
+    return () => clearInterval(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDate.getTime(), selectedCliente])
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over) return
+    const eventoId = String(active.id)
+    const novaData = String(over.id)
+    const evento = eventos.find(e => e.id === eventoId)
+    if (!evento || evento.data === novaData) return
+
+    const anterior = eventos
+    setErro('')
+    epochRef.current += 1
+    setEventos(es => es.map(e => e.id === eventoId ? { ...e, data: novaData } : e))
+    savingRef.current = true
+    try {
+      const res = await fetch(`/api/calendario/eventos/${encodeURIComponent(eventoId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({ novaData }),
+      })
+      if (!res.ok) throw new Error('Falha ao mover evento')
+    } catch (err) {
+      console.error('Erro ao mover evento do calendário:', err)
+      setEventos(anterior)
+      setErro('Não foi possível mover o evento. A data foi restaurada.')
+    } finally {
+      savingRef.current = false
     }
-  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ─── Copiar ───────────────────────────────────────────────────────────────
-
-  function copiarCalendario() {
-    if (!calendario) return;
-    const linhas: string[] = [
-      `CALENDÁRIO DE CONTEÚDO — ${form.nomeCliente.toUpperCase()} — ${form.mes.toUpperCase()}`,
-      `Gerado por ORIUM™ | oriumagencia.com.br`,
-      '━'.repeat(40),
-    ];
-    calendario.semanas.forEach(semana => {
-      linhas.push('');
-      linhas.push(semana.titulo.toUpperCase());
-      semana.posts.forEach(post => {
-        linhas.push('');
-        linhas.push(`POST ${post.numero} — ${post.diaSemana} | ${post.formato}`);
-        linhas.push(`Tema: ${post.tema}`);
-        linhas.push(`Título: ${post.titulo}`);
-        linhas.push('Legenda:');
-        linhas.push(post.legenda);
-        linhas.push(`Hashtags: ${post.hashtags}`);
-      });
-      linhas.push('');
-      linhas.push('━'.repeat(40));
-    });
-    navigator.clipboard.writeText(linhas.join('\n')).then(() => {
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2000);
-    });
   }
 
-  function resetarForm() {
-    if (!confirm('Tem certeza? O calendário atual será perdido.')) return;
-    setForm({ nomeCliente: '', instagram: '', segmento: '', mes: '', objetivo: '', tomVoz: '', diferencial: '', publico: '', frequencia: '', datasEspeciais: '', observacoes: '' });
-    setMulti({ formatos: [], temas: [] });
-    setCalendario(null);
-    setErroGeracao('');
-    setStep(0);
+  function eventosDoDia(dia: Date) {
+    const iso = toISODate(dia)
+    return eventos.filter(e => e.data === iso)
   }
 
-  function regerarCalendario() {
-    if (!confirm('Gerar novo calendário? O atual será substituído.')) return;
-    setCalendario(null);
-    gerarCalendario();
+  function navegar(direcao: -1 | 1) {
+    setCurrentDate(d => {
+      const novo = new Date(d)
+      novo.setDate(novo.getDate() + direcao * 7)
+      return novo
+    })
   }
 
-  // ─── Labels e steps ───────────────────────────────────────────────────────
-
-  const STEPS = [
-    { label: 'CLIENTE E MÊS' },
-    { label: 'ESTRATÉGIA' },
-    { label: 'CONFIGURAÇÕES' },
-    { label: 'CALENDÁRIO' },
-  ];
-
-  const totalSteps = STEPS.length;
-  const progress = ((step + 1) / totalSteps) * 100;
-
-  // ─── Validação por step ───────────────────────────────────────────────────
-
-  function podeAvancar() {
-    if (step === 0) return !!(form.nomeCliente && form.segmento && form.mes);
-    if (step === 1) return !!(form.objetivo && form.tomVoz && form.diferencial && form.publico);
-    if (step === 2) return !!(form.frequencia && multi.formatos.length > 0 && multi.temas.length > 0);
-    return true;
-  }
-
-  // Só preenche campos vazios — o que o usuário já digitou é preservado
-  function importarBriefing(d: BriefingImportado): boolean {
-    const importaveis: Array<[campo: string, valor: string]> = [
-      ['segmento', d.segmento],
-      ['instagram', d.instagram],
-      ['publico', d.publicoAlvo],
-    ];
-    let preservado = false;
-    for (const [campo, valor] of importaveis) {
-      if (valor.trim() && form[campo]?.trim()) preservado = true;
-    }
-    setForm(prev => {
-      const next = { ...prev };
-      for (const [campo, valor] of importaveis) {
-        if (valor.trim() && !prev[campo]?.trim()) next[campo] = valor;
-      }
-      return next;
-    });
-    return preservado;
-  }
-
-  // ─── Conteúdo de cada step ────────────────────────────────────────────────
-
-  function renderStep() {
-    if (step === 0) {
-      return (
-        <div style={{ maxWidth: '680px', display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-          <Field label="Nome do cliente *">
-            <ClienteSelector
-              value={form.nomeCliente}
-              onChange={nome => set('nomeCliente', nome)}
-              placeholder="Nome do cliente"
-            />
-            <ImportarBriefing cliente={form.nomeCliente} onImport={importarBriefing} />
-          </Field>
-          <Field label="Instagram do cliente">
-            <OriumInput
-              type="text"
-              placeholder="@cliente"
-              value={form.instagram}
-              onChange={e => set('instagram', e.target.value)}
-            />
-          </Field>
-          <Field label="Segmento *">
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.625rem' }}>
-              {SEGMENTOS.map(op => (
-                <button key={op} onClick={() => set('segmento', op)} style={toggleBtn(form.segmento === op)}>
-                  {form.segmento === op ? '● ' : '○ '}{op}
-                </button>
-              ))}
-            </div>
-          </Field>
-          <Field label="Mês de referência *">
-            <div style={{ position: 'relative' }}>
-              <select
-                value={form.mes}
-                onChange={e => set('mes', e.target.value)}
-                style={{ ...SELECT_STYLE, color: form.mes ? '#fff' : '#555' }}
-                onFocus={e => e.target.style.borderColor = '#FF6B00'}
-                onBlur={e => e.target.style.borderColor = '#1e1e1e'}
-              >
-                <option value="" disabled style={{ background: '#1a1a1a' }}>Selecione o mês</option>
-                {MESES.map(m => (
-                  <option key={m} value={m} style={{ background: '#1a1a1a', color: '#fff' }}>{m}</option>
-                ))}
-              </select>
-              <span style={{ position: 'absolute', right: '1.25rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#555', fontSize: '0.8rem' }}>▾</span>
-            </div>
-          </Field>
-        </div>
-      );
-    }
-
-    if (step === 1) {
-      return (
-        <div style={{ maxWidth: '680px', display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-          <Field label="Objetivo principal do mês *">
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.625rem' }}>
-              {OBJETIVOS.map(op => (
-                <button key={op} onClick={() => set('objetivo', op)} style={toggleBtn(form.objetivo === op)}>
-                  {form.objetivo === op ? '● ' : '○ '}{op}
-                </button>
-              ))}
-            </div>
-          </Field>
-          <Field label="Tom de voz *">
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.625rem' }}>
-              {TONS.map(op => (
-                <button key={op} onClick={() => set('tomVoz', op)} style={toggleBtn(form.tomVoz === op)}>
-                  {form.tomVoz === op ? '● ' : '○ '}{op}
-                </button>
-              ))}
-            </div>
-          </Field>
-          <Field label="Diferencial da marca *">
-            <textarea
-              rows={3}
-              placeholder="O que torna esse negócio único ou diferente dos concorrentes?"
-              value={form.diferencial}
-              onChange={e => set('diferencial', e.target.value)}
-              style={TEXTAREA_STYLE}
-              onFocus={e => e.target.style.borderColor = '#FF6B00'}
-              onBlur={e => e.target.style.borderColor = '#1e1e1e'}
-            />
-          </Field>
-          <Field label="Público-alvo *">
-            <textarea
-              rows={3}
-              placeholder="Descreva quem são os clientes ideais: idade, perfil, dores, desejos..."
-              value={form.publico}
-              onChange={e => set('publico', e.target.value)}
-              style={TEXTAREA_STYLE}
-              onFocus={e => e.target.style.borderColor = '#FF6B00'}
-              onBlur={e => e.target.style.borderColor = '#1e1e1e'}
-            />
-          </Field>
-        </div>
-      );
-    }
-
-    if (step === 2) {
-      return (
-        <div style={{ maxWidth: '680px', display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-          <Field label="Frequência semanal de posts *">
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.625rem' }}>
-              {FREQUENCIAS.map(op => (
-                <button key={op} onClick={() => set('frequencia', op)} style={toggleBtn(form.frequencia === op)}>
-                  {form.frequencia === op ? '● ' : '○ '}{op}
-                </button>
-              ))}
-            </div>
-          </Field>
-          <Field label="Formatos usados *" hint="Selecione quantos quiser">
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.625rem' }}>
-              {FORMATOS.map(op => (
-                <button key={op} onClick={() => toggleMulti('formatos', op)} style={toggleBtn(isChecked('formatos', op))}>
-                  {isChecked('formatos', op) ? '✓ ' : ''}{op}
-                </button>
-              ))}
-            </div>
-          </Field>
-          <Field label="Temas recorrentes *" hint="Selecione quantos quiser">
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.625rem' }}>
-              {TEMAS.map(op => (
-                <button key={op} onClick={() => toggleMulti('temas', op)} style={toggleBtn(isChecked('temas', op))}>
-                  {isChecked('temas', op) ? '✓ ' : ''}{op}
-                </button>
-              ))}
-            </div>
-          </Field>
-          <Field label="Datas especiais do mês">
-            <textarea
-              rows={2}
-              placeholder="Ex: Dia dos Namorados 12/06, aniversário da empresa 15/06..."
-              value={form.datasEspeciais}
-              onChange={e => set('datasEspeciais', e.target.value)}
-              style={TEXTAREA_STYLE}
-              onFocus={e => e.target.style.borderColor = '#FF6B00'}
-              onBlur={e => e.target.style.borderColor = '#1e1e1e'}
-            />
-          </Field>
-          <Field label="Observações livres">
-            <textarea
-              rows={2}
-              placeholder="Algo específico para incluir ou evitar neste mês..."
-              value={form.observacoes}
-              onChange={e => set('observacoes', e.target.value)}
-              style={TEXTAREA_STYLE}
-              onFocus={e => e.target.style.borderColor = '#FF6B00'}
-              onBlur={e => e.target.style.borderColor = '#1e1e1e'}
-            />
-          </Field>
-        </div>
-      );
-    }
-
-    // step === 3
-    return renderCalendario();
-  }
-
-  // ─── Calendário gerado ────────────────────────────────────────────────────
-
-  function renderCalendario() {
-    // Loading
-    if (gerando || (!calendario && !erroGeracao)) {
-      return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '2rem' }}>
-          <Image src="/lglaranja.png" alt="ORIUM" width={100} height={32} style={{ objectFit: 'contain', opacity: 0.9 }} />
-          <div style={{ position: 'relative', width: '48px', height: '48px' }}>
-            <svg viewBox="0 0 48 48" style={{ width: '100%', height: '100%', animation: 'spin 1s linear infinite' }}>
-              <circle cx="24" cy="24" r="20" fill="none" stroke="#1e1e1e" strokeWidth="3" />
-              <circle cx="24" cy="24" r="20" fill="none" stroke="#FF6B00" strokeWidth="3" strokeDasharray="40 86" strokeLinecap="round" />
-            </svg>
-          </div>
-          <p style={{ color: '#aaa', fontSize: '0.95rem', fontFamily: 'Poppins, sans-serif', transition: 'opacity 0.5s', minHeight: '1.5em', textAlign: 'center' }}>
-            {LOADING_TEXTS[loadingTextIndex]}
-          </p>
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        </div>
-      );
-    }
-
-    // Erro
-    if (erroGeracao) {
-      return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '1.5rem' }}>
-          <p style={{ color: '#ef4444', fontSize: '1rem' }}>{erroGeracao}</p>
-          <button
-            onClick={gerarCalendario}
-            style={{ background: '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.875rem 2rem', color: '#fff', fontFamily: 'Anton, sans-serif', letterSpacing: '0.15em', fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 4px 20px rgba(255,107,0,0.2)' }}
-          >
-            TENTAR NOVAMENTE
-          </button>
-        </div>
-      );
-    }
-
-    if (!calendario) return null;
-
-    const postsSemanais = parseInt(form.frequencia.split('x')[0]);
-    const totalPosts = postsSemanais * 4;
-
-    return (
-      <div style={{ maxWidth: '860px' }}>
-        {/* Cabeçalho */}
-        <div style={{ marginBottom: '2rem' }}>
-          <h2 style={{ fontFamily: 'Anton, sans-serif', fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#FF6B00', letterSpacing: '0.04em', lineHeight: 1, marginBottom: '0.25rem' }}>
-            {form.nomeCliente.toUpperCase()}
-          </h2>
-          <p style={{ color: '#fff', fontSize: '1.2rem', fontFamily: 'Anton, sans-serif', letterSpacing: '0.04em', marginBottom: '0.5rem' }}>{form.mes}</p>
-          <p style={{ color: '#71717a', fontSize: '0.88rem' }}>
-            {totalPosts} posts · 4 semanas · {form.objetivo}
-          </p>
-        </div>
-
-        {/* Botões de ação */}
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '3rem' }}>
-          <button
-            onClick={copiarCalendario}
-            style={{ background: copiado ? '#16a34a' : '#FF6B00', border: 'none', borderRadius: '8px', padding: '0.75rem 1.75rem', color: '#fff', fontFamily: 'Anton, sans-serif', letterSpacing: '0.15em', fontSize: '0.88rem', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 20px rgba(255,107,0,0.2)' }}
-          >
-            {copiado ? '✓ COPIADO!' : 'COPIAR CALENDÁRIO'}
-          </button>
-          <button
-            onClick={regerarCalendario}
-            style={{ background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '8px', padding: '0.75rem 1.75rem', color: '#888', fontFamily: 'Poppins, sans-serif', fontSize: '0.88rem', cursor: 'pointer', transition: 'all 0.2s' }}
-            onMouseEnter={e => { const b = e.currentTarget; b.style.borderColor = '#444'; b.style.color = '#ccc'; }}
-            onMouseLeave={e => { const b = e.currentTarget; b.style.borderColor = '#1e1e1e'; b.style.color = '#888'; }}
-          >
-            Regerar
-          </button>
-          <button
-            onClick={resetarForm}
-            style={{ background: 'transparent', border: '1px solid #1e1e1e', borderRadius: '8px', padding: '0.75rem 1.75rem', color: '#888', fontFamily: 'Poppins, sans-serif', fontSize: '0.88rem', cursor: 'pointer', transition: 'all 0.2s' }}
-            onMouseEnter={e => { const b = e.currentTarget; b.style.borderColor = '#444'; b.style.color = '#ccc'; }}
-            onMouseLeave={e => { const b = e.currentTarget; b.style.borderColor = '#1e1e1e'; b.style.color = '#888'; }}
-          >
-            Novo calendário
-          </button>
-        </div>
-
-        {/* Semanas */}
-        {calendario.semanas.map(semana => (
-          <div key={semana.numero} style={{ marginBottom: '3rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-              <span style={{ fontFamily: 'Anton, sans-serif', color: '#FF6B00', fontSize: '0.75rem', letterSpacing: '0.3em', textTransform: 'uppercase' }}>
-                {semana.titulo.toUpperCase()}
-              </span>
-              <div style={{ flex: 1, height: '1px', background: '#141414' }} />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
-              {semana.posts.map(post => (
-                <PostCard key={post.numero} post={post} />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  // ─── Layout principal ─────────────────────────────────────────────────────
+  const navBtnStyle: CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', background: '#111', border: '1px solid #333', borderRadius: '6px', color: '#999', fontSize: '1rem', cursor: 'pointer', fontFamily: 'Poppins, sans-serif' }
 
   return (
     <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#080808', fontFamily: 'Poppins, sans-serif', display: 'flex' }}>
       <ToolBackground position="absolute" />
-      {draft && <DraftBanner savedAt={draft.savedAt} onRetomar={retomar} onDescartar={descartar} />}
-      {duplicado && <DuplicadoBanner onDismiss={() => setDuplicado(false)} />}
 
       {/* Sidebar */}
       <div style={{ position: 'relative', width: sidebarCollapsed ? '60px' : '260px', flexShrink: 0, height: '100%', zIndex: 10, transition: 'width 0.3s ease' }}>
-
-        {/* Toggle — círculo */}
         <button
           onClick={() => setSidebarCollapsed(c => !c)}
           title={sidebarCollapsed ? 'Expandir' : 'Recolher'}
           style={{ position: 'absolute', right: '-12px', top: '50%', transform: 'translateY(-50%)', zIndex: 20, width: '24px', height: '24px', background: '#0a0a0a', border: '1px solid #1e1e1e', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#333', fontSize: '0.65rem', transition: 'all 0.2s' }}
-          onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#FF6B00'; b.style.color = '#FF6B00'; }}
-          onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#1e1e1e'; b.style.color = '#333'; }}
+          onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#FF6B00'; b.style.color = '#FF6B00' }}
+          onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = '#1e1e1e'; b.style.color = '#333' }}
         >
           {sidebarCollapsed ? '›' : '‹'}
         </button>
 
         <div style={{ width: '100%', height: '100%', borderRight: '1px solid #0f0f0f', display: 'flex', flexDirection: 'column', background: 'rgba(8,8,8,0.97)', backdropFilter: 'blur(16px)', overflow: 'hidden' }}>
-
-          {/* ZONA 1 — Logo */}
           {!sidebarCollapsed ? (
             <div style={{ padding: '1.5rem 1.75rem', borderBottom: '1px solid #0f0f0f', flexShrink: 0 }}>
               <Link href="/" className="inline-block cursor-pointer transition-opacity hover:opacity-80">
@@ -620,186 +175,90 @@ function CalendarioPage() {
             <div style={{ flexShrink: 0, height: '60px', borderBottom: '1px solid #0f0f0f' }} />
           )}
 
-          {/* ZONA 2 — Etapas */}
-          <div style={{ flex: 1, overflowY: 'hidden' }}>
-            {!sidebarCollapsed && (
-              <p style={{ color: '#444444', fontSize: '0.58rem', letterSpacing: '0.25em', textTransform: 'uppercase', padding: '1.25rem 1.75rem 0.75rem', margin: 0 }}>ETAPAS</p>
-            )}
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {STEPS.map((s, i) => (
-                <button
-                  key={i}
-                  onClick={() => { if (i <= step) setStep(i); }}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: sidebarCollapsed ? 'center' : 'flex-start', gap: '0.75rem', padding: sidebarCollapsed ? '0.875rem 0' : '0.7rem 1.75rem', background: i === step ? 'rgba(255,107,0,0.15)' : 'transparent', borderTop: 'none', borderRight: 'none', borderBottom: 'none', borderLeft: sidebarCollapsed ? 'none' : `2px solid ${i === step ? '#FF6B00' : 'transparent'}`, outline: 'none', cursor: i <= step ? 'pointer' : 'default', textAlign: 'left', width: '100%', transition: 'all 0.2s', boxSizing: 'border-box' as const }}
-                  onMouseEnter={e => { if (i !== step && i <= step) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; }}
-                  onMouseLeave={e => { if (i !== step) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
-                >
-                  <span style={{ fontFamily: 'Anton, sans-serif', fontSize: '0.65rem', letterSpacing: '0.05em', minWidth: '20px', flexShrink: 0, color: i === step ? '#FF6B00' : '#555555', transition: 'color 0.2s' }}>
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  {!sidebarCollapsed && (
-                    <span style={{ fontSize: '0.78rem', color: i === step ? '#fff' : '#888888', fontFamily: 'Poppins, sans-serif', fontWeight: i === step ? 600 : 400, lineHeight: 1.3, transition: 'color 0.2s' }}>
-                      {s.label}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
+          <div style={{ flex: 1 }} />
 
-          {/* ZONA 3 — Progresso */}
-          {!sidebarCollapsed && (
-            <div style={{ borderTop: '1px solid #0f0f0f', padding: '1.25rem 1.75rem', flexShrink: 0 }}>
-              <p style={{ color: '#444444', fontSize: '0.58rem', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '0.625rem' }}>PROGRESSO</p>
-              <div style={{ height: '2px', background: '#111', borderRadius: '2px', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${progress}%`, background: '#FF6B00', borderRadius: '2px', transition: 'width 0.5s ease' }} />
-              </div>
-              <p style={{ color: '#2a2a2a', fontSize: '0.7rem', marginTop: '0.5rem' }}>{Math.round(progress)}% concluído</p>
-            </div>
-          )}
-
-          {/* ZONA 4 — Hub + Sair */}
           <div style={{ borderTop: '1px solid #0f0f0f', padding: sidebarCollapsed ? '1rem 0' : '1rem 1.75rem 1.5rem', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: sidebarCollapsed ? 'center' : 'flex-start', gap: '0.75rem' }}>
             <a
               href="/hub"
               title="Voltar ao painel"
               style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#888888', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none', transition: 'all 0.15s', fontFamily: 'Poppins, sans-serif', border: '1px solid #1e1e1e', padding: '8px 12px', borderRadius: '8px' }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; e.currentTarget.style.borderColor = '#FF6B00'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#888888'; e.currentTarget.style.borderColor = '#1e1e1e'; }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; e.currentTarget.style.borderColor = '#FF6B00' }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#888888'; e.currentTarget.style.borderColor = '#1e1e1e' }}
             >
               <span>←</span>
               {!sidebarCollapsed && <span>PAINEL</span>}
             </a>
             {!sidebarCollapsed && (
               <a href="/biblioteca" style={{ color: '#777', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none', transition: 'color 0.2s', fontFamily: 'Poppins, sans-serif' }}
-                onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
-                onMouseLeave={e => { e.currentTarget.style.color = '#777'; }}>
+                onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00' }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#777' }}>
                 BIBLIOTECA
               </a>
             )}
             {!sidebarCollapsed && (
               <button
-                onClick={() => { clearAuth(); window.location.reload(); }}
+                onClick={() => { clearAuth(); window.location.reload() }}
                 style={{ background: 'none', border: 'none', color: '#1a1a1a', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', cursor: 'pointer', transition: 'color 0.2s', padding: 0, fontFamily: 'Poppins, sans-serif' }}
-                onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00'; }}
-                onMouseLeave={e => { e.currentTarget.style.color = '#1a1a1a'; }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#FF6B00' }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#1a1a1a' }}
               >
                 sair
               </button>
             )}
           </div>
-
         </div>
       </div>
 
       {/* Conteúdo */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
-        {/* Header */}
-        <div style={{ padding: '3rem 5rem 2.5rem', borderBottom: '1px solid #141414', flexShrink: 0 }}>
-          <p style={{ color: '#FF6B00', fontSize: '0.68rem', letterSpacing: '0.3em', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
-            Etapa {step + 1} de {totalSteps}
-          </p>
-          <h2 style={{ fontFamily: 'Anton, sans-serif', fontSize: 'clamp(1.8rem, 3vw, 2.8rem)', color: '#fff', letterSpacing: '0.04em', lineHeight: 1, marginBottom: '0.5rem' }}>
-            {STEPS[step].label}
-          </h2>
-          {step === 0 && <p style={{ color: '#555', fontSize: '0.95rem' }}>Informações básicas do cliente.</p>}
-          {step === 1 && <p style={{ color: '#555', fontSize: '0.95rem' }}>Objetivo, tom e posicionamento da marca.</p>}
-          {step === 2 && <p style={{ color: '#555', fontSize: '0.95rem' }}>Frequência, formatos e temas de conteúdo.</p>}
-          {step === 3 && <p style={{ color: '#555', fontSize: '0.95rem' }}>Calendário gerado com IA para {form.nomeCliente || 'o cliente'}.</p>}
+        <div style={{ padding: '2.5rem 3rem 1.5rem', borderBottom: '1px solid #141414', flexShrink: 0 }}>
+          <h2 style={{ fontFamily: 'Anton, sans-serif', fontSize: 'clamp(1.6rem, 3vw, 2.2rem)', color: '#fff', letterSpacing: '0.04em', lineHeight: 1, marginBottom: '0.25rem' }}>CALENDÁRIO DE CONTEÚDO</h2>
+          <p style={{ color: '#555', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Planejamento semanal com dados ao vivo do Notion.</p>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button onClick={() => navegar(-1)} style={navBtnStyle}>‹</button>
+              <button onClick={() => setCurrentDate(new Date())} style={{ ...navBtnStyle, width: 'auto', padding: '0 0.875rem', fontSize: '0.78rem', letterSpacing: '0.05em' }}>Hoje</button>
+              <button onClick={() => navegar(1)} style={navBtnStyle}>›</button>
+              <h3 style={{ fontFamily: 'Anton, sans-serif', fontSize: '1.05rem', color: '#fff', letterSpacing: '0.03em', margin: '0 0 0 0.75rem' }}>
+                {tituloSemana(dias)}
+              </h3>
+            </div>
+            <select
+              value={selectedCliente}
+              onChange={e => setSelectedCliente(e.target.value)}
+              style={{ background: '#111', border: '1px solid #333', borderRadius: '8px', padding: '0.5rem 0.875rem', color: '#aaa', fontSize: '0.82rem', fontFamily: 'Poppins, sans-serif', outline: 'none', cursor: 'pointer' }}
+            >
+              <option value="todos" style={{ background: '#0f0f0f' }}>Todos os clientes</option>
+              {CLIENTES_CALENDARIO.map(c => (
+                <option key={c} value={c} style={{ background: '#0f0f0f' }}>{c}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        {/* Body */}
-        <div ref={contentRef} style={{ flex: 1, overflowY: 'auto', padding: '3rem 5rem' }}>
-          {renderStep()}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 3rem' }}>
+          {erro && (
+            <div style={{ marginBottom: '1rem', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: '8px', padding: '0.625rem 0.875rem', color: '#fca5a5', fontSize: '0.82rem', display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center' }}>
+              <span>{erro}</span>
+              <button type="button" onClick={() => setErro('')} style={{ background: 'transparent', border: 'none', color: '#fca5a5', cursor: 'pointer', fontSize: '0.9rem', lineHeight: 1 }}>×</button>
+            </div>
+          )}
+          {loading ? (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '5rem', color: '#444', fontSize: '0.9rem' }}>Carregando calendário...</div>
+          ) : (
+            <WeekGrid dias={dias} eventosPorDia={eventosDoDia} onDragEnd={handleDragEnd} />
+          )}
         </div>
-
-        {/* Footer */}
-        {step < 3 && (
-          <WizardFooter
-            onBack={step > 0 ? () => setStep(s => s - 1) : undefined}
-            onNext={() => setStep(s => s + 1)}
-            nextLabel={step === 2 ? 'GERAR CALENDÁRIO →' : 'CONTINUAR →'}
-            disabled={!podeAvancar()}
-          />
-        )}
       </div>
     </div>
-  );
-}
-
-// ─── Sub-componentes ──────────────────────────────────────────────────────────
-
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label style={{ display: 'block', color: '#e0e0e0', fontSize: '1rem', lineHeight: 1.5, marginBottom: hint ? '0.5rem' : '1rem', fontWeight: 500 }}>
-        {label}
-      </label>
-      {hint && <p style={{ color: '#3a3a3a', fontSize: '0.78rem', marginBottom: '0.75rem' }}>{hint}</p>}
-      {children}
-    </div>
-  );
-}
-
-function PostCard({ post }: { post: Post }) {
-  const [hovered, setHovered] = useState(false);
-
-  return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        background: 'rgba(255,255,255,0.03)',
-        border: `1px solid ${hovered ? '#2a2a2a' : '#1e1e1e'}`,
-        borderRadius: '12px',
-        padding: '1.5rem',
-        transition: 'border-color 0.2s',
-      }}
-    >
-      {/* Topo */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-        <span style={{ fontFamily: 'Anton, sans-serif', color: '#FF6B00', fontSize: '1.5rem', letterSpacing: '0.04em', lineHeight: 1 }}>
-          {post.numero}
-        </span>
-        <span style={{ background: 'rgba(255,107,0,0.12)', border: '1px solid rgba(255,107,0,0.2)', borderRadius: '4px', padding: '0.2rem 0.6rem', color: '#FF6B00', fontSize: '0.7rem', fontFamily: 'Poppins, sans-serif', letterSpacing: '0.05em' }}>
-          {post.formato}
-        </span>
-      </div>
-
-      {/* Dia da semana */}
-      <p style={{ color: '#555', fontSize: '0.72rem', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-        {post.diaSemana}
-      </p>
-
-      {/* Tema */}
-      <p style={{ color: '#FF6B00', fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
-        {post.tema}
-      </p>
-
-      {/* Título */}
-      <p style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', lineHeight: 1.4, marginBottom: '0.875rem' }}>
-        {post.titulo}
-      </p>
-
-      {/* Legenda */}
-      <p style={{ color: '#71717a', fontSize: '0.88rem', lineHeight: 1.75, marginBottom: '0.75rem', whiteSpace: 'pre-line' }}>
-        {post.legenda}
-      </p>
-
-      {/* Hashtags */}
-      <p style={{ color: '#3f3f46', fontSize: '0.78rem', lineHeight: 1.5 }}>
-        {post.hashtags}
-      </p>
-    </div>
-  );
+  )
 }
 
 export default function Page() {
   return (
-    <Suspense>
-      <AuthGate title="CALENDÁRIO" subtitle="Gerador de conteúdo mensal com IA.">
-        <CalendarioPage />
-      </AuthGate>
-    </Suspense>
-  );
+    <AuthGate title="CALENDÁRIO" subtitle="Calendário de conteúdo em tempo real.">
+      <CalendarioSemanalPage />
+    </AuthGate>
+  )
 }
