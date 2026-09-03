@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import Reveal from '@/components/Reveal';
 import ChordDiagram from '@/components/guitarra-voz/ChordDiagram';
 import StruPattern from '@/components/guitarra-voz/StruPattern';
@@ -81,9 +80,9 @@ export default function GuitarraVozLanding() {
             </div>
           ))}
         </div>
-        <Link href="/guitarra-voz/diagnostico" className={styles.gvBtnPrimary}>
+        {/* <Link href="/guitarra-voz/diagnostico" className={styles.gvBtnPrimary}>
           Fazer diagnóstico gratuito →
-        </Link>
+        </Link> */}
       </section>
 
       <section className={styles.gvSection}>
@@ -224,9 +223,9 @@ export default function GuitarraVozLanding() {
           <p className={styles.gvBody} style={{ color: 'var(--gv-muted)', margin: '1rem 0 2rem' }}>
             8 a 10 perguntas. No final, você recebe o módulo de partida e as primeiras músicas indicadas.
           </p>
-          <Link href="/guitarra-voz/diagnostico" className={styles.gvBtnPrimary}>
+          {/* <Link href="/guitarra-voz/diagnostico" className={styles.gvBtnPrimary}>
             Fazer diagnóstico gratuito →
-          </Link>
+          </Link> */}
         </Reveal>
       </section>
     </>
